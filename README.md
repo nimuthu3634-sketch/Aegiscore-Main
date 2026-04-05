@@ -36,7 +36,7 @@ docker compose exec api alembic upgrade head
 docker compose exec api python -m app.db.seed
 ```
 
-4. Open the platform:
+1. Open the platform:
 
 - `http://localhost` through NGINX
 - `http://localhost/api/health` through NGINX

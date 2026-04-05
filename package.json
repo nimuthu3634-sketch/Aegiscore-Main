@@ -12,4 +12,3 @@
     "test:web:e2e": "npm run test:e2e --workspace @aegiscore/web"
   }
 }
-
