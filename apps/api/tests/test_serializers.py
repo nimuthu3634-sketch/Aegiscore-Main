@@ -121,9 +121,31 @@ def test_incident_summary_response_includes_assigned_user_and_alert() -> None:
         normalized_payload={"file_path": "/etc/nginx/nginx.conf"},
         created_at=datetime.now(UTC),
     )
+    secondary_raw_alert = RawAlert(
+        id=uuid4(),
+        asset=asset,
+        source="suricata",
+        external_id="suricata-3",
+        detection_type=DetectionType.PORT_SCAN,
+        severity=6,
+        raw_payload={"src_ip": "198.51.100.22", "dst_port": "22"},
+        received_at=datetime.now(UTC),
+    )
+    secondary_alert = NormalizedAlert(
+        id=uuid4(),
+        raw_alert=secondary_raw_alert,
+        asset=asset,
+        source="suricata",
+        title="Port scan on web edge",
+        description="Sequential connection attempts observed.",
+        detection_type=DetectionType.PORT_SCAN,
+        severity=6,
+        status=AlertStatus.NEW,
+        normalized_payload={"destination_port": 22},
+        created_at=datetime.now(UTC),
+    )
     incident = Incident(
         id=uuid4(),
-        normalized_alert=normalized_alert,
         assigned_user=assigned_user,
         title="Investigate config drift",
         summary="Critical infrastructure config changed unexpectedly.",
@@ -132,10 +154,14 @@ def test_incident_summary_response_includes_assigned_user_and_alert() -> None:
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),
     )
+    incident.primary_alert = normalized_alert
+    incident.alerts = [normalized_alert, secondary_alert]
+    normalized_alert.incident = incident
+    secondary_alert.incident = incident
 
     response = to_incident_summary_response(incident)
 
     assert response.assigned_user is not None
     assert response.assigned_user.username == "analyst"
     assert response.alert.title == "Protected config changed"
-
+    assert response.linked_alerts_count == 2

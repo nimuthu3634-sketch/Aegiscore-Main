@@ -11,6 +11,7 @@ import type {
   AlertDetailApiResponse,
   AlertDetailResponse,
   AlertLifecycleApiResponse,
+  AlertLinkIncidentApiRequest,
   AlertLinkIncidentApiResponse,
   AnalystNoteCreateApiResponse
 } from "./types";
@@ -104,9 +105,21 @@ export async function closeAlertDetail(alertId: string) {
   });
 }
 
-export async function linkAlertToIncident(alertId: string) {
+export async function linkAlertToIncident(
+  alertId: string,
+  request: AlertLinkIncidentApiRequest = { create_new: true }
+) {
   return fetchApiJson<AlertLinkIncidentApiResponse>(`/alerts/${alertId}/link-incident`, {
-    method: "POST"
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      incident_id: request.incident_id,
+      create_new: request.create_new ?? !request.incident_id,
+      title: request.title,
+      summary: request.summary
+    })
   });
 }
 

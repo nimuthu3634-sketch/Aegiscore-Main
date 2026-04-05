@@ -24,18 +24,21 @@ class IncidentsRepository:
     def list_incidents(self, query: IncidentListQuery) -> tuple[list[Incident], int]:
         statement = (
             select(Incident)
-            .join(Incident.normalized_alert)
+            .outerjoin(Incident.primary_alert)
             .outerjoin(Incident.assigned_user)
             .outerjoin(NormalizedAlert.asset)
             .options(
                 selectinload(Incident.assigned_user).selectinload(User.role),
-                selectinload(Incident.normalized_alert).selectinload(NormalizedAlert.asset),
-                selectinload(Incident.normalized_alert).selectinload(
+                selectinload(Incident.primary_alert).selectinload(NormalizedAlert.asset),
+                selectinload(Incident.primary_alert).selectinload(
                     NormalizedAlert.risk_score
                 ),
-                selectinload(Incident.normalized_alert).selectinload(
+                selectinload(Incident.primary_alert).selectinload(
                     NormalizedAlert.raw_alert
                 ),
+                selectinload(Incident.alerts).selectinload(NormalizedAlert.asset),
+                selectinload(Incident.alerts).selectinload(NormalizedAlert.risk_score),
+                selectinload(Incident.alerts).selectinload(NormalizedAlert.raw_alert),
             )
         )
 
@@ -114,9 +117,12 @@ class IncidentsRepository:
             select(Incident)
             .options(
                 selectinload(Incident.assigned_user).selectinload(User.role),
-                selectinload(Incident.normalized_alert).selectinload(NormalizedAlert.asset),
-                selectinload(Incident.normalized_alert).selectinload(NormalizedAlert.risk_score),
-                selectinload(Incident.normalized_alert).selectinload(NormalizedAlert.raw_alert),
+                selectinload(Incident.primary_alert).selectinload(NormalizedAlert.asset),
+                selectinload(Incident.primary_alert).selectinload(NormalizedAlert.risk_score),
+                selectinload(Incident.primary_alert).selectinload(NormalizedAlert.raw_alert),
+                selectinload(Incident.alerts).selectinload(NormalizedAlert.asset),
+                selectinload(Incident.alerts).selectinload(NormalizedAlert.risk_score),
+                selectinload(Incident.alerts).selectinload(NormalizedAlert.raw_alert),
                 selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.requested_by)
                 .selectinload(User.role),
@@ -130,9 +136,12 @@ class IncidentsRepository:
             select(Incident)
             .options(
                 selectinload(Incident.assigned_user).selectinload(User.role),
-                selectinload(Incident.normalized_alert).selectinload(NormalizedAlert.asset),
-                selectinload(Incident.normalized_alert).selectinload(NormalizedAlert.risk_score),
-                selectinload(Incident.normalized_alert).selectinload(NormalizedAlert.raw_alert),
+                selectinload(Incident.primary_alert).selectinload(NormalizedAlert.asset),
+                selectinload(Incident.primary_alert).selectinload(NormalizedAlert.risk_score),
+                selectinload(Incident.primary_alert).selectinload(NormalizedAlert.raw_alert),
+                selectinload(Incident.alerts).selectinload(NormalizedAlert.asset),
+                selectinload(Incident.alerts).selectinload(NormalizedAlert.risk_score),
+                selectinload(Incident.alerts).selectinload(NormalizedAlert.raw_alert),
                 selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.requested_by)
                 .selectinload(User.role),

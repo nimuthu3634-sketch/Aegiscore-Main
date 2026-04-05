@@ -368,7 +368,7 @@ export function AlertDetailPage() {
               <div className="rounded-panel border border-dashed border-border-subtle bg-surface-base/30 p-4">
                 <p className="type-body-sm">
                   No incident linkage exists yet. Use the live link action above to create
-                  and attach an incident from this alert.
+                  a new incident now, or wire in an existing-incident selector next.
                 </p>
               </div>
             )}

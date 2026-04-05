@@ -25,6 +25,7 @@ from app.services.serializers import (
 )
 from app.services.workflows import resolve_incident_transition
 
+
 def list_incidents(session: Session, query: IncidentListQuery) -> IncidentListResponse:
     incidents, total = IncidentsRepository(session).list_incidents(query)
     total_pages = max(1, (total + query.page_size - 1) // query.page_size)
@@ -53,19 +54,24 @@ def get_incident(session: Session, incident_id: UUID) -> IncidentDetailResponse:
         )
 
     audit_logs_repository = AuditLogsRepository(session)
-    audit_logs = audit_logs_repository.list_for_entity("incident", str(incident.id))
-    audit_logs.extend(
-        audit_logs_repository.list_for_entity(
-            "alert", str(incident.normalized_alert.id)
-        )
-    )
+    audit_logs_by_id = {
+        str(audit_log.id): audit_log
+        for audit_log in audit_logs_repository.list_for_entity("incident", str(incident.id))
+    }
+    for linked_alert in incident.alerts:
+        for audit_log in audit_logs_repository.list_for_entity("alert", str(linked_alert.id)):
+            audit_logs_by_id[str(audit_log.id)] = audit_log
 
     analyst_notes = AnalystNotesRepository(session).list_for_target(
         NoteTargetType.INCIDENT,
         incident.id,
     )
 
-    return to_incident_detail_response(incident, audit_logs, analyst_notes)
+    return to_incident_detail_response(
+        incident,
+        list(audit_logs_by_id.values()),
+        analyst_notes,
+    )
 
 
 def _get_incident_for_workflow(session: Session, incident_id: UUID):
@@ -112,10 +118,34 @@ def transition_incident(
     if incident.assigned_user is None:
         incident.assigned_user = actor
 
+    alert_target_status: AlertStatus | None = None
     if target_state in {IncidentStatus.INVESTIGATING, IncidentStatus.CONTAINED}:
-        incident.normalized_alert.status = AlertStatus.INVESTIGATING
+        alert_target_status = AlertStatus.INVESTIGATING
     elif target_state in {IncidentStatus.RESOLVED, IncidentStatus.FALSE_POSITIVE}:
-        incident.normalized_alert.status = AlertStatus.RESOLVED
+        alert_target_status = AlertStatus.RESOLVED
+
+    if alert_target_status is not None:
+        for linked_alert in incident.alerts:
+            if linked_alert.status == alert_target_status:
+                continue
+            previous_alert_status = linked_alert.status
+            linked_alert.status = alert_target_status
+            _create_audit_log(
+                session,
+                actor=actor,
+                entity_type="alert",
+                entity_id=str(linked_alert.id),
+                action="alert.status.synced_from_incident",
+                details={
+                    "incident_id": str(incident.id),
+                    "previous_status": previous_alert_status.value,
+                    "current_status": alert_target_status.value,
+                    "summary": (
+                        f"Alert status synced from incident transition to "
+                        f"{target_state.value}."
+                    ),
+                },
+            )
 
     _create_audit_log(
         session,

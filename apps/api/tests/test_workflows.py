@@ -1,7 +1,8 @@
 from fastapi import HTTPException
+from pydantic import ValidationError
 
 from app.models.enums import IncidentStatus
-from app.schemas.workflows import IncidentTransitionAction
+from app.schemas.workflows import AlertLinkIncidentRequest, IncidentTransitionAction
 from app.services.workflows import (
     get_allowed_incident_target_states,
     get_available_incident_actions,
@@ -49,3 +50,38 @@ def test_incident_transition_capabilities_match_workflow_map() -> None:
         IncidentStatus.RESOLVED,
         IncidentStatus.FALSE_POSITIVE,
     ]
+
+
+def test_alert_link_incident_request_requires_explicit_mode() -> None:
+    try:
+        AlertLinkIncidentRequest()
+    except ValidationError as exc:
+        assert "incident_id" in str(exc) or "create_new" in str(exc)
+    else:
+        raise AssertionError("Expected invalid alert link request to fail validation")
+
+
+def test_alert_link_incident_request_rejects_mixed_modes() -> None:
+    try:
+        AlertLinkIncidentRequest(
+            incident_id="2ef3a70c-2bf8-4c92-bd71-e6e37f0cbb0c",
+            create_new=True,
+        )
+    except ValidationError as exc:
+        assert "not both" in str(exc)
+    else:
+        raise AssertionError("Expected mixed incident link modes to fail validation")
+
+
+def test_alert_link_incident_request_accepts_existing_or_new_modes() -> None:
+    existing = AlertLinkIncidentRequest(
+        incident_id="2ef3a70c-2bf8-4c92-bd71-e6e37f0cbb0c",
+    )
+    creating = AlertLinkIncidentRequest(
+        create_new=True,
+        title="External reconnaissance incident",
+    )
+
+    assert existing.incident_id is not None
+    assert existing.create_new is False
+    assert creating.create_new is True

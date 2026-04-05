@@ -32,6 +32,11 @@ class NormalizedAlert(Base):
         unique=True,
         nullable=False,
     )
+    incident_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("incidents.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     asset_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("assets.id", ondelete="SET NULL"),
@@ -64,6 +69,11 @@ class NormalizedAlert(Base):
         uselist=False,
     )
     incident: Mapped["Incident | None"] = relationship(
-        back_populates="normalized_alert",
+        back_populates="alerts",
+        foreign_keys=[incident_id],
+    )
+    primary_for_incident: Mapped["Incident | None"] = relationship(
+        back_populates="primary_alert",
+        foreign_keys="Incident.primary_alert_id",
         uselist=False,
     )

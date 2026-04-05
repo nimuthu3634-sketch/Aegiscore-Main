@@ -179,7 +179,15 @@ export type AlertLinkIncidentApiResponse = {
   title: string;
   state: string;
   priority: string;
+  linked_alerts_count: number;
   message: string;
+};
+
+export type AlertLinkIncidentApiRequest = {
+  incident_id?: string;
+  create_new?: boolean;
+  title?: string;
+  summary?: string;
 };
 
 export type AnalystNoteCreateApiResponse = {

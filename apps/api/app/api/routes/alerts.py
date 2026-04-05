@@ -19,6 +19,7 @@ from app.schemas.alerts import AlertSeverityLabel
 from app.models.enums import DetectionType
 from app.schemas.workflows import (
     AlertLifecycleResponse,
+    AlertLinkIncidentRequest,
     AlertLinkIncidentResponse,
     AnalystNoteCreateRequest,
     AnalystNoteCreateResponse,
@@ -98,10 +99,11 @@ def close_alert_route(
 @router.post("/{alert_id}/link-incident", response_model=AlertLinkIncidentResponse)
 def link_alert_incident_route(
     alert_id: UUID,
+    payload: AlertLinkIncidentRequest,
     current_user: CurrentUser,
     db: DbSession,
 ) -> AlertLinkIncidentResponse:
-    return link_alert_incident(db, alert_id, current_user)
+    return link_alert_incident(db, alert_id, payload, current_user)
 
 
 @router.post("/{alert_id}/notes", response_model=AnalystNoteCreateResponse)

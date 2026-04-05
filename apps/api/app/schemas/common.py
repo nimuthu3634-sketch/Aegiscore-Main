@@ -183,7 +183,7 @@ class IncidentSummaryResponse(APIModel):
     updated_at: datetime
     assigned_user: UserBriefResponse | None
     assignee_name: str | None = None
-    linked_alerts_count: int = 1
+    linked_alerts_count: int = 0
     primary_asset_name: str | None = None
     detection_type: DetectionType
     source_type: str

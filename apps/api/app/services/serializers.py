@@ -316,15 +316,62 @@ def _build_alert_score_factors(alert: NormalizedAlert) -> list[str]:
     return factors[:4]
 
 
+def _incident_alerts(incident: Incident) -> list[NormalizedAlert]:
+    return sorted(
+        incident.alerts,
+        key=lambda alert: (alert.created_at, str(alert.id)),
+        reverse=True,
+    )
+
+
+def _incident_primary_alert(incident: Incident) -> NormalizedAlert | None:
+    if incident.primary_alert is not None:
+        return incident.primary_alert
+
+    alerts = _incident_alerts(incident)
+    if not alerts:
+        return None
+
+    return sorted(
+        alerts,
+        key=lambda alert: (alert.severity, alert.created_at, str(alert.id)),
+        reverse=True,
+    )[0]
+
+
+def _unique_assets_for_incident(incident: Incident) -> list[Asset]:
+    seen_asset_ids: set[str] = set()
+    assets: list[Asset] = []
+    for alert in _incident_alerts(incident):
+        if alert.asset is None:
+            continue
+        asset_key = str(alert.asset.id)
+        if asset_key in seen_asset_ids:
+            continue
+        seen_asset_ids.add(asset_key)
+        assets.append(alert.asset)
+    return assets
+
+
 def _build_incident_priority_factors(incident: Incident) -> list[str]:
     factors = [f"Incident priority: {incident.priority.value}"]
-    alert = incident.normalized_alert
+    primary_alert = _incident_primary_alert(incident)
+    if primary_alert is None:
+        return factors
 
-    if alert.asset is not None:
-        factors.append(f"Primary asset criticality: {alert.asset.criticality.value}")
-    factors.append(f"Detection type: {alert.detection_type.value}")
-    if alert.risk_score is not None:
-        factors.append(f"Alert risk score: {round(alert.risk_score.score * 100)}")
+    linked_alerts = _incident_alerts(incident)
+
+    if primary_alert.asset is not None:
+        factors.append(
+            f"Primary asset criticality: {primary_alert.asset.criticality.value}"
+        )
+    factors.append(f"Detection type: {primary_alert.detection_type.value}")
+    if primary_alert.risk_score is not None:
+        factors.append(
+            f"Alert risk score: {round(primary_alert.risk_score.score * 100)}"
+        )
+    if len(linked_alerts) > 1:
+        factors.append(f"Correlated alerts: {len(linked_alerts)}")
     if incident.response_actions:
         factors.append(f"Linked response actions: {len(incident.response_actions)}")
     return factors[:4]
@@ -452,6 +499,10 @@ def to_alert_summary_response(alert: NormalizedAlert) -> AlertSummaryResponse:
 
 
 def to_incident_summary_response(incident: Incident) -> IncidentSummaryResponse:
+    primary_alert = _incident_primary_alert(incident)
+    if primary_alert is None:
+        raise ValueError(f"Incident {incident.id} does not have a primary alert.")
+
     return IncidentSummaryResponse(
         id=incident.id,
         title=incident.title,
@@ -469,13 +520,13 @@ def to_incident_summary_response(incident: Incident) -> IncidentSummaryResponse:
         else incident.assigned_user.username
         if incident.assigned_user
         else None,
-        linked_alerts_count=1,
-        primary_asset_name=incident.normalized_alert.asset.hostname
-        if incident.normalized_alert.asset
+        linked_alerts_count=len(_incident_alerts(incident)),
+        primary_asset_name=primary_alert.asset.hostname
+        if primary_alert.asset
         else None,
-        detection_type=incident.normalized_alert.detection_type,
-        source_type=_titleize_source(incident.normalized_alert.source),
-        alert=to_alert_summary_response(incident.normalized_alert),
+        detection_type=primary_alert.detection_type,
+        source_type=_titleize_source(primary_alert.source),
+        alert=to_alert_summary_response(primary_alert),
     )
 
 
@@ -669,31 +720,53 @@ def to_incident_detail_response(
     audit_logs: list[AuditLog],
     analyst_notes: list[AnalystNote],
 ) -> IncidentDetailResponse:
+    primary_alert = _incident_primary_alert(incident)
+    if primary_alert is None:
+        raise ValueError(f"Incident {incident.id} does not have a primary alert.")
+
+    linked_alerts = _incident_alerts(incident)
+    unique_assets = _unique_assets_for_incident(incident)
     primary_asset = (
-        to_asset_summary_response(incident.normalized_alert.asset)
-        if incident.normalized_alert.asset
-        else None
+        to_asset_summary_response(primary_alert.asset) if primary_alert.asset else None
+    )
+
+    detection_types = sorted({alert.detection_type.value for alert in linked_alerts})
+    source_types = sorted({_titleize_source(alert.source) for alert in linked_alerts})
+    asset_hostnames = sorted(
+        {alert.asset.hostname for alert in linked_alerts if alert.asset is not None}
+    )
+    source_ips = sorted(
+        {
+            source_ip
+            for alert in linked_alerts
+            if (source_ip := _extract_source_ip(alert)) is not None
+        }
+    )
+    destination_ports = sorted(
+        {
+            destination_port
+            for alert in linked_alerts
+            if (destination_port := _extract_destination_port(alert)) is not None
+        }
     )
 
     correlation_keys = {
-        "detection_type": incident.normalized_alert.detection_type.value,
-        "source_type": _titleize_source(incident.normalized_alert.source),
-        "asset_hostname": incident.normalized_alert.asset.hostname
-        if incident.normalized_alert.asset
-        else None,
-        "source_ip": _extract_source_ip(incident.normalized_alert),
-        "destination_port": _extract_destination_port(incident.normalized_alert),
+        "linked_alert_count": len(linked_alerts),
+        "detection_types": detection_types,
+        "source_types": source_types,
+        "asset_hostnames": asset_hostnames,
+        "source_ips": source_ips,
+        "destination_ports": destination_ports,
     }
     evidence_items = [
-        f"Detection type: {incident.normalized_alert.detection_type.value}",
-        f"Source type: {_titleize_source(incident.normalized_alert.source)}",
+        f"Linked alerts: {len(linked_alerts)}",
+        f"Detection types: {', '.join(detection_types)}",
+        f"Source types: {', '.join(source_types)}",
     ]
-    if incident.normalized_alert.asset is not None:
-        evidence_items.append(
-            f"Primary asset: {incident.normalized_alert.asset.hostname}"
-        )
-    if source_ip := _extract_source_ip(incident.normalized_alert):
-        evidence_items.append(f"Source IP: {source_ip}")
+    if asset_hostnames:
+        evidence_items.append(f"Affected assets: {', '.join(asset_hostnames)}")
+    if source_ips:
+        evidence_items.append(f"Observed source IPs: {', '.join(source_ips)}")
     if incident.response_actions:
         evidence_items.append(
             f"Linked response actions: {len(incident.response_actions)}"
@@ -743,11 +816,18 @@ def to_incident_detail_response(
         created_at=incident.created_at,
         updated_at=incident.updated_at,
         primary_asset=primary_asset,
-        affected_assets=[primary_asset] if primary_asset else [],
-        linked_alerts=[to_incident_linked_alert_response(incident.normalized_alert)],
+        affected_assets=[
+            to_asset_summary_response(asset) for asset in unique_assets
+        ],
+        linked_alerts=[
+            to_incident_linked_alert_response(alert) for alert in linked_alerts
+        ],
         grouped_evidence=IncidentGroupedEvidenceResponse(
             summary=incident.summary
-            or "Correlation is currently grouped around the primary normalized alert and linked workflow evidence.",
+            or (
+                f"{len(linked_alerts)} linked alerts have been grouped into a single "
+                "investigation based on shared asset and detection context."
+            ),
             evidence_items=evidence_items,
             correlation_keys={
                 key: value for key, value in correlation_keys.items() if value is not None
@@ -767,10 +847,10 @@ def to_incident_detail_response(
             label="Incident priority explanation",
             summary=(
                 f"Incident is currently prioritized {incident.priority.value} based on the "
-                "primary alert, asset context, and linked workflow evidence."
+                "primary alert, correlated evidence, and linked workflow history."
             ),
             rationale=incident.summary
-            or incident.normalized_alert.description
+            or primary_alert.description
             or "Priority is derived from the normalized alert and current investigation context.",
             factors=_build_incident_priority_factors(incident),
         ),

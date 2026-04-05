@@ -34,7 +34,7 @@ AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes sec
 - `raw_alerts`: preserved source payloads from integrations such as Wazuh and Suricata
 - `normalized_alerts`: alert records transformed into the common AegisCore schema
 - `risk_scores`: explainable alert risk-scoring records
-- `incidents`: analyst-facing incident records generated from normalized alerts
+- `incidents`: analyst-facing incident records generated from normalized alerts, with one incident able to own multiple linked alerts and a primary alert retained for summary views
 - `response_actions`: basic automated or analyst-triggered response activity
 - `analyst_notes`: persisted notes attached directly to alert or incident investigations
 - `audit_logs`: security and workflow history for traceability
@@ -42,6 +42,7 @@ AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes sec
 ## Workflow State Model
 
 - Alert lifecycle actions are persisted through explicit APIs for acknowledge, close, and link-to-incident workflows.
+- Alert-to-incident linkage supports either attaching an alert to an existing incident or creating a new incident from the alert workflow entrypoint.
 - Alert display state remains frontend-friendly through derived labels such as `triaged`, `contained`, and `pending_response`.
 - Incident workflow state is modeled directly as `new`, `triaged`, `investigating`, `contained`, `resolved`, and `false_positive`.
 - Every workflow mutation writes an audit entry, and note creation also persists a first-class analyst note record.

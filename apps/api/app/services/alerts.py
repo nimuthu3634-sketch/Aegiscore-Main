@@ -22,6 +22,7 @@ from app.schemas.common import AlertListResponse, AlertSummaryResponse
 from app.schemas.listing import AlertListQuery, ListMetaResponse
 from app.schemas.workflows import (
     AlertLifecycleResponse,
+    AlertLinkIncidentRequest,
     AlertLinkIncidentResponse,
     AnalystNoteCreateResponse,
 )
@@ -105,6 +106,40 @@ def _priority_from_alert(alert) -> IncidentPriority:
     return IncidentPriority.LOW
 
 
+def _linked_alerts(incident: Incident) -> list:
+    return list(incident.alerts)
+
+
+def _select_replacement_primary_alert(
+    incident: Incident,
+    *,
+    exclude_alert_id: UUID | None = None,
+):
+    candidates = [
+        linked_alert
+        for linked_alert in _linked_alerts(incident)
+        if exclude_alert_id is None or linked_alert.id != exclude_alert_id
+    ]
+    if not candidates:
+        return None
+
+    active_candidates = [
+        linked_alert
+        for linked_alert in candidates
+        if linked_alert.status != AlertStatus.RESOLVED
+    ]
+    selection_pool = active_candidates or candidates
+    return sorted(
+        selection_pool,
+        key=lambda linked_alert: (
+            linked_alert.severity,
+            linked_alert.created_at,
+            str(linked_alert.id),
+        ),
+        reverse=True,
+    )[0]
+
+
 def _get_alert_for_workflow(session: Session, alert_id: UUID):
     alert = AlertsRepository(session).get_alert_detail(alert_id)
     if alert is None:
@@ -185,6 +220,7 @@ def close_alert(
     actor: User,
 ) -> AlertLifecycleResponse:
     alert = _get_alert_for_workflow(session, alert_id)
+    incident = alert.incident
     previous_status = alert.status.value
 
     if alert.status == AlertStatus.RESOLVED:
@@ -207,25 +243,53 @@ def close_alert(
         },
     )
 
-    if alert.incident and alert.incident.status not in {
+    if incident and incident.primary_alert_id == alert.id:
+        replacement_primary = _select_replacement_primary_alert(
+            incident,
+            exclude_alert_id=alert.id,
+        )
+        if replacement_primary is not None:
+            incident.primary_alert = replacement_primary
+            _create_audit_log(
+                session,
+                actor=actor,
+                entity_type="incident",
+                entity_id=str(incident.id),
+                action="incident.primary_alert.updated",
+                details={
+                    "previous_primary_alert_id": str(alert.id),
+                    "current_primary_alert_id": str(replacement_primary.id),
+                    "summary": "Incident primary alert was rotated after alert closure.",
+                },
+            )
+
+    if incident and incident.status not in {
         IncidentStatus.RESOLVED,
         IncidentStatus.FALSE_POSITIVE,
     }:
-        previous_incident_state = alert.incident.status.value
-        alert.incident.status = IncidentStatus.RESOLVED
-        _create_audit_log(
-            session,
-            actor=actor,
-            entity_type="incident",
-            entity_id=str(alert.incident.id),
-            action="incident.transition",
-            details={
-                "action": "resolve",
-                "previous_state": previous_incident_state,
-                "current_state": alert.incident.status.value,
-                "summary": "Incident resolved automatically because the only linked alert was closed.",
-            },
+        has_active_alerts = any(
+            linked_alert.status != AlertStatus.RESOLVED
+            for linked_alert in _linked_alerts(incident)
         )
+        if not has_active_alerts:
+            previous_incident_state = incident.status.value
+            incident.status = IncidentStatus.RESOLVED
+            _create_audit_log(
+                session,
+                actor=actor,
+                entity_type="incident",
+                entity_id=str(incident.id),
+                action="incident.transition",
+                details={
+                    "action": "resolve",
+                    "previous_state": previous_incident_state,
+                    "current_state": incident.status.value,
+                    "summary": (
+                        "Incident resolved automatically because all linked alerts "
+                        "have been closed."
+                    ),
+                },
+            )
 
     session.commit()
 
@@ -233,7 +297,7 @@ def close_alert(
         alert_id=alert.id,
         previous_status=previous_status,
         current_status=alert.status.value,
-        linked_incident_id=alert.incident.id if alert.incident else None,
+        linked_incident_id=incident.id if incident else None,
         message="Alert closed successfully.",
     )
 
@@ -241,45 +305,88 @@ def close_alert(
 def link_alert_incident(
     session: Session,
     alert_id: UUID,
+    payload: AlertLinkIncidentRequest,
     actor: User,
 ) -> AlertLinkIncidentResponse:
     alert = _get_alert_for_workflow(session, alert_id)
     if alert.status == AlertStatus.RESOLVED:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Closed alerts cannot be linked to a new incident.",
+            detail="Closed alerts cannot be linked to an incident.",
         )
 
     if alert.incident is not None:
+        if payload.incident_id and alert.incident.id == payload.incident_id:
+            detail = "Alert is already linked to the requested incident."
+        else:
+            detail = "Alert is already linked to an incident."
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Alert is already linked to an incident.",
+            detail=detail,
         )
 
-    incident = IncidentsRepository(session).create(
-        Incident(
-            normalized_alert=alert,
-            assigned_user=actor,
-            title=alert.title,
-            summary=alert.description
-            or f"Incident created from {alert.detection_type.value} alert.",
-            status=IncidentStatus.TRIAGED,
-            priority=_priority_from_alert(alert),
-        )
-    )
-    session.flush()
+    incidents_repository = IncidentsRepository(session)
 
+    if payload.incident_id is not None:
+        incident = incidents_repository.get_incident_detail(payload.incident_id)
+        if incident is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Incident not found",
+            )
+        if incident.status in {IncidentStatus.RESOLVED, IncidentStatus.FALSE_POSITIVE}:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Terminal incidents cannot accept additional linked alerts.",
+            )
+        link_mode = "existing"
+        creation_message = "Alert linked into an existing incident."
+    else:
+        incident = incidents_repository.create(
+            Incident(
+                assigned_user=actor,
+                title=payload.title or alert.title,
+                summary=payload.summary
+                or alert.description
+                or f"Incident created from {alert.detection_type.value} alert.",
+                status=IncidentStatus.TRIAGED,
+                priority=_priority_from_alert(alert),
+            )
+        )
+        session.flush()
+        _create_audit_log(
+            session,
+            actor=actor,
+            entity_type="incident",
+            entity_id=str(incident.id),
+            action="incident.created",
+            details={
+                "alert_id": str(alert.id),
+                "primary_alert_id": str(alert.id),
+                "priority": incident.priority.value,
+                "state": incident.status.value,
+                "summary": "Incident created from alert workflow linkage.",
+            },
+        )
+        link_mode = "new"
+        creation_message = "Alert linked into a new incident."
+
+    alert.incident = incident
+    if incident.primary_alert is None:
+        incident.primary_alert = alert
+
+    linked_alerts_count = len(_linked_alerts(incident))
     _create_audit_log(
         session,
         actor=actor,
         entity_type="incident",
         entity_id=str(incident.id),
-        action="incident.created",
+        action="incident.alert_linked",
         details={
             "alert_id": str(alert.id),
-            "priority": incident.priority.value,
-            "state": incident.status.value,
-            "summary": "Incident created from alert workflow linkage.",
+            "link_mode": link_mode,
+            "linked_alerts_count": linked_alerts_count,
+            "summary": "Alert linked into incident investigation scope.",
         },
     )
     _create_audit_log(
@@ -290,7 +397,9 @@ def link_alert_incident(
         action="alert.linked_incident",
         details={
             "incident_id": str(incident.id),
-            "summary": "Alert linked into a newly created incident.",
+            "link_mode": link_mode,
+            "linked_alerts_count": linked_alerts_count,
+            "summary": creation_message,
         },
     )
     session.commit()
@@ -300,7 +409,8 @@ def link_alert_incident(
         title=incident.title,
         state=incident.status,
         priority=incident.priority,
-        message="Alert linked into a new incident.",
+        linked_alerts_count=linked_alerts_count,
+        message=creation_message,
     )
 
 

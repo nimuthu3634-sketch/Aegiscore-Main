@@ -96,9 +96,56 @@ def _build_fixture() -> tuple[NormalizedAlert, Incident, list[AuditLog], list[An
         reasoning="Integrity change affected a critical configuration path.",
         calculated_at=datetime.now(UTC),
     )
+    secondary_asset = Asset(
+        id=uuid4(),
+        hostname="acct-web-01",
+        ip_address="10.20.1.15",
+        operating_system="Ubuntu 22.04 LTS",
+        criticality=AssetCriticality.HIGH,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    secondary_raw_alert = RawAlert(
+        id=uuid4(),
+        asset=secondary_asset,
+        source="suricata",
+        external_id="suricata-2048",
+        detection_type=DetectionType.PORT_SCAN,
+        severity=6,
+        raw_payload={
+            "signature": "ET SCAN Potential SSH Scan",
+            "src_ip": "198.51.100.22",
+            "dest_ip": "10.20.1.15",
+            "dst_port": "22",
+        },
+        received_at=datetime.now(UTC),
+    )
+    secondary_alert = NormalizedAlert(
+        id=uuid4(),
+        raw_alert=secondary_raw_alert,
+        asset=secondary_asset,
+        source="suricata",
+        title="External port scan observed",
+        description="Repeated TCP connection attempts targeted the web tier.",
+        detection_type=DetectionType.PORT_SCAN,
+        severity=6,
+        status=AlertStatus.NEW,
+        normalized_payload={
+            "scanner_ip": "198.51.100.22",
+            "destination_port": 22,
+        },
+        created_at=datetime.now(UTC),
+    )
+    secondary_alert.risk_score = RiskScore(
+        id=uuid4(),
+        normalized_alert=secondary_alert,
+        score=0.54,
+        confidence=0.73,
+        reasoning="External reconnaissance detected against an internet-facing asset.",
+        calculated_at=datetime.now(UTC),
+    )
     incident = Incident(
         id=uuid4(),
-        normalized_alert=alert,
         assigned_user=analyst,
         title="Investigate config drift",
         summary="Configuration drift on a critical system is under active investigation.",
@@ -107,6 +154,10 @@ def _build_fixture() -> tuple[NormalizedAlert, Incident, list[AuditLog], list[An
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),
     )
+    incident.primary_alert = alert
+    incident.alerts = [alert, secondary_alert]
+    alert.incident = incident
+    secondary_alert.incident = incident
     response_action = ResponseAction(
         id=uuid4(),
         incident=incident,
@@ -171,7 +222,8 @@ def test_incident_detail_response_builds_evidence_timeline_and_capabilities() ->
     assert response.state.value == "investigating"
     assert response.assignee is not None
     assert response.assignee.username == "analyst"
-    assert len(response.linked_alerts) == 1
+    assert len(response.linked_alerts) == 2
+    assert len(response.affected_assets) == 2
     assert response.grouped_evidence.evidence_items
     assert response.response_history[0].action_type == "collect_configuration_backup"
     assert "contain" in response.state_transition_capabilities.available_actions

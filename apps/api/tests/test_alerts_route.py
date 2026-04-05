@@ -211,23 +211,56 @@ def test_alert_link_incident_route_returns_summary(monkeypatch) -> None:
         title="Unauthorized directory account creation",
         state=IncidentStatus.TRIAGED,
         priority=IncidentPriority.CRITICAL,
+        linked_alerts_count=2,
         message="Alert linked into a new incident.",
     )
     _override_dependencies()
     monkeypatch.setattr(
         alerts_route,
         "link_alert_incident",
-        lambda db, alert_id, current_user: response_payload,
+        lambda db, alert_id, payload, current_user: response_payload,
     )
 
     try:
         client = TestClient(app)
-        response = client.post(f"/alerts/{uuid4()}/link-incident")
+        response = client.post(
+            f"/alerts/{uuid4()}/link-incident",
+            json={"create_new": True},
+        )
     finally:
         _clear_overrides()
 
     assert response.status_code == 200
     assert response.json()["state"] == "triaged"
+    assert response.json()["linked_alerts_count"] == 2
+
+
+def test_alert_link_incident_route_returns_conflict(monkeypatch) -> None:
+    _override_dependencies()
+
+    def raise_conflict(db, alert_id, payload, current_user):
+        raise HTTPException(
+            status_code=409,
+            detail="Alert is already linked to the requested incident.",
+        )
+
+    monkeypatch.setattr(
+        alerts_route,
+        "link_alert_incident",
+        raise_conflict,
+    )
+
+    try:
+        client = TestClient(app)
+        response = client.post(
+            f"/alerts/{uuid4()}/link-incident",
+            json={"incident_id": str(uuid4())},
+        )
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 409
+    assert "already linked" in response.json()["detail"]
 
 
 def test_alert_note_route_returns_created_note(monkeypatch) -> None:

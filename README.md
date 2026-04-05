@@ -97,8 +97,22 @@ The current backend now supports persisted analyst workflow actions on live reco
 
 These operations create audit-log entries, update detail timelines, and persist analyst notes in first-class storage.
 
+`POST /alerts/{id}/link-incident` now accepts a typed JSON body so an alert can be linked to an existing incident or used to create a new one:
+
+```json
+{
+  "incident_id": "optional-existing-incident-uuid",
+  "create_new": false,
+  "title": "optional new incident title",
+  "summary": "optional new incident summary"
+}
+```
+
+Use either `incident_id` for an existing incident or `create_new: true` for a new incident, but not both.
+
 ## Notes
 
 - The backend owns all external security integrations; the frontend talks only to backend APIs.
 - The backend foundation now includes roles, users, assets, raw alerts, normalized alerts, risk scores, incidents, response actions, analyst notes, and audit logs.
+- Incidents now own many normalized alerts, while each alert can belong to at most one incident and still exposes a clean linked-incident summary for the frontend.
 - Frontend work follows the AegisCore dark SOC theme and is prepared for Figma-first design iteration in later milestones.

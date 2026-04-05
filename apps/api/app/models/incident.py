@@ -25,11 +25,11 @@ class Incident(Base):
         primary_key=True,
         default=uuid.uuid4,
     )
-    normalized_alert_id: Mapped[uuid.UUID] = mapped_column(
+    primary_alert_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("normalized_alerts.id", ondelete="CASCADE"),
+        ForeignKey("normalized_alerts.id", ondelete="SET NULL"),
         unique=True,
-        nullable=False,
+        nullable=True,
     )
     assigned_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
@@ -60,6 +60,14 @@ class Incident(Base):
         nullable=False,
     )
 
-    normalized_alert: Mapped["NormalizedAlert"] = relationship(back_populates="incident")
+    primary_alert: Mapped["NormalizedAlert | None"] = relationship(
+        back_populates="primary_for_incident",
+        foreign_keys=[primary_alert_id],
+        post_update=True,
+    )
+    alerts: Mapped[list["NormalizedAlert"]] = relationship(
+        back_populates="incident",
+        foreign_keys="NormalizedAlert.incident_id",
+    )
     assigned_user: Mapped["User | None"] = relationship(back_populates="assigned_incidents")
     response_actions: Mapped[list["ResponseAction"]] = relationship(back_populates="incident")

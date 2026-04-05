@@ -4,6 +4,7 @@ from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.asset import Asset
+from app.models.enums import IncidentStatus
 from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
 from app.schemas.listing import (
@@ -34,8 +35,12 @@ class AssetsRepository:
                 NormalizedAlert.asset_id.label("asset_id"),
                 func.count(Incident.id).label("open_incidents_count"),
             )
-            .join(Incident, Incident.normalized_alert_id == NormalizedAlert.id)
-            .where(Incident.status != "resolved")
+            .join(Incident, Incident.id == NormalizedAlert.incident_id)
+            .where(
+                Incident.status.notin_(
+                    [IncidentStatus.RESOLVED, IncidentStatus.FALSE_POSITIVE]
+                )
+            )
             .group_by(NormalizedAlert.asset_id)
             .subquery()
         )

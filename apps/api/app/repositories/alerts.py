@@ -184,6 +184,24 @@ class AlertsRepository:
                 .selectinload(Incident.assigned_user)
                 .selectinload(User.role),
                 selectinload(NormalizedAlert.incident)
+                .selectinload(Incident.primary_alert)
+                .selectinload(NormalizedAlert.asset),
+                selectinload(NormalizedAlert.incident)
+                .selectinload(Incident.primary_alert)
+                .selectinload(NormalizedAlert.risk_score),
+                selectinload(NormalizedAlert.incident)
+                .selectinload(Incident.primary_alert)
+                .selectinload(NormalizedAlert.raw_alert),
+                selectinload(NormalizedAlert.incident)
+                .selectinload(Incident.alerts)
+                .selectinload(NormalizedAlert.asset),
+                selectinload(NormalizedAlert.incident)
+                .selectinload(Incident.alerts)
+                .selectinload(NormalizedAlert.risk_score),
+                selectinload(NormalizedAlert.incident)
+                .selectinload(Incident.alerts)
+                .selectinload(NormalizedAlert.raw_alert),
+                selectinload(NormalizedAlert.incident)
                 .selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.requested_by)
                 .selectinload(User.role),

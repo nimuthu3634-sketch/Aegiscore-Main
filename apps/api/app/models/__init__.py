@@ -1,3 +1,4 @@
+from app.models.analyst_note import AnalystNote
 from app.models.asset import Asset
 from app.models.audit_log import AuditLog
 from app.models.base import Base
@@ -11,6 +12,7 @@ from app.models.user import User
 
 __all__ = [
     "Asset",
+    "AnalystNote",
     "AuditLog",
     "Base",
     "Incident",

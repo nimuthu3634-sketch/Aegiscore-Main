@@ -275,35 +275,48 @@ def seed_database(session: Session) -> None:
 
     active_alerts = [pair[1] for pair in seeded_pairs]
     incident_specs = [
-        (
-            active_alerts[0],
-            admin_user,
-            IncidentStatus.TRIAGED,
-            IncidentPriority.CRITICAL,
-            "Admin account creation requires immediate validation and containment.",
-        ),
-        (
-            active_alerts[2],
-            analyst_user,
-            IncidentStatus.INVESTIGATING,
-            IncidentPriority.HIGH,
-            "Configuration drift on a critical system is under active investigation.",
-        ),
+        {
+            "primary_alert": active_alerts[3],
+            "linked_alerts": [active_alerts[3], active_alerts[1]],
+            "assignee": admin_user,
+            "status": IncidentStatus.TRIAGED,
+            "priority": IncidentPriority.HIGH,
+            "title": "External reconnaissance against web edge",
+            "summary": (
+                "Port-scan and brute-force activity are being tracked together on the "
+                "internet-facing web asset."
+            ),
+        },
+        {
+            "primary_alert": active_alerts[2],
+            "linked_alerts": [active_alerts[2]],
+            "assignee": analyst_user,
+            "status": IncidentStatus.INVESTIGATING,
+            "priority": IncidentPriority.HIGH,
+            "title": active_alerts[2].title,
+            "summary": (
+                "Configuration drift on a critical system is under active investigation."
+            ),
+        },
     ]
 
-    for alert, assignee, incident_status, priority, summary in incident_specs:
+    for incident_spec in incident_specs:
+        primary_alert = incident_spec["primary_alert"]
         incident = incidents_repository.create(
             Incident(
-                normalized_alert=alert,
-                assigned_user=assignee,
-                title=alert.title,
-                summary=summary,
-                status=incident_status,
-                priority=priority,
-                created_at=alert.created_at + timedelta(minutes=1),
+                assigned_user=incident_spec["assignee"],
+                title=incident_spec["title"],
+                summary=incident_spec["summary"],
+                status=incident_spec["status"],
+                priority=incident_spec["priority"],
+                created_at=primary_alert.created_at + timedelta(minutes=1),
                 updated_at=now - timedelta(minutes=5),
             )
         )
+        session.flush()
+        for linked_alert in incident_spec["linked_alerts"]:
+            linked_alert.incident = incident
+        incident.primary_alert = primary_alert
         created_incidents.append(incident)
 
     session.flush()
@@ -339,8 +352,24 @@ def seed_database(session: Session) -> None:
             entity_type="incident",
             entity_id=str(created_incidents[0].id),
             action="incident.created",
-            details={"priority": created_incidents[0].priority.value},
+            details={
+                "priority": created_incidents[0].priority.value,
+                "primary_alert_id": str(active_alerts[3].id),
+                "linked_alerts_count": 2,
+            },
             created_at=now - timedelta(minutes=14),
+        ),
+        AuditLog(
+            actor=admin_user,
+            entity_type="incident",
+            entity_id=str(created_incidents[0].id),
+            action="incident.alert_linked",
+            details={
+                "alert_id": str(active_alerts[1].id),
+                "link_mode": "seed",
+                "linked_alerts_count": 2,
+            },
+            created_at=now - timedelta(minutes=13),
         ),
         AuditLog(
             actor=admin_user,
