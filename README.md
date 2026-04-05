@@ -1,92 +1,91 @@
 # AegisCore
 
-AegisCore is a production-minded, single-tenant AI-integrated SOC platform for small and medium enterprises. This repository is structured as a clean monorepo for the core web UI, API, worker runtime, AI logic, infrastructure, scripts, and documentation.
+AegisCore is a single-tenant, SME-focused SOC platform prototype. It ingests Wazuh and Suricata events, normalizes them into a shared alert model, scores risk, groups incidents, records analyst workflow, evaluates safe automated-response policies, and exposes the resulting data through a backend-owned web console.
+
+This repository is intentionally scoped to four supported detections only:
+
+- `brute_force`
+- `file_integrity_violation`
+- `port_scan`
+- `unauthorized_user_creation`
 
 ## Monorepo Layout
 
-- `apps/web`: React + TypeScript + Tailwind CSS + Recharts SOC dashboard shell
-- `apps/api`: FastAPI + SQLAlchemy + Alembic backend with PostgreSQL wiring
-- `apps/worker`: background worker runtime for future automated response workflows
-- `ai`: AI and risk-scoring modules
-- `infra/nginx`: NGINX configuration for frontend and API routing
-- `infra/docker`: Dockerfiles used by local development services
-- `scripts`: helper scripts for local workflow and validation
-- `docs`: architecture and environment documentation
+- `apps/web`: React + TypeScript + Tailwind SOC console
+- `apps/api`: FastAPI + SQLAlchemy + Alembic backend
+- `apps/worker`: worker shell for future background execution
+- `ai`: training, inference, datasets, and model artifacts
+- `infra/nginx`: local reverse proxy config
+- `infra/docker`: Dockerfiles for the local stack
+- `scripts`: validation and local helper scripts
+- `docs`: architecture, setup, testing, scoring, and release-readiness guides
 
-## Local Startup
+## Local Quick Start
 
-1. Review the env examples and override values only when needed.
-2. Start the local stack:
-
-```powershell
-docker compose up --build
-```
-
-3. Open the platform:
-
-- Frontend through NGINX: `http://localhost`
-- API health through NGINX: `http://localhost/api/health`
-- API direct: `http://localhost:8000/health`
-- Frontend direct: `http://localhost:5173`
-
-## Services
-
-- `postgres`: PostgreSQL 16 for local persistence
-- `api`: FastAPI service with JWT auth, modular domain layers, and `/health`
-- `worker`: background worker shell for future policy execution
-- `web`: Vite-powered React frontend shell
-- `nginx`: reverse proxy routing `/` to the frontend and `/api` to the backend
-
-## Seed Development Data
-
-Run the local seed command after migrations are available:
+1. Copy the example env files if you want local overrides.
+2. Start the stack:
 
 ```powershell
-docker compose exec api python -m app.db.seed
-```
-
-Default seeded development credentials:
-
-- Admin: `admin` / `AegisCore123!`
-- Analyst: `analyst` / `AegisCore123!`
-
-Sample auth flow:
-
-```powershell
-$login = Invoke-RestMethod -Method Post -Uri http://localhost:8000/auth/login -ContentType "application/json" -Body '{"username":"admin","password":"AegisCore123!"}'
-$token = $login.access_token
-Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/dashboard/summary
-$alerts = Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/alerts
-Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri ("http://localhost:8000/alerts/" + $alerts.items[0].id)
-$incidents = Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/incidents
-Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri ("http://localhost:8000/incidents/" + $incidents.items[0].id)
-```
-
-## Environment Files
-
-- Root compose defaults: `.env.example`
-- Web envs: `apps/web/.env.example`
-- API envs: `apps/api/.env.example`
-- Worker envs: `apps/worker/.env.example`
-- AI envs: `ai/.env.example`
-
-## Validation Commands
-
-```powershell
-docker compose config
 docker compose up --build -d
+```
+
+3. Run migrations and seed local users:
+
+```powershell
 docker compose exec api alembic upgrade head
 docker compose exec api python -m app.db.seed
-Invoke-WebRequest http://localhost:8000/health
-Invoke-WebRequest http://localhost:8000/auth/me -Headers @{ Authorization = "Bearer <token>" }
-Invoke-WebRequest http://localhost:8000/alerts/<alert-id> -Headers @{ Authorization = "Bearer <token>" }
-Invoke-WebRequest http://localhost:8000/incidents/<incident-id> -Headers @{ Authorization = "Bearer <token>" }
-Invoke-WebRequest http://localhost/
 ```
 
-## Workflow API Surface
+4. Open the platform:
 
-The current backend now supports persisted analyst workflow actions on live records:
+- `http://localhost` through NGINX
+- `http://localhost/api/health` through NGINX
+- `http://localhost:8000/health` direct API
+- `http://localhost:5173` direct frontend dev server
+
+Default local credentials:
+
+- `admin / AegisCore123!`
+- `analyst / AegisCore123!`
+
+## Local Validation Commands
+
+Backend:
+
+```powershell
+docker compose run --rm --no-deps api pytest
+```
+
+Frontend:
+
+```powershell
+npm run lint:web
+npm run build:web
+```
+
+Browser coverage:
+
+```powershell
+npm run test:web:e2e
+```
+
+Four-scenario validation:
+
+```powershell
+py -3 scripts/validate_attack_scenarios.py
+```
+
+## Dev Authentication Boundary
+
+The browser login boundary is explicit by default, even in development.
+
+- `VITE_ENABLE_DEV_AUTH_BOOTSTRAP=false` is the default local posture.
+- Set `VITE_ENABLE_DEV_AUTH_BOOTSTRAP=true` only when you intentionally want the frontend API client to obtain a dev token automatically for local lab work.
+- Seeded credentials are still available through the normal `/login` flow whether dev bootstrap is enabled or not.
+
+## Backend Workflow Surface
+
+Current live workflow endpoints:
 
 - `POST /alerts/{id}/acknowledge`
 - `POST /alerts/{id}/close`
@@ -95,104 +94,13 @@ The current backend now supports persisted analyst workflow actions on live reco
 - `POST /incidents/{id}/transition`
 - `POST /incidents/{id}/notes`
 
-These operations create audit-log entries, update detail timelines, and persist analyst notes in first-class storage.
-
-`POST /alerts/{id}/link-incident` now accepts a typed JSON body so an alert can be linked to an existing incident or used to create a new one:
-
-```json
-{
-  "incident_id": "optional-existing-incident-uuid",
-  "create_new": false,
-  "title": "optional new incident title",
-  "summary": "optional new incident summary"
-}
-```
-
-Use either `incident_id` for an existing incident or `create_new: true` for a new incident, but not both.
-
-## Automated Response
-
-AegisCore now supports safe, policy-driven automated response after alert scoring.
-
-- Supported detection scope: `brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`
-- Supported action types: `block_ip`, `disable_user`, `quarantine_host_flag`, `create_manual_review`, `notify_admin`
-- Modes: `dry-run` and `live`
-- Safety default: destructive live actions stay blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`
-
-Current policy-management and response endpoints:
+Current policy and response endpoints:
 
 - `GET /policies`
 - `PATCH /policies/{id}`
 - `GET /responses`
 
-Automated responses are policy-evaluated after scoring and incident rollup updates. Every policy match, execution attempt, final result, and linked workflow change writes audit history.
-
-Local automated-response environment variables:
-
-- `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=false`
-- `AUTOMATED_RESPONSE_MAX_RETRIES=1`
-- `RESPONSE_ADAPTER_BLOCK_IP_SCRIPT=`
-- `RESPONSE_ADAPTER_DISABLE_USER_SCRIPT=`
-- `RESPONSE_ADAPTER_QUARANTINE_HOST_FLAG_SCRIPT=`
-- `RESPONSE_ADAPTER_CREATE_MANUAL_REVIEW_SCRIPT=`
-- `RESPONSE_ADAPTER_NOTIFY_ADMIN_SCRIPT=`
-
-Manual dry-run validation example:
-
-```powershell
-$login = Invoke-RestMethod -Method Post -Uri http://localhost:8000/auth/login -ContentType "application/json" -Body '{"username":"admin","password":"AegisCore123!"}'
-$token = $login.access_token
-Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/policies
-Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/responses
-```
-
-## Source Ingestion
-
-AegisCore now includes hardened backend-owned ingestion entrypoints for Wazuh-style and Suricata-style events. These entrypoints normalize source payloads into the existing alert, scoring, incident, and automated-response flow without exposing source-specific schema to the frontend.
-
-- `POST /integrations/wazuh/events`
-- `POST /integrations/suricata/events`
-
-Supported detection scope remains limited to:
-
-- `brute_force`
-- `file_integrity_violation`
-- `port_scan`
-- `unauthorized_user_creation`
-
-Ingestion behavior:
-
-- successful events create `raw_alerts` and `normalized_alerts`
-- duplicate source events are de-duplicated by `source + external_id`
-- malformed or unsupported payloads are recorded in `ingestion_failures`
-- partial payloads can still ingest with warnings when the supported detection type is clear
-- scoring and automated response policies continue to run through the normal backend flow
-
-Useful local ingestion environment variables:
-
-- `INGESTION_ALLOW_ASSET_AUTOCREATE=true`
-- `INGESTION_DEFAULT_ASSET_CRITICALITY=medium`
-
-Fixture-based local validation examples:
-
-```powershell
-$login = Invoke-RestMethod -Method Post -Uri http://localhost:8000/auth/login -ContentType "application/json" -Body '{"username":"admin","password":"AegisCore123!"}'
-$token = $login.access_token
-$headers = @{ Authorization = "Bearer $token" }
-
-$wazuhBody = Get-Content .\apps\api\tests\fixtures\ingestion\wazuh_brute_force.json -Raw
-$ingestedAlert = Invoke-RestMethod -Method Post -Uri http://localhost:8000/integrations/wazuh/events -Headers $headers -ContentType "application/json" -Body $wazuhBody
-Invoke-RestMethod -Headers $headers -Uri ("http://localhost:8000/alerts/" + $ingestedAlert.alert.id)
-Invoke-RestMethod -Headers $headers -Uri "http://localhost:8000/responses?mode=dry-run"
-
-$suricataBody = Get-Content .\apps\api\tests\fixtures\ingestion\suricata_port_scan.json -Raw
-Invoke-RestMethod -Method Post -Uri http://localhost:8000/integrations/suricata/events -Headers $headers -ContentType "application/json" -Body $suricataBody
-Invoke-RestMethod -Headers $headers -Uri "http://localhost:8000/dashboard/summary"
-```
-
-## Reports And Exports
-
-AegisCore now includes practical SME-focused operational reporting with real backend data and auditable exports.
+Current reporting endpoints:
 
 - `GET /reports/daily-summary`
 - `GET /reports/weekly-summary`
@@ -200,39 +108,39 @@ AegisCore now includes practical SME-focused operational reporting with real bac
 - `GET /reports/incidents/export`
 - `GET /reports/responses/export`
 
-Summary routes support optional date-range and detection/source filters. Export routes support CSV and JSON output plus operational filters aligned to alerts, incidents, and responses.
+Current ingestion endpoints:
 
-Example export validation:
+- `POST /integrations/wazuh/events`
+- `POST /integrations/suricata/events`
 
-```powershell
-$login = Invoke-RestMethod -Method Post -Uri http://localhost:8000/auth/login -ContentType "application/json" -Body '{"username":"admin","password":"AegisCore123!"}'
-$token = $login.access_token
-$headers = @{ Authorization = "Bearer $token" }
+## Safety Notes
 
-Invoke-RestMethod -Headers $headers -Uri "http://localhost:8000/reports/daily-summary"
-Invoke-WebRequest -Headers $headers -Uri "http://localhost:8000/reports/alerts/export?format=csv" -OutFile alerts-export.csv
-Invoke-WebRequest -Headers $headers -Uri "http://localhost:8000/reports/incidents/export?format=json" -OutFile incidents-export.json
-Invoke-WebRequest -Headers $headers -Uri "http://localhost:8000/reports/responses/export?format=csv" -OutFile responses-export.csv
-```
+- The frontend talks only to backend APIs.
+- Raw source payloads are preserved for auditability and debugging.
+- Automated response is policy-driven and limited to the supported detection scope.
+- Destructive live actions remain blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.
+- This prototype is intentionally single-tenant and SME-oriented. It does not include multi-tenant SaaS or enterprise SOAR complexity.
 
-## Risk Scoring
+## Documentation Map
 
-AegisCore now includes a persisted risk scoring layer for alert prioritization.
+- [Architecture](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/architecture.md)
+- [Environment Reference](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/environment.md)
+- [Scoring](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/scoring.md)
+- [Operator Guide](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/operator-guide.md)
+- [Analyst Guide](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/analyst-guide.md)
+- [End-to-End Validation](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/testing/end-to-end-validation.md)
+- [Playwright Coverage](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/testing/playwright-coverage.md)
+- [Release Readiness](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/release-readiness.md)
 
-- Deterministic runtime baseline: `apps/api/app/services/scoring/baseline.py`
-- Optional trainable scikit-learn model: `ai/training/train_risk_model.py`
-- Scoring reference: `docs/scoring.md`
+## Known Limitations
 
-Train the local model artifact with:
+- Live Wazuh and Suricata polling or webhook auth is not implemented yet; current validation uses the real ingestion endpoints with fixture-backed payloads.
+- Playwright covers core read workflows and scenario visibility, but not every mutation path.
+- The frontend is operational and validated, but still large enough to benefit from additional route-level code splitting over time.
 
-```powershell
-docker compose run --rm --no-deps api python /srv/ai/training/train_risk_model.py
-```
+## Future Work
 
-## Notes
-
-- The backend owns all external security integrations; the frontend talks only to backend APIs.
-- The backend foundation now includes roles, users, assets, raw alerts, normalized alerts, risk scores, incidents, response actions, analyst notes, and audit logs.
-- The ingestion layer now includes Wazuh and Suricata normalization services plus failure tracking for malformed or unsupported events.
-- Incidents now own many normalized alerts, while each alert can belong to at most one incident and still exposes a clean linked-incident summary for the frontend.
-- Frontend work follows the AegisCore dark SOC theme and is prepared for Figma-first design iteration in later milestones.
+- add live connector polling or webhook integration for Wazuh and Suricata
+- expand browser coverage for notes, transitions, and policy mutation flows
+- move selected heavy frontend routes to dynamic imports if bundle size becomes a sustained local problem
+- add background replay handling for ingestion failures and deeper adapter integrations for live response actions

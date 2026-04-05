@@ -17,7 +17,13 @@ import { LoginPage } from "./pages/LoginPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { ResponsesPage } from "./pages/ResponsesPage";
 import { RulesPage } from "./pages/RulesPage";
-import { fetchHealthResponse, type HealthResponse } from "./lib/api";
+import {
+  AUTH_REQUIRED_EVENT,
+  fetchHealthResponse,
+  hasStoredAccessToken,
+  isDevAuthBootstrapEnabled,
+  type HealthResponse
+} from "./lib/api";
 import {
   analystNavigation,
   pageBlueprints,
@@ -40,6 +46,8 @@ export default function App() {
   const [healthError, setHealthError] = useState<string | null>(null);
   const [globalSearch, setGlobalSearch] = useState("");
   const isLoginRoute = location.pathname === "/login";
+  const hasSession = hasStoredAccessToken();
+  const allowDevBootstrap = isDevAuthBootstrapEnabled();
 
   useEffect(() => {
     if (isLoginRoute) {
@@ -75,6 +83,22 @@ export default function App() {
     };
   }, [isLoginRoute]);
 
+  useEffect(() => {
+    if (isLoginRoute || typeof window === "undefined") {
+      return undefined;
+    }
+
+    const handleAuthRequired = () => {
+      navigate("/login", { replace: true });
+    };
+
+    window.addEventListener(AUTH_REQUIRED_EVENT, handleAuthRequired);
+
+    return () => {
+      window.removeEventListener(AUTH_REQUIRED_EVENT, handleAuthRequired);
+    };
+  }, [isLoginRoute, navigate]);
+
   const activePage = resolveActivePage(location.pathname);
   const pageContent = pageBlueprints[activePage];
 
@@ -97,6 +121,10 @@ export default function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
+  }
+
+  if (!hasSession && !allowDevBootstrap) {
+    return <Navigate to="/login" replace />;
   }
 
   return (

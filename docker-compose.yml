@@ -84,6 +84,7 @@ services:
       dockerfile: infra/docker/web.Dockerfile
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+      VITE_ENABLE_DEV_AUTH_BOOTSTRAP: ${VITE_ENABLE_DEV_AUTH_BOOTSTRAP:-false}
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "${WEB_PORT:-5173}:5173"

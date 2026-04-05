@@ -17,5 +17,31 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, "")
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) {
+            return undefined;
+          }
+
+          if (
+            id.includes("recharts")
+          ) {
+            return "recharts";
+          }
+
+          if (
+            id.includes("d3-") ||
+            id.includes("victory-vendor")
+          ) {
+            return "chart-vendor";
+          }
+
+          return undefined;
+        }
+      }
+    }
   }
 });

@@ -6,21 +6,16 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { authenticateOperator } from "../features/auth/service";
-import { hasStoredAccessToken } from "../lib/api";
+import { hasStoredAccessToken, isDevAuthBootstrapEnabled } from "../lib/api";
 
-const defaultUsername =
-  import.meta.env.DEV && import.meta.env.VITE_DEV_API_USERNAME
-    ? import.meta.env.VITE_DEV_API_USERNAME
-    : import.meta.env.DEV
-      ? "admin"
-      : "";
+const devAuthBootstrapEnabled = isDevAuthBootstrapEnabled();
+const defaultUsername = devAuthBootstrapEnabled
+  ? import.meta.env.VITE_DEV_API_USERNAME ?? "admin"
+  : "";
 
-const defaultPassword =
-  import.meta.env.DEV && import.meta.env.VITE_DEV_API_PASSWORD
-    ? import.meta.env.VITE_DEV_API_PASSWORD
-    : import.meta.env.DEV
-      ? "AegisCore123!"
-      : "";
+const defaultPassword = devAuthBootstrapEnabled
+  ? import.meta.env.VITE_DEV_API_PASSWORD ?? "AegisCore123!"
+  : "";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -149,8 +144,9 @@ export function LoginPage() {
                 <p className="text-body-sm text-status-danger">{error}</p>
               ) : import.meta.env.DEV ? (
                 <p className="type-body-sm">
-                  Local development uses the seeded admin account unless you override
-                  the auth env vars.
+                  Local lab sign-in uses the seeded backend accounts. Automatic browser
+                  bootstrap stays off unless
+                  <span className="type-mono-sm"> VITE_ENABLE_DEV_AUTH_BOOTSTRAP=true</span>.
                 </p>
               ) : (
                 <p className="type-body-sm">
@@ -169,6 +165,11 @@ export function LoginPage() {
                 <p className="mt-2 type-body-sm">
                   Seeded credentials default to <span className="type-mono-sm">admin</span>{" "}
                   / <span className="type-mono-sm">AegisCore123!</span>.
+                </p>
+                <p className="mt-2 type-body-sm">
+                  {devAuthBootstrapEnabled
+                    ? "Dev auth bootstrap is currently enabled for local browser sessions."
+                    : "Dev auth bootstrap is currently disabled, which keeps the login boundary explicit during local testing."}
                 </p>
               </div>
             ) : null}

@@ -19,18 +19,25 @@ export type AuthTokenResponse = {
   user: AuthUserResponse;
 };
 
+export const AUTH_REQUIRED_EVENT = "aegiscore:auth-required";
+
 type FetchApiJsonOptions = {
   auth?: boolean;
 };
 
 const accessTokenStorageKey = "aegiscore.access_token";
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const devAuthBootstrapEnabled =
+  import.meta.env.DEV &&
+  import.meta.env.VITE_ENABLE_DEV_AUTH_BOOTSTRAP === "true";
 const devApiUsername =
-  import.meta.env.VITE_DEV_API_USERNAME ??
-  (import.meta.env.DEV ? "admin" : undefined);
+  devAuthBootstrapEnabled
+    ? import.meta.env.VITE_DEV_API_USERNAME ?? "admin"
+    : undefined;
 const devApiPassword =
-  import.meta.env.VITE_DEV_API_PASSWORD ??
-  (import.meta.env.DEV ? "AegisCore123!" : undefined);
+  devAuthBootstrapEnabled
+    ? import.meta.env.VITE_DEV_API_PASSWORD ?? "AegisCore123!"
+    : undefined;
 let devAccessTokenPromise: Promise<string | null> | null = null;
 
 function buildUrl(path: string) {
@@ -79,6 +86,10 @@ export function hasStoredAccessToken() {
   return Boolean(getStoredAccessToken());
 }
 
+export function isDevAuthBootstrapEnabled() {
+  return devAuthBootstrapEnabled;
+}
+
 export async function loginWithPassword(
   username: string,
   password: string,
@@ -123,7 +134,7 @@ async function requestDevAccessToken(): Promise<string | null> {
     if (error instanceof ApiRequestError) {
       throw new ApiRequestError(
         error.status,
-        "Authentication required for backend detail endpoints. Configure VITE_DEV_API_USERNAME and VITE_DEV_API_PASSWORD or sign in through the AegisCore login flow."
+        "Authentication required. Sign in through the AegisCore login flow or explicitly enable local dev bootstrap with VITE_ENABLE_DEV_AUTH_BOOTSTRAP=true."
       );
     }
 
@@ -167,6 +178,14 @@ async function extractApiError(response: Response) {
   return `API request failed with status ${response.status}`;
 }
 
+function notifyAuthRequired() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new Event(AUTH_REQUIRED_EVENT));
+}
+
 export async function fetchApiResponse(
   path: string,
   init: RequestInit = {},
@@ -194,6 +213,11 @@ export async function fetchApiResponse(
   if (useAuth && response.status === 401) {
     token = await ensureAccessToken(true);
     response = await sendRequest(token);
+  }
+
+  if (useAuth && response.status === 401) {
+    clearStoredAccessToken();
+    notifyAuthRequired();
   }
 
   if (!response.ok) {

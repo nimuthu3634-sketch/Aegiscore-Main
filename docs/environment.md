@@ -17,6 +17,7 @@
 - `INGESTION_ALLOW_ASSET_AUTOCREATE`: whether ingestion may create a new asset record when a payload includes a host IP or hostname that does not exist yet
 - `INGESTION_DEFAULT_ASSET_CRITICALITY`: default criticality applied to auto-created assets when the source payload does not provide one
 - `VITE_API_BASE_URL`: frontend API base URL, defaulting to `/api`
+- `VITE_ENABLE_DEV_AUTH_BOOTSTRAP`: optional local-browser shortcut for development only; keep `false` unless you intentionally want the frontend API client to auto-login with dev credentials
 - `DEV_SEED_ADMIN_USERNAME`: seeded local admin username
 - `DEV_SEED_ADMIN_PASSWORD`: seeded local admin password
 - `DEV_SEED_ANALYST_USERNAME`: seeded local analyst username
@@ -40,6 +41,13 @@
 - `apps/api/.env.example`: API settings, auth values, seed credentials, and integration URLs
 - `apps/worker/.env.example`: worker polling and database settings
 - `ai/.env.example`: AI dataset and model artifact settings for training/inference scripts
+
+## Frontend Auth Notes
+
+- The normal frontend path expects operators to sign in through `/login`.
+- Local browser auto-auth is opt-in rather than implicit.
+- If `VITE_ENABLE_DEV_AUTH_BOOTSTRAP=true`, the frontend may request a local dev token with `VITE_DEV_API_USERNAME` and `VITE_DEV_API_PASSWORD`.
+- Leave dev bootstrap disabled for most validation work so the login boundary stays realistic.
 
 ## Automated Response Safety Notes
 

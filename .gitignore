@@ -11,6 +11,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.tsbuildinfo
 .env
 .DS_Store
-

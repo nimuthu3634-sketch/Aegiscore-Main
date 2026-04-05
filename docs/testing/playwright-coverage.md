@@ -72,3 +72,9 @@ The latest successful run completed with `7 passed`.
 - The suite does not yet exercise every mutation path such as analyst notes, alert close, incident transitions, or policy toggles.
 - Reports export coverage validates the browser download trigger, not full file-content parsing in the browser layer.
 - Coverage is intentionally practical and SME-oriented; it is not a pixel-test suite and it avoids brittle styling assertions.
+
+## Future Coverage Work
+
+- add browser coverage for alert acknowledge or close flows
+- add browser coverage for incident transitions and note persistence
+- add policy-toggle mutation coverage once those flows are stable enough for resilient browser assertions

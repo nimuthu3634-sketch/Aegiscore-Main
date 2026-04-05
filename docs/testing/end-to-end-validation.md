@@ -68,3 +68,9 @@ The latest successful run of `py -3 scripts/validate_attack_scenarios.py` return
 - Live upstream connector auth and polling are still separate future work. This validation uses the real backend ingestion endpoints with fixture-backed Wazuh and Suricata payloads.
 - Browser coverage focuses on core operational navigation, read visibility, reports, and scenario evidence. It does not yet cover every write workflow such as notes, state transitions, and policy editing in Playwright.
 - Daily summary visibility is confirmed for the supported detections, but there is no scheduled or emailed reporting workflow yet.
+
+## Future Validation Work
+
+- add browser coverage for incident transitions, note persistence, and policy toggles
+- add fixture-backed regression cases for retry-heavy malformed ingestion sequences
+- extend local validation once live Wazuh or Suricata polling is added

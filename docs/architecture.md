@@ -2,82 +2,83 @@
 
 ## Product Direction
 
-AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes security monitoring, alert prioritization, investigation workflows, and basic automated response without introducing enterprise multi-tenant complexity.
+AegisCore is a single-tenant SOC platform for SMEs. It centralizes alert review, incident investigation, explainable prioritization, safe automated response, and practical reporting without introducing enterprise multi-tenant complexity.
 
-## Service Boundaries
+## Runtime Boundaries
 
-- `apps/web` is the frontend shell and only communicates with backend APIs.
-- `apps/api` owns integration boundaries, alert normalization, incident creation, auditability, and API delivery.
-- `apps/worker` is reserved for asynchronous policy execution and background automation.
-- `ai` holds scoring logic and model-related code used by backend services.
-- `postgres` stores normalized alerts, incidents, response history, and audit history.
-- `nginx` is the single local entrypoint that routes `/` to the frontend and `/api` to the backend.
+- `apps/web` is the analyst-facing frontend and communicates only with backend APIs.
+- `apps/api` owns ingestion, normalization, scoring, incident behavior, policies, reporting, and auditability.
+- `apps/worker` remains available for background execution or replay workflows that should not block API requests.
+- `ai` contains the deterministic baseline scorer, the scikit-learn training pipeline, and inference helpers used by the API.
+- `postgres` stores users, assets, alerts, incidents, scores, notes, responses, policies, reports, and audit history.
+- `nginx` is the local reverse-proxy entrypoint for `/` and `/api`.
 
-## Initial Backend Modules
+## Core Request Flow
 
-- `app/api/routes`: typed REST endpoints for auth, dashboard, assets, alerts, incidents, responses, and health
-- `app/api/deps`: database and current-user dependencies
-- `app/api/routes`: HTTP route definitions
-- `app/core`: configuration
-- `app/core/security`: JWT and password hashing helpers
-- `app/db`: database engine and session setup
-- `app/models`: SQLAlchemy models for roles, users, assets, raw alerts, normalized alerts, incidents, risk scores, response actions, analyst notes, and audit logs
-- `app/repositories`: database access by aggregate or resource
-- `app/schemas`: API response schemas
-- `app/services`: auth, dashboard, alerts, incidents, ingestion, reports, response actions, seed logic, serializers, scoring, and health checks
+1. Wazuh-style or Suricata-style events enter the backend ingestion routes.
+2. The backend preserves the raw payload and normalizes supported detections into the shared alert schema.
+3. Alert scoring runs through the backend-owned deterministic baseline or optional ML scorer.
+4. Matching response policies evaluate alert or incident context and create auditable response actions.
+5. Alerts can remain standalone or link into multi-alert incidents.
+6. Frontend list, detail, dashboard, rules, response-history, and reporting pages consume only the normalized backend contracts.
 
-## Backend Data Model
+## Backend Modules
 
-- `roles`: single-tenant access roles limited to `admin` and `analyst`
-- `users`: authenticated platform users with JWT-backed login
-- `assets`: monitored SME systems represented in the SOC
-- `raw_alerts`: preserved source payloads from integrations such as Wazuh and Suricata
-- `normalized_alerts`: alert records transformed into the common AegisCore schema
-- `ingestion_failures`: malformed or unsupported source events preserved for retry visibility and debugging
-- `risk_scores`: explainable alert risk-scoring records
-- `incidents`: analyst-facing incident records generated from normalized alerts, with one incident able to own multiple linked alerts and a primary alert retained for summary views
-- `response_policies`: enabled or disabled automation rules keyed by target type, detection type, score threshold, action, and mode
-- `response_actions`: basic automated or analyst-triggered response activity
-- `analyst_notes`: persisted notes attached directly to alert or incident investigations
-- `audit_logs`: security and workflow history for traceability
+- `app/api`: typed REST routes and dependency wiring
+- `app/core`: configuration, auth, and security helpers
+- `app/db`: database engine, session, and seed entrypoints
+- `app/models`: SQLAlchemy persistence model layer
+- `app/repositories`: database access per aggregate
+- `app/schemas`: Pydantic request and response contracts
+- `app/services`: business logic for auth, alerts, incidents, ingestion, reporting, scoring, and automated response
 
-## Workflow State Model
+## Data Model
 
-- Alert lifecycle actions are persisted through explicit APIs for acknowledge, close, and link-to-incident workflows.
-- Alert-to-incident linkage supports either attaching an alert to an existing incident or creating a new incident from the alert workflow entrypoint.
-- Alert display state remains frontend-friendly through derived labels such as `triaged`, `contained`, and `pending_response`.
-- Incident workflow state is modeled directly as `new`, `triaged`, `investigating`, `contained`, `resolved`, and `false_positive`.
-- Every workflow mutation writes an audit entry, and note creation also persists a first-class analyst note record.
-- After risk scoring completes, enabled response policies can evaluate the alert or rolled-up incident and create auditable response actions in either `dry-run` or `live` mode.
-- Safe internal actions such as `notify_admin`, `create_manual_review`, and `quarantine_host_flag` can complete without an external adapter; destructive actions require explicit live enablement and adapter configuration.
+- `roles`: single-tenant `admin` and `analyst`
+- `users`: JWT-authenticated operators
+- `assets`: monitored endpoints and servers
+- `raw_alerts`: immutable source payload storage
+- `normalized_alerts`: frontend-safe normalized alert records
+- `ingestion_failures`: malformed or unsupported event ledger
+- `risk_scores`: persisted score value, method, version, and explanation metadata
+- `incidents`: one incident owning many linked alerts plus a retained primary alert for summary views
+- `response_policies`: enabled or disabled automation rules by target, detection, threshold, action, and mode
+- `response_actions`: auditable execution history with policy linkage and result fields
+- `analyst_notes`: first-class notes for alerts and incidents
+- `audit_logs`: lifecycle, policy, export, and workflow traceability
 
-## Reporting Flow
+## Workflow Model
 
-- Backend-owned report summaries derive directly from normalized alerts, linked incidents, and response history without exposing source-specific payload structure to the frontend.
-- Daily reports focus on short-window operational review with hourly alert volume.
-- Weekly reports focus on broader SME review with daily alert volume and distribution summaries.
-- Alert, incident, and response exports support CSV or JSON output and create audit-log entries for traceability.
+- Alerts support acknowledge, close, link-to-incident, and analyst-note writes.
+- Incidents support validated state transitions across `new`, `triaged`, `investigating`, `contained`, `resolved`, and `false_positive`.
+- Alert-to-incident linking supports either creating a new incident or attaching the alert to an existing incident.
+- Every mutation writes audit history, and incident detail timelines are built from those persisted events plus first-class note and response records.
 
-## Automated Response Scope
+## Scoring And Response Model
 
-- Supported detection types: `brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`
-- Supported action types: `block_ip`, `disable_user`, `quarantine_host_flag`, `create_manual_review`, `notify_admin`
-- Policy evaluation is backend-owned and uses normalized alert context plus persisted scoring data.
-- Response history is no longer placeholder-derived: it now stores first-class mode, status, target, result summary, result message, retry count, and policy linkage.
+- Supported detection scope remains limited to `brute_force`, `file_integrity_violation`, `port_scan`, and `unauthorized_user_creation`.
+- Risk scoring is a prioritization layer after detection, not the detector itself.
+- The deterministic baseline is the production-safe default.
+- The optional scikit-learn model stays loadable and auditable through stored model metadata.
+- Safe internal actions such as `notify_admin`, `create_manual_review`, and `quarantine_host_flag` can complete without an external script.
+- Destructive live actions require explicit configuration and remain blocked by default in development.
 
-## Integration Flow
+## Reporting Model
 
-- Wazuh-style and Suricata-style events enter through backend-only ingestion routes under `/integrations`.
-- Source-specific parsing is limited to the supported detections and maps every accepted event into the shared normalized alert shape.
-- Successful ingestion persists both `raw_alerts` and `normalized_alerts`, then hands off immediately to scoring and policy-driven response evaluation.
-- Duplicate events are rejected safely using the `source + external_id` key and return the already-normalized alert instead of creating drift.
-- Malformed or unsupported events are stored in `ingestion_failures` with retry counters, payload snapshots, and error details for SME-friendly troubleshooting.
+- Daily summaries focus on short-window SOC review.
+- Weekly summaries support broader SME operational review.
+- Alert, incident, and response exports are explicit, typed, and auditable.
+- The reports surface stays operational and compact instead of adding enterprise BI complexity.
 
-## Detection Scope
+## Dev And Operator Boundaries
 
-Only these detections are represented in the initial schema and UI shell:
+- Browser authentication remains explicit by default.
+- Optional local browser auto-auth is gated behind `VITE_ENABLE_DEV_AUTH_BOOTSTRAP=true`.
+- Raw payloads remain backend-owned and never need to be interpreted directly by the frontend.
+- Validation uses the real API surface with fixture-backed ingestion until live connector polling or webhook auth is implemented.
 
-1. `brute_force`
-2. `file_integrity_violation`
-3. `port_scan`
-4. `unauthorized_user_creation`
+## Known Limitations
+
+- Live Wazuh and Suricata connector auth or polling is still future work.
+- Browser tests validate the core read path well, but not every write flow yet.
+- Some asset enrichment remains backend-derived rather than source-owned because the project stays intentionally SME-scoped.
