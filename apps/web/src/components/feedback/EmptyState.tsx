@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { IconName } from "../../lib/theme/tokens";
 import { Card } from "../ui/Card";
 import { Icon } from "../ui/Icon";
 
@@ -6,7 +7,7 @@ type EmptyStateProps = {
   title: string;
   description: string;
   action?: ReactNode;
-  iconName?: "shield" | "reports" | "alerts" | "incidents" | "endpoints";
+  iconName?: IconName;
 };
 
 export function EmptyState({

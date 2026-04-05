@@ -50,6 +50,7 @@ export type NavigationItem = {
   label: string;
   shortLabel: string;
   icon: IconName;
+  path: string;
   badgeCount?: number;
 };
 
@@ -87,13 +88,15 @@ export const primaryNavigation: NavigationItem[] = [
     id: "overview",
     label: "Overview Dashboard",
     shortLabel: "Overview",
-    icon: "dashboard"
+    icon: "dashboard",
+    path: "/overview"
   },
   {
     id: "alerts",
     label: "Alerts",
     shortLabel: "Alerts",
     icon: "alerts",
+    path: "/alerts",
     badgeCount: 12
   },
   {
@@ -101,39 +104,66 @@ export const primaryNavigation: NavigationItem[] = [
     label: "Incidents Queue",
     shortLabel: "Incidents",
     icon: "incidents",
+    path: "/incidents",
     badgeCount: 4
   },
   {
     id: "assets",
     label: "Assets / Endpoints",
     shortLabel: "Assets",
-    icon: "endpoints"
+    icon: "endpoints",
+    path: "/assets"
   },
   {
     id: "responses",
     label: "Response History",
     shortLabel: "Responses",
-    icon: "responses"
+    icon: "responses",
+    path: "/responses"
   },
   {
     id: "rules",
     label: "Rules / Policies",
     shortLabel: "Rules",
-    icon: "rules"
+    icon: "rules",
+    path: "/rules"
   },
   {
     id: "reports",
     label: "Reports",
     shortLabel: "Reports",
-    icon: "reports"
+    icon: "reports",
+    path: "/reports"
   },
   {
     id: "settings",
     label: "Settings",
     shortLabel: "Settings",
-    icon: "settings"
+    icon: "settings",
+    path: "/settings"
   }
 ];
+
+export const analystNavigation = primaryNavigation.filter((item) =>
+  ["alerts", "incidents", "assets", "responses"].includes(item.id)
+);
+
+export const navPathById = primaryNavigation.reduce<Record<NavKey, string>>(
+  (paths, item) => {
+    paths[item.id] = item.path;
+    return paths;
+  },
+  {
+    overview: "/overview",
+    alerts: "/alerts",
+    incidents: "/incidents",
+    assets: "/assets",
+    responses: "/responses",
+    rules: "/rules",
+    reports: "/reports",
+    settings: "/settings"
+  }
+);
 
 export const pageBlueprints: Record<
   NavKey,
