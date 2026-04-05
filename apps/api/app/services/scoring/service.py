@@ -7,7 +7,11 @@ from app.models.normalized_alert import NormalizedAlert
 from app.models.raw_alert import RawAlert
 from app.models.risk_score import RiskScore
 from app.repositories.risk_scores import RiskScoresRepository
-from app.services.response_automation.execution import evaluate_alert_policies, evaluate_incident_policies
+from app.services.response_automation.execution import (
+    evaluate_alert_policies,
+    evaluate_incident_policies,
+    evaluate_incident_policies_for_alert,
+)
 from app.services.scoring.baseline import score_with_baseline
 from app.services.scoring.features import extract_alert_features
 from app.services.scoring.ml import (
@@ -64,11 +68,13 @@ def score_alert(
     risk_score = RiskScoresRepository(session).upsert_for_alert(alert, result)
     session.flush()
 
+    evaluate_alert_policies(session, alert)
+
     if alert.incident is not None:
         refresh_incident_priority(alert.incident)
         evaluate_incident_policies(session, alert.incident)
-
-    evaluate_alert_policies(session, alert)
+    else:
+        evaluate_incident_policies_for_alert(session, alert)
 
     return risk_score
 

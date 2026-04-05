@@ -364,3 +364,133 @@ def test_evaluate_incident_policies_retries_and_logs_failed_execution(monkeypatc
     audit_actions = _audit_actions(session)
     assert audit_actions.count("response.execution_attempted") == 2
     assert "response.execution_failed" in audit_actions
+
+
+def test_evaluate_incident_policies_for_alert_auto_creates_incident_for_port_scan(
+    monkeypatch,
+) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.PORT_SCAN,
+        score=82,
+        source="suricata",
+        severity=7,
+        raw_payload={"src_ip": "198.51.100.44", "dst_port": "443"},
+        normalized_payload={
+            "source_ip": "198.51.100.44",
+            "destination_port": 443,
+        },
+    )
+    session.add(alert)
+    policy = _build_policy(
+        target=ResponsePolicyTarget.INCIDENT,
+        detection_type=DetectionType.PORT_SCAN,
+        action_type=ResponseActionType.NOTIFY_ADMIN,
+        mode=ResponseMode.DRY_RUN,
+        min_risk_score=75,
+    )
+
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(
+        PoliciesRepository,
+        "find_matching_policies",
+        lambda self, **kwargs: [policy],
+    )
+    monkeypatch.setattr(
+        ResponsesRepository,
+        "find_existing_policy_action",
+        lambda self, **kwargs: None,
+    )
+
+    response = execution.evaluate_incident_policies_for_alert(session, alert)[0]
+
+    assert alert.incident is not None
+    assert response.status == ResponseStatus.COMPLETED
+    assert response.mode == ResponseMode.DRY_RUN
+    assert response.incident is alert.incident
+    assert "notify_admin" in (response.result_summary or "")
+    assert "incident.created.automated_response" in _audit_actions(session)
+
+
+def test_evaluate_alert_policies_records_live_manual_review_for_file_integrity(
+    monkeypatch,
+) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.FILE_INTEGRITY_VIOLATION,
+        score=91,
+        raw_payload={"path": "D:\\Operations\\Policies\\access-control.xlsx"},
+        normalized_payload={
+            "file_path": "D:\\Operations\\Policies\\access-control.xlsx"
+        },
+    )
+    policy = _build_policy(
+        target=ResponsePolicyTarget.ALERT,
+        detection_type=DetectionType.FILE_INTEGRITY_VIOLATION,
+        action_type=ResponseActionType.CREATE_MANUAL_REVIEW,
+        mode=ResponseMode.LIVE,
+        min_risk_score=80,
+    )
+
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(
+        PoliciesRepository,
+        "find_matching_policies",
+        lambda self, **kwargs: [policy],
+    )
+    monkeypatch.setattr(
+        ResponsesRepository,
+        "find_existing_policy_action",
+        lambda self, **kwargs: None,
+    )
+
+    response = execution.evaluate_alert_policies(session, alert)[0]
+
+    assert response.status == ResponseStatus.COMPLETED
+    assert response.mode == ResponseMode.LIVE
+    assert response.result_summary == "Manual review workflow opened."
+    assert response.details["manual_review_recorded"] is True
+    assert "response.execution_completed" in _audit_actions(session)
+
+
+def test_evaluate_alert_policies_records_live_admin_notification_for_user_creation(
+    monkeypatch,
+) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.UNAUTHORIZED_USER_CREATION,
+        score=96,
+        raw_payload={"username": "unknown-admin"},
+        normalized_payload={
+            "username": "unknown-admin",
+            "group_name": "Domain Admins",
+        },
+    )
+    policy = _build_policy(
+        target=ResponsePolicyTarget.ALERT,
+        detection_type=DetectionType.UNAUTHORIZED_USER_CREATION,
+        action_type=ResponseActionType.NOTIFY_ADMIN,
+        mode=ResponseMode.LIVE,
+        min_risk_score=90,
+    )
+
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(
+        PoliciesRepository,
+        "find_matching_policies",
+        lambda self, **kwargs: [policy],
+    )
+    monkeypatch.setattr(
+        ResponsesRepository,
+        "find_existing_policy_action",
+        lambda self, **kwargs: None,
+    )
+
+    response = execution.evaluate_alert_policies(session, alert)[0]
+
+    assert response.status == ResponseStatus.COMPLETED
+    assert response.mode == ResponseMode.LIVE
+    assert response.target_value == "AegisCore administrators"
+    assert response.result_summary == "Administrator notification recorded."
+    assert response.details["notification_recorded"] is True
+    assert "response.execution_completed" in _audit_actions(session)

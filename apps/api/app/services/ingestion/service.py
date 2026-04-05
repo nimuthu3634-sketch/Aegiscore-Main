@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -95,6 +96,22 @@ def _resolve_or_create_asset(
             criticality=parsed_event.asset_criticality or _default_asset_criticality(),
         )
     )
+    try:
+        session.flush()
+    except IntegrityError:
+        session.rollback()
+        existing_after_race = repository.get_by_hostname_or_ip(
+            hostname=parsed_event.asset_hostname,
+            ip_address=parsed_event.asset_ip,
+        )
+        if existing_after_race is None:
+            raise
+
+        warnings.append(
+            "An existing asset record was reused after a concurrent or duplicate asset-create race."
+        )
+        return existing_after_race, warnings
+
     warnings.append(
         "A new asset record was created automatically from the ingested event context."
     )

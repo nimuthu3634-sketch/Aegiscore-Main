@@ -4,8 +4,19 @@ export type HealthResponse = {
   database: string;
 };
 
-type AuthTokenResponse = {
+export type AuthUserResponse = {
+  id: string;
+  username: string;
+  full_name: string;
+  is_active: boolean;
+  role: string;
+};
+
+export type AuthTokenResponse = {
   access_token: string;
+  token_type: string;
+  expires_in: number;
+  user: AuthUserResponse;
 };
 
 type FetchApiJsonOptions = {
@@ -40,7 +51,7 @@ function canUseWebStorage() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
 
-function getStoredAccessToken() {
+export function getStoredAccessToken() {
   if (!canUseWebStorage()) {
     return null;
   }
@@ -48,7 +59,7 @@ function getStoredAccessToken() {
   return window.localStorage.getItem(accessTokenStorageKey);
 }
 
-function setStoredAccessToken(token: string) {
+export function setStoredAccessToken(token: string) {
   if (!canUseWebStorage()) {
     return;
   }
@@ -56,7 +67,7 @@ function setStoredAccessToken(token: string) {
   window.localStorage.setItem(accessTokenStorageKey, token);
 }
 
-function clearStoredAccessToken() {
+export function clearStoredAccessToken() {
   if (!canUseWebStorage()) {
     return;
   }
@@ -64,11 +75,17 @@ function clearStoredAccessToken() {
   window.localStorage.removeItem(accessTokenStorageKey);
 }
 
-async function requestDevAccessToken(): Promise<string | null> {
-  if (!devApiUsername || !devApiPassword) {
-    return null;
-  }
+export function hasStoredAccessToken() {
+  return Boolean(getStoredAccessToken());
+}
 
+export async function loginWithPassword(
+  username: string,
+  password: string,
+  options: {
+    persist?: boolean;
+  } = {}
+): Promise<AuthTokenResponse> {
   const response = await fetch(buildUrl("/auth/login"), {
     method: "POST",
     headers: {
@@ -76,21 +93,42 @@ async function requestDevAccessToken(): Promise<string | null> {
       Accept: "application/json"
     },
     body: JSON.stringify({
-      username: devApiUsername,
-      password: devApiPassword
+      username,
+      password
     })
   });
 
   if (!response.ok) {
-    throw new ApiRequestError(
-      response.status,
-      "Authentication required for backend detail endpoints. Configure VITE_DEV_API_USERNAME and VITE_DEV_API_PASSWORD or sign in through the future auth flow."
-    );
+    throw new ApiRequestError(response.status, await extractApiError(response));
   }
 
   const payload = (await response.json()) as AuthTokenResponse;
-  setStoredAccessToken(payload.access_token);
-  return payload.access_token;
+
+  if (options.persist ?? true) {
+    setStoredAccessToken(payload.access_token);
+  }
+
+  return payload;
+}
+
+async function requestDevAccessToken(): Promise<string | null> {
+  if (!devApiUsername || !devApiPassword) {
+    return null;
+  }
+
+  try {
+    const payload = await loginWithPassword(devApiUsername, devApiPassword);
+    return payload.access_token;
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      throw new ApiRequestError(
+        error.status,
+        "Authentication required for backend detail endpoints. Configure VITE_DEV_API_USERNAME and VITE_DEV_API_PASSWORD or sign in through the AegisCore login flow."
+      );
+    }
+
+    throw error;
+  }
 }
 
 async function ensureAccessToken(forceRefresh = false) {

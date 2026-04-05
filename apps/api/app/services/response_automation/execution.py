@@ -376,6 +376,25 @@ def evaluate_alert_policies(
     return responses
 
 
+def evaluate_incident_policies_for_alert(
+    session: Session,
+    alert: NormalizedAlert,
+) -> list[ResponseAction]:
+    if alert.risk_score is None:
+        return []
+
+    matching_policies = PoliciesRepository(session).find_matching_policies(
+        target=ResponsePolicyTarget.INCIDENT,
+        detection_type=alert.detection_type,
+        risk_score=alert.risk_score.score,
+    )
+    if not matching_policies:
+        return []
+
+    incident = _ensure_incident_for_alert(session, alert)
+    return evaluate_incident_policies(session, incident)
+
+
 def evaluate_incident_policies(
     session: Session,
     incident: Incident,

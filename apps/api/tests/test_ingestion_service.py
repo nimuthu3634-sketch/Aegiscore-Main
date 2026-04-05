@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.models.asset import Asset
 from app.models.enums import (
@@ -25,8 +26,13 @@ from app.models.risk_score import RiskScore
 from app.models.role import Role
 from app.models.user import User
 from app.services.ingestion.parsers import parse_suricata_event, parse_wazuh_event
-from app.services.ingestion.service import ingest_suricata_event, ingest_wazuh_event
+from app.services.ingestion.service import (
+    _resolve_or_create_asset,
+    ingest_suricata_event,
+    ingest_wazuh_event,
+)
 from app.services.ingestion.types import IngestionParseError
+from app.services.ingestion.types import ParsedSecurityEvent
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "ingestion"
@@ -34,18 +40,76 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures" / "ingestion"
 
 class FakeSession:
     def __init__(self) -> None:
+        self.added: list[object] = []
         self.commits = 0
         self.flushed = 0
+        self.rollbacks = 0
+        self.raise_integrity_error_on_flush = False
+
+    def add(self, obj: object) -> None:
+        self.added.append(obj)
 
     def commit(self) -> None:
         self.commits += 1
 
     def flush(self) -> None:
         self.flushed += 1
+        if self.raise_integrity_error_on_flush:
+            self.raise_integrity_error_on_flush = False
+            raise IntegrityError("INSERT", {}, Exception("duplicate asset"))
+
+    def rollback(self) -> None:
+        self.rollbacks += 1
 
 
 def _fixture(name: str) -> dict:
     return json.loads((FIXTURES_DIR / name).read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "parser", "expected_detection", "field_name", "expected_value"),
+    [
+        (
+            "wazuh_brute_force.json",
+            parse_wazuh_event,
+            DetectionType.BRUTE_FORCE,
+            "failed_attempts",
+            24,
+        ),
+        (
+            "wazuh_file_integrity_violation.json",
+            parse_wazuh_event,
+            DetectionType.FILE_INTEGRITY_VIOLATION,
+            "file_path",
+            "D:\\Operations\\Policies\\access-control.xlsx",
+        ),
+        (
+            "suricata_port_scan.json",
+            parse_suricata_event,
+            DetectionType.PORT_SCAN,
+            "destination_port",
+            3389,
+        ),
+        (
+            "wazuh_unauthorized_user_creation.json",
+            parse_wazuh_event,
+            DetectionType.UNAUTHORIZED_USER_CREATION,
+            "username",
+            "unknown-admin",
+        ),
+    ],
+)
+def test_supported_fixture_scenarios_parse_expected_identity_and_key_field(
+    fixture_name: str,
+    parser,
+    expected_detection: DetectionType,
+    field_name: str,
+    expected_value: object,
+) -> None:
+    parsed = parser(_fixture(fixture_name))
+
+    assert parsed.detection_type == expected_detection
+    assert parsed.normalized_payload[field_name] == expected_value
 
 
 def test_parse_wazuh_supported_detections_from_fixtures() -> None:
@@ -271,3 +335,50 @@ def test_ingest_suricata_event_logs_failure_for_malformed_payload(monkeypatch) -
     assert recorded["source"] == "suricata"
     assert recorded["error_type"] == "unsupported_detection"
     assert session.commits == 1
+
+
+def test_resolve_or_create_asset_reuses_existing_asset_after_unique_race(
+    monkeypatch,
+) -> None:
+    session = FakeSession()
+    session.raise_integrity_error_on_flush = True
+    parsed_event = ParsedSecurityEvent(
+        source="wazuh",
+        external_id="wazuh-fixture-fim-001",
+        detection_type=DetectionType.FILE_INTEGRITY_VIOLATION,
+        severity=9,
+        title="File integrity violation detected",
+        description="Critical file integrity change detected.",
+        observed_at=datetime.now(UTC),
+        normalized_payload={"file_path": "D:\\Operations\\Policies\\access-control.xlsx"},
+        raw_payload={},
+        asset_hostname="ops-files-03",
+        asset_ip="10.42.7.54",
+        asset_operating_system="Windows Server 2022",
+        asset_criticality=AssetCriticality.MEDIUM,
+    )
+    reused_asset = Asset(
+        id=uuid4(),
+        hostname="ops-files-03",
+        ip_address="10.42.7.54",
+        operating_system="Windows Server 2022",
+        criticality=AssetCriticality.MEDIUM,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    lookup_calls = {"count": 0}
+
+    def fake_lookup(self, *, hostname, ip_address):
+        lookup_calls["count"] += 1
+        return reused_asset if lookup_calls["count"] == 2 else None
+
+    monkeypatch.setattr(
+        "app.services.ingestion.service.AssetsRepository.get_by_hostname_or_ip",
+        fake_lookup,
+    )
+
+    asset, warnings = _resolve_or_create_asset(session, parsed_event)
+
+    assert asset is reused_asset
+    assert session.rollbacks == 1
+    assert any("asset-create race" in warning for warning in warnings)

@@ -13,6 +13,7 @@ import { AssetsPage } from "./pages/AssetsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { IncidentDetailPage } from "./pages/IncidentDetailPage";
 import { IncidentsPage } from "./pages/IncidentsPage";
+import { LoginPage } from "./pages/LoginPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { ResponsesPage } from "./pages/ResponsesPage";
 import { RulesPage } from "./pages/RulesPage";
@@ -38,8 +39,13 @@ export default function App() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [globalSearch, setGlobalSearch] = useState("");
+  const isLoginRoute = location.pathname === "/login";
 
   useEffect(() => {
+    if (isLoginRoute) {
+      return undefined;
+    }
+
     let isMounted = true;
 
     void fetchHealthResponse()
@@ -67,7 +73,7 @@ export default function App() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isLoginRoute]);
 
   const activePage = resolveActivePage(location.pathname);
   const pageContent = pageBlueprints[activePage];
@@ -83,6 +89,15 @@ export default function App() {
     : health
       ? `API ${health.status} · database ${health.database}`
       : "Checking API health";
+
+  if (isLoginRoute) {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
 
   return (
     <AppShell
@@ -104,6 +119,7 @@ export default function App() {
     >
       <Routes>
         <Route path="/" element={<Navigate to="/overview" replace />} />
+        <Route path="/login" element={<Navigate to="/overview" replace />} />
         <Route path="/overview" element={<DashboardPage />} />
         <Route path="/alerts" element={<AlertsPage />} />
         <Route path="/alerts/:alertId" element={<AlertDetailPage />} />
