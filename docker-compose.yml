@@ -1,0 +1,100 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aegiscore}
+      POSTGRES_USER: ${POSTGRES_USER:-aegiscore}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aegiscore_dev_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-aegiscore} -d ${POSTGRES_DB:-aegiscore}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    environment:
+      APP_ENV: docker
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aegiscore}:${POSTGRES_PASSWORD:-aegiscore_dev_password}@postgres:5432/${POSTGRES_DB:-aegiscore}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-replace-with-a-development-secret}
+      WAZUH_BASE_URL: ${WAZUH_BASE_URL:-http://wazuh-manager:55000}
+      SURICATA_SOURCE: ${SURICATA_SOURCE:-suricata}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./apps/api:/srv/apps/api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/worker.Dockerfile
+    environment:
+      APP_ENV: docker
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aegiscore}:${POSTGRES_PASSWORD:-aegiscore_dev_password}@postgres:5432/${POSTGRES_DB:-aegiscore}
+      WORKER_POLL_INTERVAL_SECONDS: 15
+    volumes:
+      - ./apps/worker:/srv/apps/worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/web.Dockerfile
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    volumes:
+      - ./apps/web:/srv/apps/web
+      - web_node_modules:/srv/apps/web/node_modules
+    depends_on:
+      api:
+        condition: service_started
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_started
+      web:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  web_node_modules:
+

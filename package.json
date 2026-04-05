@@ -1,0 +1,15 @@
+{
+  "name": "aegiscore",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace @aegiscore/web",
+    "build:web": "npm run build --workspace @aegiscore/web",
+    "lint:web": "npm run lint --workspace @aegiscore/web",
+    "test:web:e2e": "npm run test:e2e --workspace @aegiscore/web"
+  }
+}
+

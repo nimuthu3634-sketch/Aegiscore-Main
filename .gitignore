@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+.playwright/
+playwright-report/
+test-results/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.pyc
+*.pyo
+*.pyd
+.env
+.DS_Store
+
