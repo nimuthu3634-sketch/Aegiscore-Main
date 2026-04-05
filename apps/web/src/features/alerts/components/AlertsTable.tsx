@@ -74,7 +74,7 @@ const columns: TableColumn<AlertRecord>[] = [
     header: "Risk",
     cell: (row) => (
       <span className="text-body-sm font-medium text-content-primary">
-        {row.riskScore}
+        {row.riskScore ?? "n/a"}
       </span>
     ),
     align: "right"

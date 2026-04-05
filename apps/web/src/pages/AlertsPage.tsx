@@ -100,9 +100,9 @@ export function AlertsPage() {
         description={pageBlueprints.alerts.description}
         meta={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="outline">{alerts.length} seeded alerts</Badge>
+            <Badge tone="outline">{alerts.length} alerts in feed</Badge>
             <Badge tone="brand">
-              {alerts.filter((alert) => alert.riskScore >= 80).length} high-risk
+              {alerts.filter((alert) => (alert.riskScore ?? 0) >= 80).length} high-risk
             </Badge>
           </div>
         }

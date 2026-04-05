@@ -19,3 +19,15 @@ export type AssetsListResponse = {
   total: number;
   generatedAt: string;
 };
+
+export type AssetsListApiResponse = {
+  items: Array<{
+    id: string;
+    hostname: string;
+    ip_address: string;
+    operating_system: string | null;
+    criticality: "low" | "medium" | "high" | "critical";
+    created_at: string;
+    updated_at: string;
+  }>;
+};

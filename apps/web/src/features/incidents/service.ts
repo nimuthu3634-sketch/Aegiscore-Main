@@ -1,10 +1,11 @@
 import { useAsyncResource } from "../../lib/data/useAsyncResource";
-import { mockIncidentsResponse } from "./mockData";
-import type { IncidentsListResponse } from "./types";
+import { fetchApiJson } from "../../lib/api";
+import { mapIncidentsListResponse } from "../../lib/api/listTransforms";
+import type { IncidentsListApiResponse, IncidentsListResponse } from "./types";
 
 async function listIncidents(): Promise<IncidentsListResponse> {
-  await new Promise((resolve) => window.setTimeout(resolve, 150));
-  return mockIncidentsResponse;
+  const response = await fetchApiJson<IncidentsListApiResponse>("/incidents");
+  return mapIncidentsListResponse(response);
 }
 
 export function useIncidentsList() {

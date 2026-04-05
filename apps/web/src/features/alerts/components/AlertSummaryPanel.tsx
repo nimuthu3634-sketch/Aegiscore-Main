@@ -29,7 +29,7 @@ export function AlertSummaryPanel({ alert }: AlertSummaryPanelProps) {
         <div className="flex flex-wrap gap-2">
           <Badge tone="outline">{alert.sourceType}</Badge>
           <SeverityChip severity={alert.severity} />
-          <Badge tone="brand">Risk {alert.riskScore}</Badge>
+          <Badge tone="brand">Risk {alert.riskScore ?? "n/a"}</Badge>
         </div>
         <div className="space-y-3">
           <div>

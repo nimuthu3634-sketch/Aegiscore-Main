@@ -1,10 +1,11 @@
 import { useAsyncResource } from "../../lib/data/useAsyncResource";
-import { mockAlertsResponse } from "./mockData";
-import type { AlertsListResponse } from "./types";
+import { fetchApiJson } from "../../lib/api";
+import { mapAlertsListResponse } from "../../lib/api/listTransforms";
+import type { AlertsListApiResponse, AlertsListResponse } from "./types";
 
 async function listAlerts(): Promise<AlertsListResponse> {
-  await new Promise((resolve) => window.setTimeout(resolve, 140));
-  return mockAlertsResponse;
+  const response = await fetchApiJson<AlertsListApiResponse>("/alerts");
+  return mapAlertsListResponse(response);
 }
 
 export function useAlertsList() {

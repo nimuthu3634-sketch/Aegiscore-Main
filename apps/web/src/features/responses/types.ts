@@ -17,3 +17,31 @@ export type ResponsesListResponse = {
   total: number;
   generatedAt: string;
 };
+
+export type ResponsesListApiResponse = {
+  items: Array<{
+    id: string;
+    action_type: string;
+    status: "queued" | "in_progress" | "completed" | "failed";
+    details: Record<string, unknown>;
+    created_at: string;
+    executed_at: string | null;
+    requested_by: {
+      id: string;
+      username: string;
+      full_name: string | null;
+      role: {
+        id: string;
+        name: string;
+      };
+    } | null;
+    incident: {
+      id: string;
+      title: string;
+      status: string;
+      priority: string;
+      created_at: string;
+      updated_at: string;
+    };
+  }>;
+};
