@@ -111,6 +111,12 @@ class ResponseActionReferenceResponse(APIModel):
     id: UUID
     action_type: str
     status: ResponseStatus
+    policy_id: UUID | None = None
+    policy_name: str | None = None
+    target: str | None = None
+    result_summary: str | None = None
+    result_message: str | None = None
+    attempt_count: int = 0
     details: dict
     created_at: datetime
     executed_at: datetime | None
@@ -121,9 +127,13 @@ class ResponseActionDetailResponse(APIModel):
     id: UUID
     action_type: str
     status: ResponseStatus
-    target: str | None
-    mode: ResponseModeLabel | None
-    result_summary: str | None
+    policy_id: UUID | None = None
+    policy_name: str | None = None
+    target: str | None = None
+    mode: ResponseModeLabel | None = None
+    result_summary: str | None = None
+    result_message: str | None = None
+    attempt_count: int = 0
     details: dict[str, Any]
     created_at: datetime
     executed_at: datetime | None
@@ -212,9 +222,13 @@ class ResponseActionSummaryResponse(APIModel):
     action_type: str
     status: ResponseStatus
     execution_status_label: ResponseExecutionStatusLabel
-    target: str | None
-    mode: ResponseModeLabel | None
-    result_summary: str | None
+    policy_id: UUID | None = None
+    policy_name: str | None = None
+    target: str | None = None
+    mode: ResponseModeLabel | None = None
+    result_summary: str | None = None
+    result_message: str | None = None
+    attempt_count: int = 0
     details: dict
     created_at: datetime
     executed_at: datetime | None

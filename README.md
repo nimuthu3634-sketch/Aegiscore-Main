@@ -110,6 +110,42 @@ These operations create audit-log entries, update detail timelines, and persist 
 
 Use either `incident_id` for an existing incident or `create_new: true` for a new incident, but not both.
 
+## Automated Response
+
+AegisCore now supports safe, policy-driven automated response after alert scoring.
+
+- Supported detection scope: `brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`
+- Supported action types: `block_ip`, `disable_user`, `quarantine_host_flag`, `create_manual_review`, `notify_admin`
+- Modes: `dry-run` and `live`
+- Safety default: destructive live actions stay blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`
+
+Current policy-management and response endpoints:
+
+- `GET /policies`
+- `PATCH /policies/{id}`
+- `GET /responses`
+
+Automated responses are policy-evaluated after scoring and incident rollup updates. Every policy match, execution attempt, final result, and linked workflow change writes audit history.
+
+Local automated-response environment variables:
+
+- `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=false`
+- `AUTOMATED_RESPONSE_MAX_RETRIES=1`
+- `RESPONSE_ADAPTER_BLOCK_IP_SCRIPT=`
+- `RESPONSE_ADAPTER_DISABLE_USER_SCRIPT=`
+- `RESPONSE_ADAPTER_QUARANTINE_HOST_FLAG_SCRIPT=`
+- `RESPONSE_ADAPTER_CREATE_MANUAL_REVIEW_SCRIPT=`
+- `RESPONSE_ADAPTER_NOTIFY_ADMIN_SCRIPT=`
+
+Manual dry-run validation example:
+
+```powershell
+$login = Invoke-RestMethod -Method Post -Uri http://localhost:8000/auth/login -ContentType "application/json" -Body '{"username":"admin","password":"AegisCore123!"}'
+$token = $login.access_token
+Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/policies
+Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/responses
+```
+
 ## Risk Scoring
 
 AegisCore now includes a persisted risk scoring layer for alert prioritization.

@@ -16,8 +16,21 @@ from app.models.raw_alert import RawAlert
 from app.models.risk_score import RiskScore
 from app.services.scoring.service import (
     build_incident_priority_summary,
+    persist_and_score_alert,
     refresh_incident_priority,
 )
+
+
+class FakeSession:
+    def __init__(self) -> None:
+        self.added: list[object] = []
+        self.flush_count = 0
+
+    def add(self, obj: object) -> None:
+        self.added.append(obj)
+
+    def flush(self) -> None:
+        self.flush_count += 1
 
 
 def test_incident_rollup_uses_real_linked_alert_scores() -> None:
@@ -122,3 +135,44 @@ def test_incident_rollup_uses_real_linked_alert_scores() -> None:
     assert priority == IncidentPriority.CRITICAL
     assert summary["score"] >= 80
     assert "Linked alert count: 2" in summary["factors"]
+
+
+def test_persist_and_score_alert_links_raw_and_normalized_records(monkeypatch) -> None:
+    session = FakeSession()
+    raw_alert = RawAlert(
+        id=uuid4(),
+        source="wazuh",
+        external_id="wazuh-link-test",
+        detection_type=DetectionType.BRUTE_FORCE,
+        severity=7,
+        raw_payload={"src_ip": "203.0.113.8"},
+        received_at=datetime.now(UTC),
+    )
+    normalized_alert = NormalizedAlert(
+        id=uuid4(),
+        source="wazuh",
+        title="Linkage validation alert",
+        description="Used to verify raw-to-normalized persistence linkage.",
+        detection_type=DetectionType.BRUTE_FORCE,
+        severity=7,
+        status=AlertStatus.NEW,
+        normalized_payload={"source_ip": "203.0.113.8"},
+        created_at=datetime.now(UTC),
+    )
+    captured: dict[str, object] = {}
+
+    def fake_score_alert(score_session, alert):
+        captured["session"] = score_session
+        captured["alert"] = alert
+        return None
+
+    monkeypatch.setattr("app.services.scoring.service.score_alert", fake_score_alert)
+
+    result = persist_and_score_alert(session, raw_alert, normalized_alert)
+
+    assert result is normalized_alert
+    assert raw_alert.normalized_alert is normalized_alert
+    assert normalized_alert.raw_alert is raw_alert
+    assert captured["session"] is session
+    assert captured["alert"] is normalized_alert
+    assert session.flush_count == 1

@@ -46,12 +46,26 @@ class ResponseStatus(str, enum.Enum):
     QUEUED = "queued"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
+    WARNING = "warning"
     FAILED = "failed"
 
 
 class ResponseMode(str, enum.Enum):
     DRY_RUN = "dry-run"
     LIVE = "live"
+
+
+class ResponseActionType(str, enum.Enum):
+    BLOCK_IP = "block_ip"
+    DISABLE_USER = "disable_user"
+    QUARANTINE_HOST_FLAG = "quarantine_host_flag"
+    CREATE_MANUAL_REVIEW = "create_manual_review"
+    NOTIFY_ADMIN = "notify_admin"
+
+
+class ResponsePolicyTarget(str, enum.Enum):
+    ALERT = "alert"
+    INCIDENT = "incident"
 
 
 class NoteTargetType(str, enum.Enum):

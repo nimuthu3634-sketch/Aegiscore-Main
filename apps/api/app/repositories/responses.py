@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import String, case, cast, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
@@ -33,6 +35,7 @@ class ResponsesRepository:
             .outerjoin(ResponseAction.requested_by)
             .options(
                 selectinload(ResponseAction.requested_by).selectinload(User.role),
+                selectinload(ResponseAction.policy),
                 selectinload(ResponseAction.incident)
                 .selectinload(Incident.primary_alert)
                 .selectinload(NormalizedAlert.asset),
@@ -58,6 +61,8 @@ class ResponsesRepository:
 
         if query.execution_status == ResponseExecutionStatusLabel.SUCCEEDED:
             conditions.append(ResponseAction.status == ResponseStatus.COMPLETED)
+        elif query.execution_status == ResponseExecutionStatusLabel.WARNING:
+            conditions.append(ResponseAction.status == ResponseStatus.WARNING)
         elif query.execution_status == ResponseExecutionStatusLabel.FAILED:
             conditions.append(ResponseAction.status == ResponseStatus.FAILED)
         elif query.execution_status == ResponseExecutionStatusLabel.PENDING:
@@ -75,9 +80,10 @@ class ResponsesRepository:
 
         status_rank = case(
             (ResponseAction.status.in_([ResponseStatus.QUEUED, ResponseStatus.IN_PROGRESS]), 1),
-            (ResponseAction.status == ResponseStatus.COMPLETED, 2),
-            (ResponseAction.status == ResponseStatus.FAILED, 3),
-            else_=4,
+            (ResponseAction.status == ResponseStatus.WARNING, 2),
+            (ResponseAction.status == ResponseStatus.COMPLETED, 3),
+            (ResponseAction.status == ResponseStatus.FAILED, 4),
+            else_=5,
         )
         sort_expression = {
             ResponseListSortField.EXECUTED_AT: executed_at_expression,
@@ -99,6 +105,25 @@ class ResponsesRepository:
         offset = (page - 1) * query.page_size
         paged_statement = statement.offset(offset).limit(query.page_size)
         return list(self.session.scalars(paged_statement)), total
+
+    def find_existing_policy_action(
+        self,
+        *,
+        policy_id: UUID,
+        incident_id: UUID,
+        normalized_alert_id: UUID | None,
+    ) -> ResponseAction | None:
+        statement = select(ResponseAction).where(
+            ResponseAction.policy_id == policy_id,
+            ResponseAction.incident_id == incident_id,
+        )
+        if normalized_alert_id is None:
+            statement = statement.where(ResponseAction.normalized_alert_id.is_(None))
+        else:
+            statement = statement.where(
+                ResponseAction.normalized_alert_id == normalized_alert_id
+            )
+        return self.session.scalar(statement)
 
     def create(self, response_action: ResponseAction) -> ResponseAction:
         self.session.add(response_action)

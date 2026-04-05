@@ -24,6 +24,13 @@
 - `SCORING_MODEL_PATH`: model artifact path used when `SCORING_STRATEGY=model`
 - `SCORING_MODEL_METADATA_PATH`: metadata JSON path paired with the model artifact
 - `SCORING_MODEL_VERSION`: fallback runtime model version label for local development
+- `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE`: safety gate for live destructive adapters such as `block_ip` and `disable_user`; keep `false` for local development
+- `AUTOMATED_RESPONSE_MAX_RETRIES`: maximum automated execution attempts before a response action is marked failed
+- `RESPONSE_ADAPTER_BLOCK_IP_SCRIPT`: optional script path for live `block_ip`
+- `RESPONSE_ADAPTER_DISABLE_USER_SCRIPT`: optional script path for live `disable_user`
+- `RESPONSE_ADAPTER_QUARANTINE_HOST_FLAG_SCRIPT`: optional script path for live `quarantine_host_flag`
+- `RESPONSE_ADAPTER_CREATE_MANUAL_REVIEW_SCRIPT`: optional script path for live `create_manual_review`
+- `RESPONSE_ADAPTER_NOTIFY_ADMIN_SCRIPT`: optional script path for live `notify_admin`
 
 ## App-Specific Files
 
@@ -31,3 +38,10 @@
 - `apps/api/.env.example`: API settings, auth values, seed credentials, and integration URLs
 - `apps/worker/.env.example`: worker polling and database settings
 - `ai/.env.example`: AI dataset and model artifact settings for training/inference scripts
+
+## Automated Response Safety Notes
+
+- Automated response is policy-driven and currently scoped to `brute_force`, `file_integrity_violation`, `port_scan`, and `unauthorized_user_creation`.
+- Destructive live actions are intentionally blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.
+- If a live adapter script path is unset for a supported action, AegisCore records a warning or internal completion event rather than silently failing.
+- Response execution attempts, final outcomes, and policy matches are written to audit history and exposed through the response history APIs.

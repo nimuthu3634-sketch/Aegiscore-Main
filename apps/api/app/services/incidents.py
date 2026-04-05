@@ -23,6 +23,7 @@ from app.services.serializers import (
     to_incident_summary_response,
     to_analyst_note_response,
 )
+from app.services.response_automation.execution import evaluate_incident_policies
 from app.services.workflows import resolve_incident_transition
 
 
@@ -60,6 +61,12 @@ def get_incident(session: Session, incident_id: UUID) -> IncidentDetailResponse:
     }
     for linked_alert in incident.alerts:
         for audit_log in audit_logs_repository.list_for_entity("alert", str(linked_alert.id)):
+            audit_logs_by_id[str(audit_log.id)] = audit_log
+    for response_action in incident.response_actions:
+        for audit_log in audit_logs_repository.list_for_entity(
+            "response",
+            str(response_action.id),
+        ):
             audit_logs_by_id[str(audit_log.id)] = audit_log
 
     analyst_notes = AnalystNotesRepository(session).list_for_target(
@@ -162,6 +169,7 @@ def transition_incident(
             ),
         },
     )
+    evaluate_incident_policies(session, incident)
     session.commit()
 
     return IncidentTransitionResponse(

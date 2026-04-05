@@ -1,23 +1,33 @@
 from __future__ import annotations
 
-from statistics import mean
-
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.enums import IncidentPriority
-from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
 from app.models.raw_alert import RawAlert
 from app.models.risk_score import RiskScore
 from app.repositories.risk_scores import RiskScoresRepository
-from app.services.scoring.baseline import priority_from_score, score_with_baseline
+from app.services.response_automation.execution import evaluate_alert_policies, evaluate_incident_policies
+from app.services.scoring.baseline import score_with_baseline
 from app.services.scoring.features import extract_alert_features
 from app.services.scoring.ml import (
     ModelArtifactUnavailableError,
     load_priority_model,
     score_with_model,
 )
+from app.services.scoring.rollup import (
+    build_incident_priority_summary,
+    incident_rollup_score,
+    refresh_incident_priority,
+)
+
+__all__ = [
+    "build_incident_priority_summary",
+    "incident_rollup_score",
+    "persist_and_score_alert",
+    "refresh_incident_priority",
+    "score_alert",
+]
 
 
 def score_alert(
@@ -56,6 +66,9 @@ def score_alert(
 
     if alert.incident is not None:
         refresh_incident_priority(alert.incident)
+        evaluate_incident_policies(session, alert.incident)
+
+    evaluate_alert_policies(session, alert)
 
     return risk_score
 
@@ -71,60 +84,3 @@ def persist_and_score_alert(
     session.flush()
     score_alert(session, normalized_alert)
     return normalized_alert
-
-
-def incident_rollup_score(incident: Incident) -> float:
-    linked_alerts = list(incident.alerts) or ([incident.primary_alert] if incident.primary_alert else [])
-    risk_values = [alert.risk_score.score for alert in linked_alerts if alert and alert.risk_score]
-
-    if risk_values:
-        max_score = max(risk_values)
-        average_score = mean(risk_values)
-        correlation_bonus = min(10, max(0, len(risk_values) - 1) * 4)
-        return round(min(100, max_score * 0.7 + average_score * 0.3 + correlation_bonus), 2)
-
-    primary_alert = incident.primary_alert
-    if primary_alert is None:
-        return 0.0
-    return float(primary_alert.severity * 10)
-
-
-def refresh_incident_priority(incident: Incident) -> IncidentPriority:
-    incident.priority = priority_from_score(incident_rollup_score(incident))
-    return incident.priority
-
-
-def build_incident_priority_summary(incident: Incident) -> dict[str, object]:
-    linked_alerts = list(incident.alerts) or ([incident.primary_alert] if incident.primary_alert else [])
-    risk_values = [alert.risk_score.score for alert in linked_alerts if alert and alert.risk_score]
-    rollup_score = incident_rollup_score(incident)
-    priority = priority_from_score(rollup_score)
-    max_score = max(risk_values) if risk_values else None
-    average_score = round(mean(risk_values), 2) if risk_values else None
-    scoring_methods = sorted(
-        {
-            alert.risk_score.scoring_method.value
-            for alert in linked_alerts
-            if alert.risk_score and alert.risk_score.scoring_method is not None
-        }
-    )
-
-    factors = [
-        f"Linked alert count: {len(linked_alerts)}",
-        f"Rollup score: {round(rollup_score)}",
-    ]
-    if max_score is not None:
-        factors.append(f"Highest linked alert score: {round(max_score)}")
-    if average_score is not None:
-        factors.append(f"Average linked alert score: {round(average_score)}")
-    if scoring_methods:
-        factors.append(f"Scoring methods in scope: {', '.join(scoring_methods)}")
-
-    return {
-        "score": round(rollup_score),
-        "priority": priority.value,
-        "factors": factors,
-        "scoring_methods": scoring_methods,
-        "max_alert_score": round(max_score) if max_score is not None else None,
-        "average_alert_score": round(average_score) if average_score is not None else None,
-    }

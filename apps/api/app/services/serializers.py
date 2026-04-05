@@ -56,7 +56,7 @@ from app.services.scoring.features import (
     extract_source_ip,
     extract_username,
 )
-from app.services.scoring.service import build_incident_priority_summary
+from app.services.scoring.rollup import build_incident_priority_summary
 from app.services.workflows import (
     get_allowed_incident_target_states,
     get_available_incident_actions,
@@ -105,6 +105,8 @@ def _response_execution_status_label(
 ) -> ResponseExecutionStatusLabel:
     if response_action.status == ResponseStatus.COMPLETED:
         return ResponseExecutionStatusLabel.SUCCEEDED
+    if response_action.status == ResponseStatus.WARNING:
+        return ResponseExecutionStatusLabel.WARNING
     if response_action.status == ResponseStatus.FAILED:
         return ResponseExecutionStatusLabel.FAILED
     return ResponseExecutionStatusLabel.PENDING
@@ -238,6 +240,8 @@ def _extract_source_rule(raw_alert: RawAlert) -> AlertSourceRuleResponse | None:
 
 
 def _extract_response_target(response_action: ResponseAction) -> str | None:
+    if response_action.target_value:
+        return response_action.target_value
     return _pick_payload_value(
         [response_action.details],
         "target",
@@ -260,6 +264,8 @@ def _extract_response_mode(response_action: ResponseAction) -> str | None:
 
 
 def _extract_response_summary(response_action: ResponseAction) -> str | None:
+    if response_action.result_summary:
+        return response_action.result_summary
     summary = _pick_payload_value(
         [response_action.details],
         "summary",
@@ -521,6 +527,12 @@ def to_response_action_reference_response(
         id=response_action.id,
         action_type=response_action.action_type,
         status=response_action.status,
+        policy_id=response_action.policy.id if response_action.policy else None,
+        policy_name=response_action.policy.name if response_action.policy else None,
+        target=_extract_response_target(response_action),
+        result_summary=_extract_response_summary(response_action),
+        result_message=response_action.result_message,
+        attempt_count=response_action.attempt_count or 0,
         details=response_action.details,
         created_at=response_action.created_at,
         executed_at=response_action.executed_at,
@@ -538,9 +550,13 @@ def to_response_action_summary_response(
         action_type=response_action.action_type,
         status=response_action.status,
         execution_status_label=_response_execution_status_label(response_action),
+        policy_id=response_action.policy.id if response_action.policy else None,
+        policy_name=response_action.policy.name if response_action.policy else None,
         target=_extract_response_target(response_action),
         mode=_response_mode_label(response_action),
         result_summary=_extract_response_summary(response_action),
+        result_message=response_action.result_message,
+        attempt_count=response_action.attempt_count or 0,
         details=response_action.details,
         created_at=response_action.created_at,
         executed_at=response_action.executed_at,
@@ -580,9 +596,13 @@ def to_response_action_detail_response(
         id=response_action.id,
         action_type=response_action.action_type,
         status=response_action.status,
+        policy_id=response_action.policy.id if response_action.policy else None,
+        policy_name=response_action.policy.name if response_action.policy else None,
         target=_extract_response_target(response_action),
         mode=_response_mode_label(response_action),
         result_summary=_extract_response_summary(response_action),
+        result_message=response_action.result_message,
+        attempt_count=response_action.attempt_count or 0,
         details=response_action.details,
         created_at=response_action.created_at,
         executed_at=response_action.executed_at,
@@ -640,6 +660,20 @@ def _build_alert_score_explanation(
     )
 
 
+def _alert_related_responses(alert: NormalizedAlert) -> list[ResponseAction]:
+    response_by_id: dict[str, ResponseAction] = {}
+    for action in alert.response_actions:
+        response_by_id[str(action.id)] = action
+    if alert.incident is not None:
+        for action in alert.incident.response_actions:
+            response_by_id[str(action.id)] = action
+    return sorted(
+        response_by_id.values(),
+        key=lambda action: action.created_at,
+        reverse=True,
+    )
+
+
 def to_alert_detail_response(
     alert: NormalizedAlert,
     audit_logs: list[AuditLog],
@@ -685,11 +719,7 @@ def to_alert_detail_response(
         score_explanation=_build_alert_score_explanation(alert, priority_label),
         related_responses=[
             to_response_action_detail_response(action)
-            for action in sorted(
-                alert.incident.response_actions if alert.incident else [],
-                key=lambda action: action.created_at,
-                reverse=True,
-            )
+            for action in _alert_related_responses(alert)
         ],
         analyst_notes=_build_analyst_notes(analyst_notes),
         audit_history=[

@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from app.models.asset import Asset
     from app.models.incident import Incident
     from app.models.raw_alert import RawAlert
+    from app.models.response_action import ResponseAction
     from app.models.risk_score import RiskScore
 
 
@@ -76,4 +77,7 @@ class NormalizedAlert(Base):
         back_populates="primary_alert",
         foreign_keys="Incident.primary_alert_id",
         uselist=False,
+    )
+    response_actions: Mapped[list["ResponseAction"]] = relationship(
+        back_populates="normalized_alert"
     )

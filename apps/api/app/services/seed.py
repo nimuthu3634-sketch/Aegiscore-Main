@@ -14,7 +14,9 @@ from app.models.enums import (
     DetectionType,
     IncidentPriority,
     IncidentStatus,
+    ResponseActionType,
     ResponseMode,
+    ResponsePolicyTarget,
     ResponseStatus,
     RoleName,
 )
@@ -22,16 +24,19 @@ from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
 from app.models.raw_alert import RawAlert
 from app.models.response_action import ResponseAction
+from app.models.response_policy import ResponsePolicy
 from app.models.role import Role
 from app.models.user import User
 from app.repositories.assets import AssetsRepository
 from app.repositories.audit_logs import AuditLogsRepository
 from app.repositories.alerts import AlertsRepository
 from app.repositories.incidents import IncidentsRepository
+from app.repositories.policies import PoliciesRepository
 from app.repositories.responses import ResponsesRepository
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
-from app.services.scoring.service import refresh_incident_priority
+from app.schemas.listing import AssetListQuery
+from app.services.scoring.rollup import refresh_incident_priority
 
 
 def seed_database(session: Session) -> None:
@@ -83,8 +88,66 @@ def seed_database(session: Session) -> None:
 
     session.flush()
 
+    policies_repository = PoliciesRepository(session)
+
+    def ensure_default_policies() -> None:
+        if policies_repository.list_policies():
+            return
+        default_policies = [
+            ResponsePolicy(
+                name="Dry-run brute-force IP containment",
+                description="Simulate IP blocking for high-risk brute-force alerts.",
+                enabled=True,
+                target=ResponsePolicyTarget.ALERT,
+                detection_type=DetectionType.BRUTE_FORCE,
+                min_risk_score=85,
+                action_type=ResponseActionType.BLOCK_IP,
+                mode=ResponseMode.DRY_RUN,
+                config={"reason": "SME baseline brute-force containment"},
+            ),
+            ResponsePolicy(
+                name="Notify admin on unauthorized user creation",
+                description="Record a live admin notification for critical account-creation alerts.",
+                enabled=True,
+                target=ResponsePolicyTarget.ALERT,
+                detection_type=DetectionType.UNAUTHORIZED_USER_CREATION,
+                min_risk_score=90,
+                action_type=ResponseActionType.NOTIFY_ADMIN,
+                mode=ResponseMode.LIVE,
+                config={"channel": "internal_admin_queue"},
+            ),
+            ResponsePolicy(
+                name="Manual review for integrity violations",
+                description="Open manual review workflow for high-risk file integrity events.",
+                enabled=True,
+                target=ResponsePolicyTarget.ALERT,
+                detection_type=DetectionType.FILE_INTEGRITY_VIOLATION,
+                min_risk_score=80,
+                action_type=ResponseActionType.CREATE_MANUAL_REVIEW,
+                mode=ResponseMode.LIVE,
+                config={"review_queue": "infra-security"},
+            ),
+            ResponsePolicy(
+                name="Incident-level port-scan notification",
+                description="Escalate correlated reconnaissance incidents through a dry-run notification.",
+                enabled=True,
+                target=ResponsePolicyTarget.INCIDENT,
+                detection_type=DetectionType.PORT_SCAN,
+                min_risk_score=75,
+                action_type=ResponseActionType.NOTIFY_ADMIN,
+                mode=ResponseMode.DRY_RUN,
+                config={"channel": "soc-queue"},
+            ),
+        ]
+        for policy in default_policies:
+            policies_repository.create(policy)
+
     assets_repository = AssetsRepository(session)
-    if assets_repository.list_assets():
+    _, existing_asset_total = assets_repository.list_assets(
+        AssetListQuery(page=1, page_size=1)
+    )
+    if existing_asset_total > 0:
+        ensure_default_policies()
         session.commit()
         return
 
@@ -299,9 +362,14 @@ def seed_database(session: Session) -> None:
         ResponseAction(
             incident=created_incidents[0],
             requested_by=admin_user,
-            action_type="disable_user_account",
+            action_type=ResponseActionType.DISABLE_USER.value,
             status=ResponseStatus.COMPLETED,
             mode=ResponseMode.LIVE,
+            target_value="svc-shadow",
+            result_summary="User account disabled successfully.",
+            result_message="Seeded manual response completed against the unexpected account.",
+            attempt_count=1,
+            last_attempted_at=now - timedelta(minutes=14),
             details={"username": "svc-shadow", "result": "disabled"},
             created_at=now - timedelta(minutes=15),
             executed_at=now - timedelta(minutes=14),
@@ -309,10 +377,15 @@ def seed_database(session: Session) -> None:
         ResponseAction(
             incident=created_incidents[1],
             requested_by=analyst_user,
-            action_type="collect_configuration_backup",
+            action_type=ResponseActionType.CREATE_MANUAL_REVIEW.value,
             status=ResponseStatus.IN_PROGRESS,
             mode=ResponseMode.DRY_RUN,
-            details={"path": "/etc/nginx/nginx.conf", "result": "snapshot_requested"},
+            target_value="/etc/nginx/nginx.conf",
+            result_summary="Manual review workflow is awaiting analyst confirmation.",
+            result_message="Seeded dry-run manual review is pending analyst confirmation.",
+            attempt_count=1,
+            last_attempted_at=now - timedelta(minutes=10),
+            details={"path": "/etc/nginx/nginx.conf", "result": "manual_review_requested"},
             created_at=now - timedelta(minutes=10),
             executed_at=None,
         ),
@@ -350,7 +423,7 @@ def seed_database(session: Session) -> None:
             entity_type="incident",
             entity_id=str(created_incidents[0].id),
             action="response.executed",
-            details={"response_action": "disable_user_account"},
+            details={"response_action": ResponseActionType.DISABLE_USER.value},
             created_at=now - timedelta(minutes=13),
         ),
         AuditLog(
@@ -365,4 +438,5 @@ def seed_database(session: Session) -> None:
     for audit_log in audit_logs:
         audit_logs_repository.create(audit_log)
 
+    ensure_default_policies()
     session.commit()

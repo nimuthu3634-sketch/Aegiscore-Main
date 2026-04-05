@@ -32,7 +32,8 @@ from app.services.serializers import (
     to_analyst_note_response,
 )
 from app.services.scoring.baseline import priority_from_score
-from app.services.scoring.service import refresh_incident_priority
+from app.services.scoring.rollup import refresh_incident_priority
+from app.services.response_automation.execution import evaluate_incident_policies
 
 
 def list_alerts(session: Session, query: AlertListQuery) -> AlertListResponse:
@@ -78,6 +79,17 @@ def get_alert_detail(session: Session, alert_id: UUID) -> AlertDetailResponse:
     if alert.incident is not None:
         audit_logs.extend(
             audit_logs_repository.list_for_entity("incident", str(alert.incident.id))
+        )
+        for response_action in alert.incident.response_actions:
+            audit_logs.extend(
+                audit_logs_repository.list_for_entity(
+                    "response",
+                    str(response_action.id),
+                )
+            )
+    for response_action in alert.response_actions:
+        audit_logs.extend(
+            audit_logs_repository.list_for_entity("response", str(response_action.id))
         )
 
     analyst_notes = AnalystNotesRepository(session).list_for_target(
@@ -372,6 +384,7 @@ def link_alert_incident(
     if incident.primary_alert is None:
         incident.primary_alert = alert
     refresh_incident_priority(incident)
+    evaluate_incident_policies(session, incident)
 
     linked_alerts_count = len(_linked_alerts(incident))
     _create_audit_log(

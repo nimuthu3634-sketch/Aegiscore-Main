@@ -60,6 +60,34 @@ class Settings(BaseSettings):
         default="untrained",
         alias="SCORING_MODEL_VERSION",
     )
+    automated_response_allow_destructive: bool = Field(
+        default=False,
+        alias="AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE",
+    )
+    automated_response_max_retries: int = Field(
+        default=1,
+        alias="AUTOMATED_RESPONSE_MAX_RETRIES",
+    )
+    response_adapter_block_ip_script: str | None = Field(
+        default=None,
+        alias="RESPONSE_ADAPTER_BLOCK_IP_SCRIPT",
+    )
+    response_adapter_disable_user_script: str | None = Field(
+        default=None,
+        alias="RESPONSE_ADAPTER_DISABLE_USER_SCRIPT",
+    )
+    response_adapter_quarantine_host_flag_script: str | None = Field(
+        default=None,
+        alias="RESPONSE_ADAPTER_QUARANTINE_HOST_FLAG_SCRIPT",
+    )
+    response_adapter_create_manual_review_script: str | None = Field(
+        default=None,
+        alias="RESPONSE_ADAPTER_CREATE_MANUAL_REVIEW_SCRIPT",
+    )
+    response_adapter_notify_admin_script: str | None = Field(
+        default=None,
+        alias="RESPONSE_ADAPTER_NOTIFY_ADMIN_SCRIPT",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

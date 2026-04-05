@@ -36,9 +36,15 @@ class IncidentsRepository:
                 selectinload(Incident.primary_alert).selectinload(
                     NormalizedAlert.raw_alert
                 ),
+                selectinload(Incident.primary_alert).selectinload(
+                    NormalizedAlert.response_actions
+                ).selectinload(ResponseAction.policy),
                 selectinload(Incident.alerts).selectinload(NormalizedAlert.asset),
                 selectinload(Incident.alerts).selectinload(NormalizedAlert.risk_score),
                 selectinload(Incident.alerts).selectinload(NormalizedAlert.raw_alert),
+                selectinload(Incident.alerts).selectinload(
+                    NormalizedAlert.response_actions
+                ).selectinload(ResponseAction.policy),
             )
         )
 
@@ -120,9 +126,17 @@ class IncidentsRepository:
                 selectinload(Incident.primary_alert).selectinload(NormalizedAlert.asset),
                 selectinload(Incident.primary_alert).selectinload(NormalizedAlert.risk_score),
                 selectinload(Incident.primary_alert).selectinload(NormalizedAlert.raw_alert),
+                selectinload(Incident.primary_alert).selectinload(
+                    NormalizedAlert.response_actions
+                ).selectinload(ResponseAction.policy),
                 selectinload(Incident.alerts).selectinload(NormalizedAlert.asset),
                 selectinload(Incident.alerts).selectinload(NormalizedAlert.risk_score),
                 selectinload(Incident.alerts).selectinload(NormalizedAlert.raw_alert),
+                selectinload(Incident.alerts).selectinload(
+                    NormalizedAlert.response_actions
+                ).selectinload(ResponseAction.policy),
+                selectinload(Incident.response_actions)
+                .selectinload(ResponseAction.policy),
                 selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.requested_by)
                 .selectinload(User.role),
@@ -139,9 +153,17 @@ class IncidentsRepository:
                 selectinload(Incident.primary_alert).selectinload(NormalizedAlert.asset),
                 selectinload(Incident.primary_alert).selectinload(NormalizedAlert.risk_score),
                 selectinload(Incident.primary_alert).selectinload(NormalizedAlert.raw_alert),
+                selectinload(Incident.primary_alert).selectinload(
+                    NormalizedAlert.response_actions
+                ).selectinload(ResponseAction.policy),
                 selectinload(Incident.alerts).selectinload(NormalizedAlert.asset),
                 selectinload(Incident.alerts).selectinload(NormalizedAlert.risk_score),
                 selectinload(Incident.alerts).selectinload(NormalizedAlert.raw_alert),
+                selectinload(Incident.alerts).selectinload(
+                    NormalizedAlert.response_actions
+                ).selectinload(ResponseAction.policy),
+                selectinload(Incident.response_actions)
+                .selectinload(ResponseAction.policy),
                 selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.requested_by)
                 .selectinload(User.role),

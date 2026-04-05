@@ -20,7 +20,7 @@ from app.schemas.listing import (
     AlertListStatusFilter,
     SortDirection,
 )
-from app.services.scoring.service import score_alert
+from app.services.scoring.service import persist_and_score_alert
 
 
 class AlertsRepository:
@@ -38,6 +38,7 @@ class AlertsRepository:
                 selectinload(NormalizedAlert.asset),
                 selectinload(NormalizedAlert.raw_alert),
                 selectinload(NormalizedAlert.risk_score),
+                selectinload(NormalizedAlert.response_actions).selectinload(ResponseAction.policy),
                 selectinload(NormalizedAlert.incident).selectinload(Incident.assigned_user),
                 selectinload(NormalizedAlert.incident).selectinload(Incident.response_actions),
             )
@@ -168,6 +169,7 @@ class AlertsRepository:
                 selectinload(NormalizedAlert.asset),
                 selectinload(NormalizedAlert.raw_alert),
                 selectinload(NormalizedAlert.risk_score),
+                selectinload(NormalizedAlert.response_actions).selectinload(ResponseAction.policy),
                 selectinload(NormalizedAlert.incident).selectinload(Incident.assigned_user),
             )
             .where(NormalizedAlert.id == alert_id)
@@ -181,6 +183,8 @@ class AlertsRepository:
                 selectinload(NormalizedAlert.asset),
                 selectinload(NormalizedAlert.raw_alert),
                 selectinload(NormalizedAlert.risk_score),
+                selectinload(NormalizedAlert.response_actions)
+                .selectinload(ResponseAction.policy),
                 selectinload(NormalizedAlert.incident)
                 .selectinload(Incident.assigned_user)
                 .selectinload(User.role),
@@ -204,6 +208,9 @@ class AlertsRepository:
                 .selectinload(NormalizedAlert.raw_alert),
                 selectinload(NormalizedAlert.incident)
                 .selectinload(Incident.response_actions)
+                .selectinload(ResponseAction.policy),
+                selectinload(NormalizedAlert.incident)
+                .selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.requested_by)
                 .selectinload(User.role),
             )
@@ -212,7 +219,4 @@ class AlertsRepository:
         return self.session.scalar(statement)
 
     def create_raw_and_normalized(self, raw_alert, normalized_alert) -> None:
-        self.session.add(raw_alert)
-        self.session.add(normalized_alert)
-        self.session.flush()
-        score_alert(self.session, normalized_alert)
+        persist_and_score_alert(self.session, raw_alert, normalized_alert)

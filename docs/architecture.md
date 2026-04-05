@@ -35,6 +35,7 @@ AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes sec
 - `normalized_alerts`: alert records transformed into the common AegisCore schema
 - `risk_scores`: explainable alert risk-scoring records
 - `incidents`: analyst-facing incident records generated from normalized alerts, with one incident able to own multiple linked alerts and a primary alert retained for summary views
+- `response_policies`: enabled or disabled automation rules keyed by target type, detection type, score threshold, action, and mode
 - `response_actions`: basic automated or analyst-triggered response activity
 - `analyst_notes`: persisted notes attached directly to alert or incident investigations
 - `audit_logs`: security and workflow history for traceability
@@ -46,6 +47,15 @@ AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes sec
 - Alert display state remains frontend-friendly through derived labels such as `triaged`, `contained`, and `pending_response`.
 - Incident workflow state is modeled directly as `new`, `triaged`, `investigating`, `contained`, `resolved`, and `false_positive`.
 - Every workflow mutation writes an audit entry, and note creation also persists a first-class analyst note record.
+- After risk scoring completes, enabled response policies can evaluate the alert or rolled-up incident and create auditable response actions in either `dry-run` or `live` mode.
+- Safe internal actions such as `notify_admin`, `create_manual_review`, and `quarantine_host_flag` can complete without an external adapter; destructive actions require explicit live enablement and adapter configuration.
+
+## Automated Response Scope
+
+- Supported detection types: `brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`
+- Supported action types: `block_ip`, `disable_user`, `quarantine_host_flag`, `create_manual_review`, `notify_admin`
+- Policy evaluation is backend-owned and uses normalized alert context plus persisted scoring data.
+- Response history is no longer placeholder-derived: it now stores first-class mode, status, target, result summary, result message, retry count, and policy linkage.
 
 ## Detection Scope
 
