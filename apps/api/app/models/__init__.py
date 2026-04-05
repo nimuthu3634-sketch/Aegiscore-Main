@@ -2,6 +2,7 @@ from app.models.analyst_note import AnalystNote
 from app.models.asset import Asset
 from app.models.audit_log import AuditLog
 from app.models.base import Base
+from app.models.ingestion_failure import IngestionFailure
 from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
 from app.models.raw_alert import RawAlert
@@ -16,6 +17,7 @@ __all__ = [
     "AnalystNote",
     "AuditLog",
     "Base",
+    "IngestionFailure",
     "Incident",
     "NormalizedAlert",
     "RawAlert",

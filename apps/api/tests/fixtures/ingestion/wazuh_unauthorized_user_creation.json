@@ -1,0 +1,26 @@
+{
+  "id": "wazuh-fixture-user-001",
+  "timestamp": "2026-04-05T09:23:41.000+0000",
+  "rule": {
+    "id": 60115,
+    "level": 12,
+    "description": "Unauthorized local user created",
+    "groups": ["windows", "account_changed"]
+  },
+  "agent": {
+    "id": "021",
+    "name": "finance-dc-01",
+    "ip": "10.42.11.9",
+    "os": {
+      "name": "Windows Server 2022"
+    }
+  },
+  "data": {
+    "win": {
+      "eventdata": {
+        "TargetUserName": "unknown-admin",
+        "GroupName": "Domain Admins"
+      }
+    }
+  }
+}

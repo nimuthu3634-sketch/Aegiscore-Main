@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,6 +18,13 @@ if TYPE_CHECKING:
 
 class RawAlert(Base):
     __tablename__ = "raw_alerts"
+    __table_args__ = (
+        UniqueConstraint(
+            "source",
+            "external_id",
+            name="uq_raw_alerts_source_external_id",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

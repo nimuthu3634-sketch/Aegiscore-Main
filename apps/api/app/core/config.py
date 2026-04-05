@@ -27,6 +27,14 @@ class Settings(BaseSettings):
         alias="WAZUH_BASE_URL",
     )
     suricata_source: str = Field(default="suricata", alias="SURICATA_SOURCE")
+    ingestion_allow_asset_autocreate: bool = Field(
+        default=True,
+        alias="INGESTION_ALLOW_ASSET_AUTOCREATE",
+    )
+    ingestion_default_asset_criticality: str = Field(
+        default="medium",
+        alias="INGESTION_DEFAULT_ASSET_CRITICALITY",
+    )
     dev_seed_admin_username: str = Field(
         default="admin",
         alias="DEV_SEED_ADMIN_USERNAME",

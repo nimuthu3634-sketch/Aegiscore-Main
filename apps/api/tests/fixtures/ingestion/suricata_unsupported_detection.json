@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-04-05T10:02:18.000000+0000",
+  "flow_id": "flow-dns-001",
+  "src_ip": "198.51.100.77",
+  "dest_ip": "10.20.1.53",
+  "dest_port": 53,
+  "event_type": "alert",
+  "alert": {
+    "signature_id": 2024001,
+    "signature": "ET DNS Query for Suspicious Domain",
+    "category": "Potentially Bad Traffic",
+    "severity": 3
+  }
+}

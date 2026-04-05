@@ -150,3 +150,28 @@ class AssetsRepository:
     def create(self, asset: Asset) -> Asset:
         self.session.add(asset)
         return asset
+
+    def get_by_hostname(self, hostname: str) -> Asset | None:
+        statement = select(Asset).where(func.lower(Asset.hostname) == hostname.lower())
+        return self.session.scalar(statement)
+
+    def get_by_ip_address(self, ip_address: str) -> Asset | None:
+        statement = select(Asset).where(Asset.ip_address == ip_address)
+        return self.session.scalar(statement)
+
+    def get_by_hostname_or_ip(
+        self,
+        *,
+        hostname: str | None,
+        ip_address: str | None,
+    ) -> Asset | None:
+        conditions = []
+        if hostname:
+            conditions.append(func.lower(Asset.hostname) == hostname.lower())
+        if ip_address:
+            conditions.append(Asset.ip_address == ip_address)
+        if not conditions:
+            return None
+
+        statement = select(Asset).where(or_(*conditions)).order_by(Asset.updated_at.desc())
+        return self.session.scalar(statement)

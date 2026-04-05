@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-04-05T09:22:10.000000+0000",
+  "flow_id": "flow-pt-001",
+  "src_ip": "198.51.100.55",
+  "dest_ip": "10.20.1.15",
+  "dest_port": 3389,
+  "event_type": "alert",
+  "alert": {
+    "signature_id": 2100498,
+    "signature": "ET SCAN Potential RDP Scan",
+    "category": "Attempted Information Leak",
+    "severity": 2
+  }
+}

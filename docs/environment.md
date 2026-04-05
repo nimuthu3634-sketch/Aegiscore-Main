@@ -14,6 +14,8 @@
 - `ACCESS_TOKEN_EXPIRE_MINUTES`: bearer token lifetime for API auth
 - `WAZUH_BASE_URL`: future Wazuh integration base URL
 - `SURICATA_SOURCE`: identifier for the Suricata source
+- `INGESTION_ALLOW_ASSET_AUTOCREATE`: whether ingestion may create a new asset record when a payload includes a host IP or hostname that does not exist yet
+- `INGESTION_DEFAULT_ASSET_CRITICALITY`: default criticality applied to auto-created assets when the source payload does not provide one
 - `VITE_API_BASE_URL`: frontend API base URL, defaulting to `/api`
 - `DEV_SEED_ADMIN_USERNAME`: seeded local admin username
 - `DEV_SEED_ADMIN_PASSWORD`: seeded local admin password
@@ -45,3 +47,10 @@
 - Destructive live actions are intentionally blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.
 - If a live adapter script path is unset for a supported action, AegisCore records a warning or internal completion event rather than silently failing.
 - Response execution attempts, final outcomes, and policy matches are written to audit history and exposed through the response history APIs.
+
+## Ingestion Notes
+
+- Fixture-friendly backend ingestion routes are available at `POST /integrations/wazuh/events` and `POST /integrations/suricata/events`.
+- Successful source events are normalized into the existing alert schema and continue through scoring, incident linkage, and automated-response evaluation.
+- Malformed or unsupported events are written to `ingestion_failures` with raw payload snapshots, retry counters, and error metadata for local debugging.
+- Duplicate events are de-duplicated by `source + external_id` and safely return the existing normalized alert.

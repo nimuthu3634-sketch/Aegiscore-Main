@@ -27,6 +27,37 @@ class AlertsRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
+    def get_raw_alert_by_source_external_id(
+        self,
+        *,
+        source: str,
+        external_id: str,
+    ) -> RawAlert | None:
+        statement = (
+            select(RawAlert)
+            .options(
+                selectinload(RawAlert.asset),
+                selectinload(RawAlert.normalized_alert).selectinload(NormalizedAlert.asset),
+                selectinload(RawAlert.normalized_alert).selectinload(NormalizedAlert.raw_alert),
+                selectinload(RawAlert.normalized_alert).selectinload(NormalizedAlert.risk_score),
+                selectinload(RawAlert.normalized_alert)
+                .selectinload(NormalizedAlert.response_actions)
+                .selectinload(ResponseAction.policy),
+                selectinload(RawAlert.normalized_alert)
+                .selectinload(NormalizedAlert.incident)
+                .selectinload(Incident.assigned_user),
+                selectinload(RawAlert.normalized_alert)
+                .selectinload(NormalizedAlert.incident)
+                .selectinload(Incident.response_actions)
+                .selectinload(ResponseAction.policy),
+            )
+            .where(
+                RawAlert.source == source,
+                RawAlert.external_id == external_id,
+            )
+        )
+        return self.session.scalar(statement)
+
     def list_alerts(self, query: AlertListQuery) -> tuple[list[NormalizedAlert], int]:
         statement = (
             select(NormalizedAlert)

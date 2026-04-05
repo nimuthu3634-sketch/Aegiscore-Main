@@ -146,6 +146,50 @@ Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://loca
 Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/responses
 ```
 
+## Source Ingestion
+
+AegisCore now includes hardened backend-owned ingestion entrypoints for Wazuh-style and Suricata-style events. These entrypoints normalize source payloads into the existing alert, scoring, incident, and automated-response flow without exposing source-specific schema to the frontend.
+
+- `POST /integrations/wazuh/events`
+- `POST /integrations/suricata/events`
+
+Supported detection scope remains limited to:
+
+- `brute_force`
+- `file_integrity_violation`
+- `port_scan`
+- `unauthorized_user_creation`
+
+Ingestion behavior:
+
+- successful events create `raw_alerts` and `normalized_alerts`
+- duplicate source events are de-duplicated by `source + external_id`
+- malformed or unsupported payloads are recorded in `ingestion_failures`
+- partial payloads can still ingest with warnings when the supported detection type is clear
+- scoring and automated response policies continue to run through the normal backend flow
+
+Useful local ingestion environment variables:
+
+- `INGESTION_ALLOW_ASSET_AUTOCREATE=true`
+- `INGESTION_DEFAULT_ASSET_CRITICALITY=medium`
+
+Fixture-based local validation examples:
+
+```powershell
+$login = Invoke-RestMethod -Method Post -Uri http://localhost:8000/auth/login -ContentType "application/json" -Body '{"username":"admin","password":"AegisCore123!"}'
+$token = $login.access_token
+$headers = @{ Authorization = "Bearer $token" }
+
+$wazuhBody = Get-Content .\apps\api\tests\fixtures\ingestion\wazuh_brute_force.json -Raw
+$ingestedAlert = Invoke-RestMethod -Method Post -Uri http://localhost:8000/integrations/wazuh/events -Headers $headers -ContentType "application/json" -Body $wazuhBody
+Invoke-RestMethod -Headers $headers -Uri ("http://localhost:8000/alerts/" + $ingestedAlert.alert.id)
+Invoke-RestMethod -Headers $headers -Uri "http://localhost:8000/responses?mode=dry-run"
+
+$suricataBody = Get-Content .\apps\api\tests\fixtures\ingestion\suricata_port_scan.json -Raw
+Invoke-RestMethod -Method Post -Uri http://localhost:8000/integrations/suricata/events -Headers $headers -ContentType "application/json" -Body $suricataBody
+Invoke-RestMethod -Headers $headers -Uri "http://localhost:8000/dashboard/summary"
+```
+
 ## Risk Scoring
 
 AegisCore now includes a persisted risk scoring layer for alert prioritization.
@@ -164,5 +208,6 @@ docker compose run --rm --no-deps api python /srv/ai/training/train_risk_model.p
 
 - The backend owns all external security integrations; the frontend talks only to backend APIs.
 - The backend foundation now includes roles, users, assets, raw alerts, normalized alerts, risk scores, incidents, response actions, analyst notes, and audit logs.
+- The ingestion layer now includes Wazuh and Suricata normalization services plus failure tracking for malformed or unsupported events.
 - Incidents now own many normalized alerts, while each alert can belong to at most one incident and still exposes a clean linked-incident summary for the frontend.
 - Frontend work follows the AegisCore dark SOC theme and is prepared for Figma-first design iteration in later milestones.

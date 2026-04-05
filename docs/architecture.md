@@ -24,7 +24,7 @@ AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes sec
 - `app/models`: SQLAlchemy models for roles, users, assets, raw alerts, normalized alerts, incidents, risk scores, response actions, analyst notes, and audit logs
 - `app/repositories`: database access by aggregate or resource
 - `app/schemas`: API response schemas
-- `app/services`: auth, dashboard, alerts, incidents, response actions, seed logic, serializers, and health checks
+- `app/services`: auth, dashboard, alerts, incidents, ingestion, response actions, seed logic, serializers, scoring, and health checks
 
 ## Backend Data Model
 
@@ -33,6 +33,7 @@ AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes sec
 - `assets`: monitored SME systems represented in the SOC
 - `raw_alerts`: preserved source payloads from integrations such as Wazuh and Suricata
 - `normalized_alerts`: alert records transformed into the common AegisCore schema
+- `ingestion_failures`: malformed or unsupported source events preserved for retry visibility and debugging
 - `risk_scores`: explainable alert risk-scoring records
 - `incidents`: analyst-facing incident records generated from normalized alerts, with one incident able to own multiple linked alerts and a primary alert retained for summary views
 - `response_policies`: enabled or disabled automation rules keyed by target type, detection type, score threshold, action, and mode
@@ -56,6 +57,14 @@ AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes sec
 - Supported action types: `block_ip`, `disable_user`, `quarantine_host_flag`, `create_manual_review`, `notify_admin`
 - Policy evaluation is backend-owned and uses normalized alert context plus persisted scoring data.
 - Response history is no longer placeholder-derived: it now stores first-class mode, status, target, result summary, result message, retry count, and policy linkage.
+
+## Integration Flow
+
+- Wazuh-style and Suricata-style events enter through backend-only ingestion routes under `/integrations`.
+- Source-specific parsing is limited to the supported detections and maps every accepted event into the shared normalized alert shape.
+- Successful ingestion persists both `raw_alerts` and `normalized_alerts`, then hands off immediately to scoring and policy-driven response evaluation.
+- Duplicate events are rejected safely using the `source + external_id` key and return the already-normalized alert instead of creating drift.
+- Malformed or unsupported events are stored in `ingestion_failures` with retry counters, payload snapshots, and error details for SME-friendly troubleshooting.
 
 ## Detection Scope
 

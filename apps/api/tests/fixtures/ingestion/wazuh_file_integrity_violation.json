@@ -1,0 +1,23 @@
+{
+  "id": "wazuh-fixture-fim-001",
+  "timestamp": "2026-04-05T09:19:55.000+0000",
+  "rule": {
+    "id": 554,
+    "level": 9,
+    "description": "Critical file integrity change detected",
+    "groups": ["syscheck", "fim"]
+  },
+  "agent": {
+    "id": "014",
+    "name": "ops-files-03",
+    "ip": "10.42.7.54",
+    "os": {
+      "name": "Windows Server 2022"
+    }
+  },
+  "syscheck": {
+    "path": "D:\\Operations\\Policies\\access-control.xlsx",
+    "event": "modified",
+    "sha256_after": "9aa4cb322f7810ba6a6301f39f00409d"
+  }
+}
