@@ -18,12 +18,16 @@ export type ResponsesListQuery = {
 export type ResponseRecord = {
   id: string;
   actionType: string;
+  policyName: string | null;
   target: string;
   mode: ResponseMode;
   linkedEntity: string;
+  linkedEntityTitle: string;
   executionStatus: ResponseExecutionStatus;
   executedAt: string;
   resultSummary: string;
+  resultMessage: string | null;
+  attemptCount: number;
 };
 
 export type ResponsesListResponse = {
@@ -46,14 +50,18 @@ export type ResponsesListApiResponse = {
   items: Array<{
     id: string;
     action_type: string;
+    policy_name: string | null;
     execution_status_label: ResponseExecutionStatus;
     target: string | null;
     mode: ResponseMode | null;
     result_summary: string | null;
+    result_message: string | null;
+    attempt_count: number;
     created_at: string;
     executed_at: string | null;
     incident: {
       id: string;
+      title: string;
     };
   }>;
 };

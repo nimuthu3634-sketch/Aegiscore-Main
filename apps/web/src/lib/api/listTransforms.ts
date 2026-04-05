@@ -97,12 +97,16 @@ export function mapResponsesListResponse(
     items: payload.items.map((response) => ({
       id: response.id,
       actionType: response.action_type,
+      policyName: response.policy_name,
       target: response.target ?? "n/a",
       mode: response.mode ?? "live",
       linkedEntity: response.incident.id,
+      linkedEntityTitle: response.incident.title,
       executionStatus: response.execution_status_label,
       executedAt: formatUtcDateTime(response.executed_at ?? response.created_at),
-      resultSummary: response.result_summary ?? "No response summary available."
+      resultSummary: response.result_summary ?? "No response summary available.",
+      resultMessage: response.result_message,
+      attemptCount: response.attempt_count
     })),
     total: payload.meta.total,
     generatedAt: new Date().toISOString(),

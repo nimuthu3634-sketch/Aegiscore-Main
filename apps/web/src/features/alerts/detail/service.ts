@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { ApiRequestError, fetchApiJson, formatUtcDateTime } from "../../../lib/api";
 import {
+  formatDriverLabel,
+  formatScoreMethodLabel,
   toActorLabel,
   toAnalystNotes,
   toKeyValueItems,
@@ -63,6 +65,14 @@ function mapAlertDetailResponse(payload: AlertDetailApiResponse): AlertDetailRes
             summary: payload.score_explanation.summary,
             rationale: payload.score_explanation.rationale,
             factors: payload.score_explanation.factors,
+            drivers: (payload.score_explanation.drivers ?? [])
+              .slice(0, 3)
+              .map((driver) => formatDriverLabel(driver)),
+            scoringMethod: formatScoreMethodLabel(payload.score_explanation.scoring_method),
+            version:
+              payload.score_explanation.model_version ??
+              payload.score_explanation.baseline_version ??
+              null,
             confidence: payload.score_explanation.confidence
           }
         : null,

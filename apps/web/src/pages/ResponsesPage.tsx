@@ -14,7 +14,16 @@ import { Select } from "../components/ui/Select";
 import { ResponsesTable } from "../features/responses/components/ResponsesTable";
 import { useResponsesList } from "../features/responses/service";
 import type { ResponsesListQuery, ResponsesSortField } from "../features/responses/types";
+import { formatTokenLabel } from "../lib/formatters";
 import { pageBlueprints } from "../lib/theme/tokens";
+
+const supportedActionTypes = [
+  "block_ip",
+  "disable_user",
+  "quarantine_host_flag",
+  "create_manual_review",
+  "notify_admin"
+];
 
 export function ResponsesPage() {
   const [search, setSearch] = useState("");
@@ -73,9 +82,10 @@ export function ResponsesPage() {
         }
       />
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {isLoading ? (
           <>
+            <LoadingCard />
             <LoadingCard />
             <LoadingCard />
             <LoadingCard />
@@ -83,12 +93,19 @@ export function ResponsesPage() {
         ) : (
           <>
             <MetricCard
-              label="Succeeded"
+              label="Policy-backed"
               value={String(
-                responses.filter((response) => response.executionStatus === "succeeded").length
+                responses.filter((response) => Boolean(response.policyName)).length
               )}
-              detail="Current page slice of completed actions with auditable outcomes."
+              detail="Current page slice of backend policy-driven executions with named policy context."
               tone="highlight"
+            />
+            <MetricCard
+              label="Live mode"
+              value={String(
+                responses.filter((response) => response.mode === "live").length
+              )}
+              detail="Current page slice of live actions or live workflow records."
             />
             <MetricCard
               label="Warnings or failures"
@@ -98,7 +115,7 @@ export function ResponsesPage() {
                     response.executionStatus === "warning" ||
                     response.executionStatus === "failed"
                 ).length
-              )}
+              )} 
               detail="Current page slice needing analyst review before policy promotion."
               tone="warning"
             />
@@ -135,9 +152,9 @@ export function ResponsesPage() {
                 setPage(1);
               }}
               placeholder="Action type"
-              options={[...new Set(responses.map((response) => response.actionType))].map(
-                (value) => ({ value, label: value })
-              )}
+              options={[...new Set([...supportedActionTypes, ...responses.map((response) => response.actionType)])]
+                .sort((left, right) => left.localeCompare(right))
+                .map((value) => ({ value, label: formatTokenLabel(value) }))}
             />
             <Select
               aria-label="Filter responses by mode"

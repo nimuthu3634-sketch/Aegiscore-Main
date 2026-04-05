@@ -56,7 +56,8 @@ const detailExtensions: Record<
         "Privileged-style username present in the event stream",
         "SSH destination port aligned to sensitive access path",
         "Linked incident already open for the same host and source pattern"
-      ]
+      ],
+      drivers: ["Repeated failed logins", "Privileged account flag", "Sensitive access path"]
     },
     notes: [
       {
@@ -102,7 +103,8 @@ const detailExtensions: Record<
         "Multi-port probing behavior confirmed by network telemetry",
         "Source IP currently maps to an internal branch range",
         "No credential or file-integrity signal linked yet"
-      ]
+      ],
+      drivers: ["Time-window density", "Repeated source IP", "Detection type: port scan"]
     },
     notes: [
       {
@@ -152,7 +154,8 @@ const detailExtensions: Record<
         "Business-critical infrastructure involved",
         "Pending response already attached",
         "No approved maintenance window matched the event"
-      ]
+      ],
+      drivers: ["Privileged account flag", "Asset criticality", "Unauthorized user creation"]
     },
     notes: [
       {
@@ -199,7 +202,8 @@ const detailExtensions: Record<
         "Sensitive file-share content changed unexpectedly",
         "After-hours timing increased confidence",
         "Containment action already executed successfully"
-      ]
+      ],
+      drivers: ["Sensitive file flag", "Response history", "After-hours activity"]
     },
     notes: [
       {
@@ -245,7 +249,8 @@ const detailExtensions: Record<
         "External source targeting authentication service",
         "Gateway asset has elevated operational sensitivity",
         "No linked incident or response history yet"
-      ]
+      ],
+      drivers: ["External source IP", "Asset criticality", "Detection type: brute force"]
     },
     notes: []
   },
@@ -281,7 +286,8 @@ const detailExtensions: Record<
         "Low-confidence scan signature",
         "No matching compromise or persistence indicators",
         "Closed after sensor-tuning review"
-      ]
+      ],
+      drivers: ["Low-confidence signature", "No recurrence history", "Resolved status"]
     },
     notes: []
   }
@@ -301,11 +307,14 @@ export const mockAlertDetailsById: Record<string, AlertDetailResponse> =
             .map((response) => ({
               id: response.id,
               actionType: response.actionType,
+              policyName: response.policyName,
               target: response.target,
               mode: response.mode,
               executionStatus: response.executionStatus,
               executedAt: response.executedAt,
-              resultSummary: response.resultSummary
+              resultSummary: response.resultSummary,
+              resultMessage: response.resultMessage,
+              attemptCount: response.attemptCount
             })),
           ...detailExtensions[alert.id]
         }

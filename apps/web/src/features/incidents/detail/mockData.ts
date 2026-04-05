@@ -93,7 +93,10 @@ const incidentExtensions: Record<
         "Production authentication asset involved",
         "Repeated privileged-style username targeting",
         "Response preview indicates potential operational impact"
-      ]
+      ],
+      rollupScore: 87,
+      linkedAlertsCount: 1,
+      scoringMethods: ["Baseline rules"]
     }
   },
   "INC-302": {
@@ -165,7 +168,10 @@ const incidentExtensions: Record<
         "Mission-critical directory asset involved",
         "Privileged role assignment detected",
         "Analyst validation removed benign explanation path"
-      ]
+      ],
+      rollupScore: 95,
+      linkedAlertsCount: 1,
+      scoringMethods: ["Baseline rules"]
     }
   },
   "INC-303": {
@@ -211,7 +217,10 @@ const incidentExtensions: Record<
       factors: [
         "Important network edge asset involved",
         "Single source range and limited blast evidence"
-      ]
+      ],
+      rollupScore: 61,
+      linkedAlertsCount: 1,
+      scoringMethods: ["Baseline rules"]
     }
   },
   "INC-304": {
@@ -273,7 +282,10 @@ const incidentExtensions: Record<
       factors: [
         "Sensitive operational files impacted",
         "Containment executed after confirmation"
-      ]
+      ],
+      rollupScore: 79,
+      linkedAlertsCount: 1,
+      scoringMethods: ["Baseline rules"]
     }
   },
   "INC-305": {
@@ -327,7 +339,10 @@ const incidentExtensions: Record<
       factors: [
         "No follow-on evidence",
         "Resolution path already completed"
-      ]
+      ],
+      rollupScore: 34,
+      linkedAlertsCount: 1,
+      scoringMethods: ["Baseline rules"]
     }
   }
 };
@@ -356,11 +371,14 @@ export const mockIncidentDetailsById = Object.fromEntries(
       .map((response) => ({
         id: response.id,
         actionType: response.actionType,
+        policyName: response.policyName,
         target: response.target,
         mode: response.mode,
         executionStatus: response.executionStatus,
         executedAt: response.executedAt,
-        resultSummary: response.resultSummary
+        resultSummary: response.resultSummary,
+        resultMessage: response.resultMessage,
+        attemptCount: response.attemptCount
       }));
 
     return [

@@ -361,8 +361,27 @@ export function IncidentDetailPage() {
             label={incident.priorityExplanation.label}
             summary={incident.priorityExplanation.summary}
             rationale={incident.priorityExplanation.rationale}
-            scoreValue={<PriorityChip priority={incident.priority} />}
+            scoreValue={
+              <div className="flex flex-wrap items-center gap-2">
+                <PriorityChip priority={incident.priority} />
+                {incident.priorityExplanation.rollupScore != null ? (
+                  <Badge tone="brand">rollup {incident.priorityExplanation.rollupScore}</Badge>
+                ) : null}
+              </div>
+            }
             factors={incident.priorityExplanation.factors}
+            metadata={[
+              {
+                label: "Linked alerts",
+                value: String(incident.priorityExplanation.linkedAlertsCount),
+                mono: true
+              },
+              {
+                label: "Scoring methods",
+                value:
+                  incident.priorityExplanation.scoringMethods.join(", ") || "n/a"
+              }
+            ]}
           />
 
           <EvidencePanel

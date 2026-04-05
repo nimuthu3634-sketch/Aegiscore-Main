@@ -1,15 +1,21 @@
 import { EvidencePanel } from "./EvidencePanel";
 import { ModeBadge, ExecutionStatusBadge } from "../../features/responses/components/ResponseBadges";
 import type { ResponseExecutionStatus, ResponseMode } from "../../features/responses/types";
+import { Badge } from "../ui/Badge";
+import { formatTokenLabel } from "../../lib/formatters";
 
 export type RelatedResponseItem = {
   id: string;
   actionType: string;
+  policyName?: string | null;
   target: string;
   mode: ResponseMode;
   executionStatus: ResponseExecutionStatus;
   executedAt: string;
   resultSummary: string;
+  resultMessage?: string | null;
+  attemptCount?: number;
+  requestedBy?: string | null;
 };
 
 type RelatedResponsesPanelProps = {
@@ -36,9 +42,12 @@ export function RelatedResponsesPanel({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-body-sm font-medium text-content-primary">
-                    {response.actionType}
+                    {formatTokenLabel(response.actionType)}
                   </p>
-                  <p className="mt-1 type-mono-sm">{response.id}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <p className="type-mono-sm">{response.id}</p>
+                    {response.policyName ? <Badge tone="brand">{response.policyName}</Badge> : null}
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <ModeBadge mode={response.mode} />
@@ -49,6 +58,17 @@ export function RelatedResponsesPanel({
                 <p className="type-mono-sm">target: {response.target}</p>
                 <p className="type-mono-sm">executed_at: {response.executedAt}</p>
                 <p className="type-body-sm">{response.resultSummary}</p>
+                {response.resultMessage && response.resultMessage !== response.resultSummary ? (
+                  <p className="type-body-sm text-content-muted">{response.resultMessage}</p>
+                ) : null}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <p className="type-mono-sm">attempts: {response.attemptCount ?? 0}</p>
+                  {response.requestedBy ? (
+                    <p className="type-body-sm">
+                      requested_by: <span className="type-mono-sm">{response.requestedBy}</span>
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </div>
           ))}

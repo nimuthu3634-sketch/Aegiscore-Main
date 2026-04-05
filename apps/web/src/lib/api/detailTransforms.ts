@@ -8,6 +8,7 @@ import type {
   ResponseMode
 } from "../../features/responses/types";
 import { formatUtcDateTime } from "../api";
+import { formatDriverLabel, formatScoreMethodLabel, formatTokenLabel } from "../formatters";
 
 type ApiUserSummary = {
   username: string;
@@ -18,9 +19,12 @@ type ApiRelatedResponse = {
   id: string;
   action_type: string;
   status: string;
+  policy_name?: string | null;
   target: string | null;
   mode: string | null;
   result_summary: string | null;
+  result_message?: string | null;
+  attempt_count?: number | null;
   details: Record<string, unknown>;
   created_at: string;
   executed_at: string | null;
@@ -83,6 +87,7 @@ export function toRelatedResponses(
   return responses.map((response) => ({
     id: response.id,
     actionType: response.action_type,
+    policyName: response.policy_name ?? null,
     target: response.target ?? "n/a",
     mode: (response.mode === "dry-run" ? "dry-run" : "live") as ResponseMode,
     executionStatus: toResponseExecutionStatus(response.status),
@@ -90,7 +95,10 @@ export function toRelatedResponses(
     resultSummary:
       response.result_summary ??
       toDisplayValue(response.details.result) ??
-      "No response summary available."
+      "No response summary available.",
+    resultMessage: response.result_message ?? null,
+    attemptCount: response.attempt_count ?? 0,
+    requestedBy: toActorLabel(response.requested_by)
   }));
 }
 
@@ -157,6 +165,8 @@ function toResponseExecutionStatus(status: string): ResponseExecutionStatus {
   switch (status) {
     case "completed":
       return "succeeded";
+    case "warning":
+      return "warning";
     case "failed":
       return "failed";
     case "queued":
@@ -167,7 +177,7 @@ function toResponseExecutionStatus(status: string): ResponseExecutionStatus {
 }
 
 function toLabel(key: string) {
-  return key
-    .replace(/[_-]+/g, " ")
-    .replace(/\b\w/g, (character) => character.toUpperCase());
+  return formatTokenLabel(key);
 }
+
+export { formatDriverLabel, formatScoreMethodLabel, formatTokenLabel };

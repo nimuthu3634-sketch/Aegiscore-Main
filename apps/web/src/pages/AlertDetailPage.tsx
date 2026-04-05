@@ -288,12 +288,32 @@ export function AlertDetailPage() {
               label={alert.scoreExplanation.label}
               summary={alert.scoreExplanation.summary}
               rationale={alert.scoreExplanation.rationale}
-              scoreValue={
-                <span className="type-mono-sm">
-                  {alert.scoreExplanation.score ?? "n/a"}
-                </span>
-              }
+              scoreValue={<Badge tone="brand">risk {alert.scoreExplanation.score ?? "n/a"}</Badge>}
               factors={alert.scoreExplanation.factors}
+              drivers={alert.scoreExplanation.drivers}
+              metadata={[
+                {
+                  label: "Scoring method",
+                  value: alert.scoreExplanation.scoringMethod ?? "n/a"
+                },
+                ...(alert.scoreExplanation.version
+                  ? [
+                      {
+                        label: "Version",
+                        value: alert.scoreExplanation.version,
+                        mono: true
+                      }
+                    ]
+                  : []),
+                {
+                  label: "Confidence",
+                  value:
+                    alert.scoreExplanation.confidence != null
+                      ? `${Math.round(alert.scoreExplanation.confidence * 100)}%`
+                      : "n/a",
+                  mono: true
+                }
+              ]}
             />
           ) : (
             <EvidencePanel

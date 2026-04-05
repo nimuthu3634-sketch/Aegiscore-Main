@@ -14,6 +14,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { IncidentDetailPage } from "./pages/IncidentDetailPage";
 import { IncidentsPage } from "./pages/IncidentsPage";
 import { ResponsesPage } from "./pages/ResponsesPage";
+import { RulesPage } from "./pages/RulesPage";
 import { fetchHealthResponse, type HealthResponse } from "./lib/api";
 import {
   analystNavigation,
@@ -109,6 +110,7 @@ export default function App() {
         <Route path="/incidents/:incidentId" element={<IncidentDetailPage />} />
         <Route path="/assets" element={<AssetsPage />} />
         <Route path="/responses" element={<ResponsesPage />} />
+        <Route path="/rules" element={<RulesPage />} />
         <Route path="*" element={<Navigate to="/overview" replace />} />
       </Routes>
     </AppShell>

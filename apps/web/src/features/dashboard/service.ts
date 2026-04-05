@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { fetchApiJson, formatUtcDateTime } from "../../lib/api";
 import { buildApiPath } from "../../lib/api/query";
-import { mapAlertsListResponse, mapAssetsListResponse, mapIncidentsListResponse, mapResponsesListResponse } from "../../lib/api/listTransforms";
+import { mapAssetsListResponse, mapIncidentsListResponse, mapResponsesListResponse } from "../../lib/api/listTransforms";
 import { useAsyncResource } from "../../lib/data/useAsyncResource";
 import type { AlertsListApiResponse } from "../alerts/types";
 import type { AssetsListApiResponse } from "../assets/types";
@@ -39,6 +39,7 @@ const riskPalette = {
 
 type SeverityBucket = keyof typeof severityPalette;
 type IncidentStateBucket = keyof typeof incidentStatePalette;
+const dashboardPageSize = 100;
 
 function formatShortTime(value: string) {
   const date = new Date(value);
@@ -173,12 +174,42 @@ function countRecentResponses(responseTimestamps: string[]) {
   }).length;
 }
 
+async function fetchAllAlertItems() {
+  const firstPage = await fetchApiJson<AlertsListApiResponse>(
+    buildApiPath("/alerts", {
+      sort_by: "timestamp",
+      sort_direction: "desc",
+      page: 1,
+      page_size: dashboardPageSize,
+      date_range: "all"
+    })
+  );
+
+  if (firstPage.meta.total_pages <= 1) {
+    return firstPage.items;
+  }
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: firstPage.meta.total_pages - 1 }, (_, index) =>
+      fetchApiJson<AlertsListApiResponse>(
+        buildApiPath("/alerts", {
+          sort_by: "timestamp",
+          sort_direction: "desc",
+          page: index + 2,
+          page_size: dashboardPageSize,
+          date_range: "all"
+        })
+      )
+    )
+  );
+
+  return [firstPage, ...remainingPages].flatMap((page) => page.items);
+}
+
 async function fetchDashboardOverview(): Promise<DashboardOverviewResponse> {
   const [
     summary,
-    alertsResponse,
-    criticalAlertsResponse,
-    highAlertsResponse,
+    alertItems,
     incidentsResponse,
     assetsResponse,
     onlineAssetsResponse,
@@ -186,31 +217,7 @@ async function fetchDashboardOverview(): Promise<DashboardOverviewResponse> {
     responsesResponse
   ] = await Promise.all([
     fetchApiJson<DashboardSummaryApiResponse>("/dashboard/summary"),
-    fetchApiJson<AlertsListApiResponse>(
-      buildApiPath("/alerts", {
-        sort_by: "timestamp",
-        sort_direction: "desc",
-        page: 1,
-        page_size: 100,
-        date_range: "all"
-      })
-    ),
-    fetchApiJson<AlertsListApiResponse>(
-      buildApiPath("/alerts", {
-        severity: "critical",
-        page: 1,
-        page_size: 1,
-        date_range: "all"
-      })
-    ),
-    fetchApiJson<AlertsListApiResponse>(
-      buildApiPath("/alerts", {
-        severity: "high",
-        page: 1,
-        page_size: 1,
-        date_range: "all"
-      })
-    ),
+    fetchAllAlertItems(),
     fetchApiJson<IncidentsListApiResponse>(
       buildApiPath("/incidents", {
         sort_by: "updated_at",
@@ -251,12 +258,11 @@ async function fetchDashboardOverview(): Promise<DashboardOverviewResponse> {
     )
   ]);
 
-  const alerts = mapAlertsListResponse(alertsResponse);
   const incidents = mapIncidentsListResponse(incidentsResponse);
   const assets = mapAssetsListResponse(assetsResponse);
   const responses = mapResponsesListResponse(responsesResponse);
 
-  const highRiskAlerts = criticalAlertsResponse.meta.total + highAlertsResponse.meta.total;
+  const highRiskAlerts = alertItems.filter((alert) => (alert.risk_score_value ?? 0) >= 70).length;
   const activeAssets =
     onlineAssetsResponse.meta.total + degradedAssetsResponse.meta.total;
   const recentResponses = countRecentResponses(
@@ -274,12 +280,12 @@ async function fetchDashboardOverview(): Promise<DashboardOverviewResponse> {
       pendingResponses: summary.pending_response_count,
       averageRiskScore: Math.round(summary.average_risk_score)
     },
-    alertVolume: buildAlertVolume(alertsResponse.items.map((alert) => alert.created_at)),
+    alertVolume: buildAlertVolume(alertItems.map((alert) => alert.created_at)),
     severityDistribution: buildSeverityDistribution(
-      alerts.items.map((alert) => alert.severity)
+      alertItems.map((alert) => alert.severity_label)
     ),
     riskDistribution: buildRiskDistribution(
-      alerts.items.map((alert) => alert.riskScore)
+      alertItems.map((alert) => alert.risk_score_value)
     ),
     incidentStateDistribution: buildIncidentStateDistribution(
       incidents.items.map((incident) => incident.state)

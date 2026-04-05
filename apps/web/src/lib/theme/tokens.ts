@@ -146,7 +146,7 @@ export const primaryNavigation: NavigationItem[] = [
 ];
 
 export const analystNavigation = primaryNavigation.filter((item) =>
-  ["overview", "alerts", "incidents", "assets", "responses"].includes(item.id)
+  ["overview", "alerts", "incidents", "assets", "responses", "rules"].includes(item.id)
 );
 
 export const navPathById = primaryNavigation.reduce<Record<NavKey, string>>(

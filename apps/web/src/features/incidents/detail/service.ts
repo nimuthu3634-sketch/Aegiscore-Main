@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ApiRequestError, fetchApiJson, formatUtcDateTime } from "../../../lib/api";
 import {
+  formatScoreMethodLabel,
   toAnalystNotes,
   toAssetCriticality,
   toRelatedResponses,
@@ -105,7 +106,13 @@ function mapIncidentDetailResponse(
         label: payload.priority_explanation.label,
         summary: payload.priority_explanation.summary,
         rationale: payload.priority_explanation.rationale,
-        factors: payload.priority_explanation.factors
+        factors: payload.priority_explanation.factors,
+        rollupScore: payload.priority_explanation.rollup_score ?? null,
+        linkedAlertsCount:
+          payload.priority_explanation.linked_alerts_count ?? payload.linked_alerts.length,
+        scoringMethods: (payload.priority_explanation.scoring_methods ?? []).map((value) =>
+          formatScoreMethodLabel(value)
+        )
       },
       availableActions: payload.state_transition_capabilities.available_actions
     }

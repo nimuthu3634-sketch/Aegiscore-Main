@@ -9,6 +9,9 @@ export type AlertScoreExplanation = {
   summary: string;
   rationale: string;
   factors: string[];
+  drivers: string[];
+  scoringMethod?: string | null;
+  version?: string | null;
   confidence?: number | null;
 };
 
@@ -112,14 +115,25 @@ export type AlertDetailApiResponse = {
     rationale: string;
     factors: string[];
     confidence: number | null;
+    scoring_method?: string | null;
+    baseline_version?: string | null;
+    model_version?: string | null;
+    drivers?: Array<{
+      label?: string;
+      contribution?: number;
+      feature?: string;
+    }> | null;
   } | null;
   related_responses: Array<{
     id: string;
     action_type: string;
     status: string;
+    policy_name?: string | null;
     target: string | null;
     mode: string | null;
     result_summary: string | null;
+    result_message?: string | null;
+    attempt_count?: number | null;
     details: Record<string, unknown>;
     created_at: string;
     executed_at: string | null;

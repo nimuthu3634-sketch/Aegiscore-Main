@@ -74,7 +74,7 @@ export function DashboardPage() {
         label: "High-risk alerts",
         value: metricFormatter.format(data.summary.highRiskAlerts),
         detail:
-          "Critical and high-severity alerts returned by live server-side filters.",
+          "Alerts with backend risk scores of 70 or higher across the live alert dataset.",
         tone: "warning" as const,
         trend: <Badge tone="warning">avg risk {data.summary.averageRiskScore}</Badge>
       },

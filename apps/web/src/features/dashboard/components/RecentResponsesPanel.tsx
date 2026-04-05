@@ -11,6 +11,8 @@ import {
   ModeBadge
 } from "../../responses/components/ResponseBadges";
 import type { ResponseRecord } from "../../responses/types";
+import { Badge } from "../../../components/ui/Badge";
+import { formatTokenLabel } from "../../../lib/formatters";
 
 type RecentResponsesPanelProps = {
   responses: ResponseRecord[];
@@ -49,10 +51,14 @@ export function RecentResponsesPanel({
                     <span className="type-mono-sm">{response.id}</span>
                     <ModeBadge mode={response.mode} />
                     <ExecutionStatusBadge status={response.executionStatus} />
+                    {response.policyName ? <Badge tone="brand">{response.policyName}</Badge> : null}
                   </div>
                   <div>
-                    <h3 className="type-heading-sm">{response.actionType}</h3>
+                    <h3 className="type-heading-sm">{formatTokenLabel(response.actionType)}</h3>
                     <p className="type-body-sm">{response.resultSummary}</p>
+                    {response.resultMessage && response.resultMessage !== response.resultSummary ? (
+                      <p className="type-body-sm text-content-muted">{response.resultMessage}</p>
+                    ) : null}
                   </div>
                 </div>
                 <span className="type-mono-sm">{response.executedAt}</span>
@@ -62,7 +68,10 @@ export function RecentResponsesPanel({
                   Target: <span className="type-mono-sm">{response.target}</span>
                 </span>
                 <span className="type-body-sm">
-                  Linked entity: <span className="type-mono-sm">{response.linkedEntity}</span>
+                  Incident: <span className="type-mono-sm">{response.linkedEntity}</span>
+                </span>
+                <span className="type-body-sm">
+                  Attempts: <span className="type-mono-sm">{response.attemptCount}</span>
                 </span>
               </div>
             </div>

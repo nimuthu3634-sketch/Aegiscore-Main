@@ -17,6 +17,9 @@ export type IncidentPriorityExplanation = {
   summary: string;
   rationale: string;
   factors: string[];
+  rollupScore: number | null;
+  linkedAlertsCount: number;
+  scoringMethods: string[];
 };
 
 export type IncidentDetailRecord = {
@@ -108,9 +111,12 @@ export type IncidentDetailApiResponse = {
     id: string;
     action_type: string;
     status: string;
+    policy_name?: string | null;
     target: string | null;
     mode: string | null;
     result_summary: string | null;
+    result_message?: string | null;
+    attempt_count?: number | null;
     details: Record<string, unknown>;
     created_at: string;
     executed_at: string | null;
@@ -160,6 +166,9 @@ export type IncidentDetailApiResponse = {
     summary: string;
     rationale: string;
     factors: string[];
+    rollup_score?: number | null;
+    linked_alerts_count?: number;
+    scoring_methods?: string[];
   };
   state_transition_capabilities: {
     current_state: "new" | "triaged" | "investigating" | "contained" | "resolved" | "false_positive";
