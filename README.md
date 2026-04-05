@@ -32,10 +32,31 @@ docker compose up --build
 ## Services
 
 - `postgres`: PostgreSQL 16 for local persistence
-- `api`: FastAPI service with modular app structure and `/health`
+- `api`: FastAPI service with JWT auth, modular domain layers, and `/health`
 - `worker`: background worker shell for future policy execution
 - `web`: Vite-powered React frontend shell
 - `nginx`: reverse proxy routing `/` to the frontend and `/api` to the backend
+
+## Seed Development Data
+
+Run the local seed command after migrations are available:
+
+```powershell
+docker compose exec api python -m app.db.seed
+```
+
+Default seeded development credentials:
+
+- Admin: `admin` / `AegisCore123!`
+- Analyst: `analyst` / `AegisCore123!`
+
+Sample auth flow:
+
+```powershell
+$login = Invoke-RestMethod -Method Post -Uri http://localhost:8000/auth/login -ContentType "application/json" -Body '{"username":"admin","password":"AegisCore123!"}'
+$token = $login.access_token
+Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/dashboard/summary
+```
 
 ## Environment Files
 
@@ -50,13 +71,15 @@ docker compose up --build
 ```powershell
 docker compose config
 docker compose up --build -d
+docker compose exec api alembic upgrade head
+docker compose exec api python -m app.db.seed
 Invoke-WebRequest http://localhost:8000/health
+Invoke-WebRequest http://localhost:8000/auth/me -Headers @{ Authorization = "Bearer <token>" }
 Invoke-WebRequest http://localhost/
 ```
 
 ## Notes
 
 - The backend owns all external security integrations; the frontend talks only to backend APIs.
-- Raw payload preservation, normalized alerts, incidents, audit history, and response history are reflected in the initial backend schema.
+- The backend foundation now includes roles, users, assets, raw alerts, normalized alerts, risk scores, incidents, response actions, and audit logs.
 - Frontend work follows the AegisCore dark SOC theme and is prepared for Figma-first design iteration in later milestones.
-

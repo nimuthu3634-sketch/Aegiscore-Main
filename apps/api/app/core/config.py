@@ -17,11 +17,32 @@ class Settings(BaseSettings):
         default="replace-with-a-development-secret",
         alias="JWT_SECRET_KEY",
     )
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    access_token_expire_minutes: int = Field(
+        default=60,
+        alias="ACCESS_TOKEN_EXPIRE_MINUTES",
+    )
     wazuh_base_url: str = Field(
         default="http://wazuh-manager:55000",
         alias="WAZUH_BASE_URL",
     )
     suricata_source: str = Field(default="suricata", alias="SURICATA_SOURCE")
+    dev_seed_admin_username: str = Field(
+        default="admin",
+        alias="DEV_SEED_ADMIN_USERNAME",
+    )
+    dev_seed_admin_password: str = Field(
+        default="AegisCore123!",
+        alias="DEV_SEED_ADMIN_PASSWORD",
+    )
+    dev_seed_analyst_username: str = Field(
+        default="analyst",
+        alias="DEV_SEED_ANALYST_USERNAME",
+    )
+    dev_seed_analyst_password: str = Field(
+        default="AegisCore123!",
+        alias="DEV_SEED_ANALYST_PASSWORD",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -34,4 +55,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

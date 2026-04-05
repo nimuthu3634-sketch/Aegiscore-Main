@@ -30,8 +30,14 @@ services:
       API_PORT: 8000
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aegiscore}:${POSTGRES_PASSWORD:-aegiscore_dev_password}@postgres:5432/${POSTGRES_DB:-aegiscore}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-replace-with-a-development-secret}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
       WAZUH_BASE_URL: ${WAZUH_BASE_URL:-http://wazuh-manager:55000}
       SURICATA_SOURCE: ${SURICATA_SOURCE:-suricata}
+      DEV_SEED_ADMIN_USERNAME: ${DEV_SEED_ADMIN_USERNAME:-admin}
+      DEV_SEED_ADMIN_PASSWORD: ${DEV_SEED_ADMIN_PASSWORD:-AegisCore123!}
+      DEV_SEED_ANALYST_USERNAME: ${DEV_SEED_ANALYST_USERNAME:-analyst}
+      DEV_SEED_ANALYST_PASSWORD: ${DEV_SEED_ANALYST_PASSWORD:-AegisCore123!}
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:
@@ -97,4 +103,3 @@ services:
 volumes:
   postgres_data:
   web_node_modules:
-
