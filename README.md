@@ -110,6 +110,20 @@ These operations create audit-log entries, update detail timelines, and persist 
 
 Use either `incident_id` for an existing incident or `create_new: true` for a new incident, but not both.
 
+## Risk Scoring
+
+AegisCore now includes a persisted risk scoring layer for alert prioritization.
+
+- Deterministic runtime baseline: `apps/api/app/services/scoring/baseline.py`
+- Optional trainable scikit-learn model: `ai/training/train_risk_model.py`
+- Scoring reference: `docs/scoring.md`
+
+Train the local model artifact with:
+
+```powershell
+docker compose run --rm --no-deps api python /srv/ai/training/train_risk_model.py
+```
+
 ## Notes
 
 - The backend owns all external security integrations; the frontend talks only to backend APIs.

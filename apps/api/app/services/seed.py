@@ -22,15 +22,16 @@ from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
 from app.models.raw_alert import RawAlert
 from app.models.response_action import ResponseAction
-from app.models.risk_score import RiskScore
 from app.models.role import Role
 from app.models.user import User
 from app.repositories.assets import AssetsRepository
 from app.repositories.audit_logs import AuditLogsRepository
+from app.repositories.alerts import AlertsRepository
 from app.repositories.incidents import IncidentsRepository
 from app.repositories.responses import ResponsesRepository
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
+from app.services.scoring.service import refresh_incident_priority
 
 
 def seed_database(session: Session) -> None:
@@ -113,7 +114,7 @@ def seed_database(session: Session) -> None:
     session.flush()
     now = datetime.now(UTC)
 
-    seeded_pairs: list[tuple[RawAlert, NormalizedAlert, RiskScore]] = [
+    seeded_pairs: list[tuple[RawAlert, NormalizedAlert]] = [
         (
             RawAlert(
                 asset=primary_assets[2],
@@ -142,12 +143,6 @@ def seed_database(session: Session) -> None:
                     "source": "wazuh",
                 },
                 created_at=now - timedelta(minutes=37),
-            ),
-            RiskScore(
-                score=0.96,
-                confidence=0.92,
-                reasoning="High-confidence admin account creation on a monitored server.",
-                calculated_at=now - timedelta(minutes=36),
             ),
         ),
         (
@@ -179,12 +174,6 @@ def seed_database(session: Session) -> None:
                 },
                 created_at=now - timedelta(minutes=30),
             ),
-            RiskScore(
-                score=0.54,
-                confidence=0.73,
-                reasoning="External reconnaissance detected against an internet-facing asset.",
-                calculated_at=now - timedelta(minutes=29),
-            ),
         ),
         (
             RawAlert(
@@ -212,12 +201,6 @@ def seed_database(session: Session) -> None:
                     "asset_hostname": "acct-db-01",
                 },
                 created_at=now - timedelta(minutes=25),
-            ),
-            RiskScore(
-                score=0.88,
-                confidence=0.89,
-                reasoning="Integrity change affected a critical configuration path.",
-                calculated_at=now - timedelta(minutes=24),
             ),
         ),
         (
@@ -249,23 +232,15 @@ def seed_database(session: Session) -> None:
                 },
                 created_at=now - timedelta(minutes=17),
             ),
-            RiskScore(
-                score=0.78,
-                confidence=0.84,
-                reasoning="Brute-force activity targeted a high-value internet-facing system.",
-                calculated_at=now - timedelta(minutes=16),
-            ),
         ),
     ]
 
     created_incidents: list[Incident] = []
 
-    for raw_alert, normalized_alert, risk_score in seeded_pairs:
-        raw_alert.normalized_alert = normalized_alert
-        normalized_alert.risk_score = risk_score
-        session.add(raw_alert)
-        session.add(normalized_alert)
-        session.add(risk_score)
+    alerts_repository = AlertsRepository(session)
+
+    for raw_alert, normalized_alert in seeded_pairs:
+        alerts_repository.create_raw_and_normalized(raw_alert, normalized_alert)
 
     session.flush()
 
@@ -280,7 +255,6 @@ def seed_database(session: Session) -> None:
             "linked_alerts": [active_alerts[3], active_alerts[1]],
             "assignee": admin_user,
             "status": IncidentStatus.TRIAGED,
-            "priority": IncidentPriority.HIGH,
             "title": "External reconnaissance against web edge",
             "summary": (
                 "Port-scan and brute-force activity are being tracked together on the "
@@ -292,7 +266,6 @@ def seed_database(session: Session) -> None:
             "linked_alerts": [active_alerts[2]],
             "assignee": analyst_user,
             "status": IncidentStatus.INVESTIGATING,
-            "priority": IncidentPriority.HIGH,
             "title": active_alerts[2].title,
             "summary": (
                 "Configuration drift on a critical system is under active investigation."
@@ -308,7 +281,7 @@ def seed_database(session: Session) -> None:
                 title=incident_spec["title"],
                 summary=incident_spec["summary"],
                 status=incident_spec["status"],
-                priority=incident_spec["priority"],
+                priority=IncidentPriority.MEDIUM,
                 created_at=primary_alert.created_at + timedelta(minutes=1),
                 updated_at=now - timedelta(minutes=5),
             )
@@ -317,6 +290,7 @@ def seed_database(session: Session) -> None:
         for linked_alert in incident_spec["linked_alerts"]:
             linked_alert.incident = incident
         incident.primary_alert = primary_alert
+        refresh_incident_priority(incident)
         created_incidents.append(incident)
 
     session.flush()

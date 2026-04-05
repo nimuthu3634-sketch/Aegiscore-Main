@@ -43,6 +43,23 @@ class Settings(BaseSettings):
         default="AegisCore123!",
         alias="DEV_SEED_ANALYST_PASSWORD",
     )
+    scoring_strategy: str = Field(default="baseline", alias="SCORING_STRATEGY")
+    scoring_baseline_version: str = Field(
+        default="baseline_v1",
+        alias="SCORING_BASELINE_VERSION",
+    )
+    scoring_model_path: str = Field(
+        default="/srv/ai/models/aegiscore-risk-priority-model.joblib",
+        alias="SCORING_MODEL_PATH",
+    )
+    scoring_model_metadata_path: str = Field(
+        default="/srv/ai/models/aegiscore-risk-priority-model.metadata.json",
+        alias="SCORING_MODEL_METADATA_PATH",
+    )
+    scoring_model_version: str = Field(
+        default="untrained",
+        alias="SCORING_MODEL_VERSION",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

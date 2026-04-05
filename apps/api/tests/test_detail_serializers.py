@@ -14,6 +14,7 @@ from app.models.enums import (
     ResponseMode,
     ResponseStatus,
     RoleName,
+    ScoreMethod,
 )
 from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
@@ -91,9 +92,20 @@ def _build_fixture() -> tuple[NormalizedAlert, Incident, list[AuditLog], list[An
     alert.risk_score = RiskScore(
         id=uuid4(),
         normalized_alert=alert,
-        score=0.88,
+        score=88,
         confidence=0.89,
+        priority_label=IncidentPriority.CRITICAL,
+        scoring_method=ScoreMethod.BASELINE_RULES,
+        baseline_version="baseline_v1",
         reasoning="Integrity change affected a critical configuration path.",
+        explanation={
+            "label": "Deterministic baseline score",
+            "summary": "Alert scored 88/100 and was classified as critical priority.",
+            "rationale": "Baseline factors elevated the alert.",
+            "factors": ["Sensitive file or configuration path was involved."],
+            "drivers": [{"feature": "sensitive_file_flag", "contribution": 10}],
+        },
+        feature_snapshot={"sensitive_file_flag": 1},
         calculated_at=datetime.now(UTC),
     )
     secondary_asset = Asset(
@@ -139,9 +151,14 @@ def _build_fixture() -> tuple[NormalizedAlert, Incident, list[AuditLog], list[An
     secondary_alert.risk_score = RiskScore(
         id=uuid4(),
         normalized_alert=secondary_alert,
-        score=0.54,
+        score=54,
         confidence=0.73,
+        priority_label=IncidentPriority.MEDIUM,
+        scoring_method=ScoreMethod.BASELINE_RULES,
+        baseline_version="baseline_v1",
         reasoning="External reconnaissance detected against an internet-facing asset.",
+        explanation={"summary": "Alert scored 54/100."},
+        feature_snapshot={"repeated_source_ip": 2},
         calculated_at=datetime.now(UTC),
     )
     incident = Incident(
@@ -211,6 +228,9 @@ def test_alert_detail_response_includes_observables_and_related_workflow() -> No
     assert response.related_responses[0].mode.value == "dry-run"
     assert response.linked_incident is not None
     assert response.score_explanation is not None
+    assert response.risk_score == 88
+    assert response.score_explanation.scoring_method == ScoreMethod.BASELINE_RULES
+    assert response.score_explanation.feature_snapshot == {"sensitive_file_flag": 1}
     assert response.analyst_notes[0].content.startswith("Escalated")
 
 
@@ -228,4 +248,6 @@ def test_incident_detail_response_builds_evidence_timeline_and_capabilities() ->
     assert response.response_history[0].action_type == "collect_configuration_backup"
     assert "contain" in response.state_transition_capabilities.available_actions
     assert response.timeline[0].title == "Incident created"
+    assert response.priority_explanation.rollup_score is not None
+    assert response.priority_explanation.linked_alerts_count == 2
     assert response.analyst_notes[0].content.startswith("Escalated")

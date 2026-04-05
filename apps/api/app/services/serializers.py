@@ -49,6 +49,14 @@ from app.schemas.incidents import (
     IncidentPriorityExplanationResponse,
     IncidentStateTransitionCapabilitiesResponse,
 )
+from app.services.scoring.baseline import priority_from_score
+from app.services.scoring.features import (
+    extract_destination_ip,
+    extract_destination_port,
+    extract_source_ip,
+    extract_username,
+)
+from app.services.scoring.service import build_incident_priority_summary
 from app.services.workflows import (
     get_allowed_incident_target_states,
     get_available_incident_actions,
@@ -149,14 +157,10 @@ def _priority_label_from_risk(
     if risk_score is None:
         return _severity_label_from_score(severity)
 
-    scaled_score = round(risk_score.score * 100)
-    if scaled_score >= 85:
-        return AlertSeverityLabel.CRITICAL
-    if scaled_score >= 70:
-        return AlertSeverityLabel.HIGH
-    if scaled_score >= 45:
-        return AlertSeverityLabel.MEDIUM
-    return AlertSeverityLabel.LOW
+    if risk_score.priority_label is not None:
+        return AlertSeverityLabel(risk_score.priority_label.value)
+
+    return AlertSeverityLabel(priority_from_score(risk_score.score).value)
 
 
 def _pick_payload_value(
@@ -184,45 +188,19 @@ def _coerce_int(value: Any) -> int | None:
 
 
 def _extract_source_ip(alert: NormalizedAlert) -> str | None:
-    return _pick_payload_value(
-        [alert.normalized_payload, alert.raw_alert.raw_payload],
-        "source_ip",
-        "src_ip",
-        "srcip",
-        "scanner_ip",
-    )
+    return extract_source_ip(alert)
 
 
 def _extract_destination_ip(alert: NormalizedAlert) -> str | None:
-    return _pick_payload_value(
-        [alert.normalized_payload, alert.raw_alert.raw_payload],
-        "destination_ip",
-        "dest_ip",
-        "dst_ip",
-        "dstip",
-        "target_ip",
-    )
+    return extract_destination_ip(alert)
 
 
 def _extract_destination_port(alert: NormalizedAlert) -> int | None:
-    return _coerce_int(
-        _pick_payload_value(
-            [alert.normalized_payload, alert.raw_alert.raw_payload],
-            "destination_port",
-            "dest_port",
-            "dst_port",
-            "destinationPort",
-        )
-    )
+    return extract_destination_port(alert)
 
 
 def _extract_username(alert: NormalizedAlert) -> str | None:
-    return _pick_payload_value(
-        [alert.normalized_payload, alert.raw_alert.raw_payload],
-        "username",
-        "new_user",
-        "user",
-    )
+    return extract_username(alert)
 
 
 def _extract_source_rule(raw_alert: RawAlert) -> AlertSourceRuleResponse | None:
@@ -368,7 +346,7 @@ def _build_incident_priority_factors(incident: Incident) -> list[str]:
     factors.append(f"Detection type: {primary_alert.detection_type.value}")
     if primary_alert.risk_score is not None:
         factors.append(
-            f"Alert risk score: {round(primary_alert.risk_score.score * 100)}"
+            f"Alert risk score: {round(primary_alert.risk_score.score)}"
         )
     if len(linked_alerts) > 1:
         factors.append(f"Correlated alerts: {len(linked_alerts)}")
@@ -452,9 +430,15 @@ def to_raw_alert_summary_response(raw_alert: RawAlert) -> RawAlertSummaryRespons
 def to_risk_score_response(risk_score: RiskScore) -> RiskScoreResponse:
     return RiskScoreResponse(
         id=risk_score.id,
-        score=risk_score.score,
+        score=round(risk_score.score, 2),
         confidence=risk_score.confidence,
         reasoning=risk_score.reasoning,
+        priority_label=risk_score.priority_label,
+        scoring_method=risk_score.scoring_method,
+        baseline_version=risk_score.baseline_version,
+        model_version=risk_score.model_version,
+        explanation=risk_score.explanation,
+        feature_snapshot=risk_score.feature_snapshot,
         calculated_at=risk_score.calculated_at,
     )
 
@@ -493,7 +477,7 @@ def to_alert_summary_response(alert: NormalizedAlert) -> AlertSummaryResponse:
         destination_port=_extract_destination_port(alert),
         username=_extract_username(alert),
         risk_score=to_risk_score_response(alert.risk_score) if alert.risk_score else None,
-        risk_score_value=round(alert.risk_score.score * 100) if alert.risk_score else None,
+        risk_score_value=round(alert.risk_score.score) if alert.risk_score else None,
         incident=to_incident_reference_response(alert.incident) if alert.incident else None,
     )
 
@@ -625,6 +609,37 @@ def to_activity_entry_response(audit_log: AuditLog) -> ActivityEntryResponse:
     )
 
 
+def _build_alert_score_explanation(
+    alert: NormalizedAlert,
+    priority_label: AlertSeverityLabel | None,
+) -> AlertScoreExplanationResponse | None:
+    if alert.risk_score is None:
+        return None
+
+    explanation = alert.risk_score.explanation or {}
+    factors = explanation.get("factors")
+    drivers = explanation.get("drivers")
+
+    return AlertScoreExplanationResponse(
+        label=str(explanation.get("label") or "Alert risk explanation"),
+        summary=str(
+            explanation.get("summary")
+            or (
+                f"Alert is currently scored {priority_label.value if priority_label else 'unrated'} "
+                "based on normalized telemetry and asset context."
+            )
+        ),
+        rationale=str(explanation.get("rationale") or alert.risk_score.reasoning),
+        factors=[str(factor) for factor in (factors or _build_alert_score_factors(alert))],
+        confidence=alert.risk_score.confidence,
+        scoring_method=alert.risk_score.scoring_method,
+        baseline_version=alert.risk_score.baseline_version,
+        model_version=alert.risk_score.model_version,
+        drivers=drivers if isinstance(drivers, list) else None,
+        feature_snapshot=alert.risk_score.feature_snapshot,
+    )
+
+
 def to_alert_detail_response(
     alert: NormalizedAlert,
     audit_logs: list[AuditLog],
@@ -642,7 +657,7 @@ def to_alert_detail_response(
         severity_score=alert.severity,
         status=alert.status,
         status_label=_alert_status_label(alert),
-        risk_score=round(alert.risk_score.score * 100) if alert.risk_score else None,
+        risk_score=round(alert.risk_score.score) if alert.risk_score else None,
         risk_confidence=alert.risk_score.confidence if alert.risk_score else None,
         priority_label=priority_label,
         linked_incident=AlertLinkedIncidentResponse(
@@ -667,18 +682,7 @@ def to_alert_detail_response(
         source_rule=_extract_source_rule(alert.raw_alert),
         normalized_details=alert.normalized_payload,
         raw_payload=alert.raw_alert.raw_payload,
-        score_explanation=AlertScoreExplanationResponse(
-            label="Alert risk explanation",
-            summary=(
-                f"Alert is currently scored {priority_label.value if priority_label else 'unrated'} "
-                "based on normalized telemetry and asset context."
-            ),
-            rationale=alert.risk_score.reasoning,
-            factors=_build_alert_score_factors(alert),
-            confidence=alert.risk_score.confidence,
-        )
-        if alert.risk_score
-        else None,
+        score_explanation=_build_alert_score_explanation(alert, priority_label),
         related_responses=[
             to_response_action_detail_response(action)
             for action in sorted(
@@ -705,7 +709,7 @@ def to_incident_linked_alert_response(
         source_type=_titleize_source(alert.source),
         severity=_severity_label_from_score(alert.severity),
         status=alert.status,
-        risk_score=round(alert.risk_score.score * 100) if alert.risk_score else None,
+        risk_score=round(alert.risk_score.score) if alert.risk_score else None,
         timestamp=alert.created_at,
         asset_hostname=alert.asset.hostname if alert.asset else None,
         source_ip=_extract_source_ip(alert),
@@ -729,6 +733,7 @@ def to_incident_detail_response(
     primary_asset = (
         to_asset_summary_response(primary_alert.asset) if primary_alert.asset else None
     )
+    priority_summary = build_incident_priority_summary(incident)
 
     detection_types = sorted({alert.detection_type.value for alert in linked_alerts})
     source_types = sorted({_titleize_source(alert.source) for alert in linked_alerts})
@@ -846,13 +851,17 @@ def to_incident_detail_response(
         priority_explanation=IncidentPriorityExplanationResponse(
             label="Incident priority explanation",
             summary=(
-                f"Incident is currently prioritized {incident.priority.value} based on the "
-                "primary alert, correlated evidence, and linked workflow history."
+                f"Incident is currently prioritized {incident.priority.value} with a "
+                f"rollup score of {priority_summary['score']} based on linked alert risk, "
+                "correlated evidence, and workflow history."
             ),
             rationale=incident.summary
             or primary_alert.description
             or "Priority is derived from the normalized alert and current investigation context.",
-            factors=_build_incident_priority_factors(incident),
+            factors=priority_summary["factors"],
+            rollup_score=priority_summary["score"],
+            linked_alerts_count=len(linked_alerts),
+            scoring_methods=priority_summary["scoring_methods"],
         ),
         state_transition_capabilities=_state_transition_capabilities(incident),
     )

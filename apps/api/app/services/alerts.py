@@ -31,6 +31,8 @@ from app.services.serializers import (
     to_alert_summary_response,
     to_analyst_note_response,
 )
+from app.services.scoring.baseline import priority_from_score
+from app.services.scoring.service import refresh_incident_priority
 
 
 def list_alerts(session: Session, query: AlertListQuery) -> AlertListResponse:
@@ -87,15 +89,10 @@ def get_alert_detail(session: Session, alert_id: UUID) -> AlertDetailResponse:
 
 
 def _priority_from_alert(alert) -> IncidentPriority:
-    risk_score = round(alert.risk_score.score * 100) if alert.risk_score else None
-    if risk_score is not None:
-        if risk_score >= 85:
-            return IncidentPriority.CRITICAL
-        if risk_score >= 70:
-            return IncidentPriority.HIGH
-        if risk_score >= 45:
-            return IncidentPriority.MEDIUM
-        return IncidentPriority.LOW
+    if alert.risk_score and alert.risk_score.priority_label is not None:
+        return alert.risk_score.priority_label
+    if alert.risk_score:
+        return priority_from_score(alert.risk_score.score)
 
     if alert.severity >= 9:
         return IncidentPriority.CRITICAL
@@ -374,6 +371,7 @@ def link_alert_incident(
     alert.incident = incident
     if incident.primary_alert is None:
         incident.primary_alert = alert
+    refresh_incident_priority(incident)
 
     linked_alerts_count = len(_linked_alerts(incident))
     _create_audit_log(

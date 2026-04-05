@@ -9,6 +9,7 @@ from app.models.enums import (
     IncidentPriority,
     IncidentStatus,
     RoleName,
+    ScoreMethod,
 )
 from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
@@ -58,9 +59,14 @@ def test_alert_summary_response_includes_nested_entities() -> None:
     risk_score = RiskScore(
         id=uuid4(),
         normalized_alert=normalized_alert,
-        score=0.81,
+        score=81,
         confidence=0.88,
+        priority_label=IncidentPriority.HIGH,
+        scoring_method=ScoreMethod.BASELINE_RULES,
+        baseline_version="baseline_v1",
         reasoning="High-volume failures on an internet-facing system.",
+        explanation={"summary": "Alert scored 81/100."},
+        feature_snapshot={"repeated_failed_logins": 22},
         calculated_at=datetime.now(UTC),
     )
     normalized_alert.risk_score = risk_score
@@ -70,7 +76,10 @@ def test_alert_summary_response_includes_nested_entities() -> None:
     assert response.asset is not None
     assert response.risk_score is not None
     assert response.asset.hostname == "acct-web-01"
-    assert response.risk_score.score == 0.81
+    assert response.risk_score.score == 81
+    assert response.risk_score.scoring_method == ScoreMethod.BASELINE_RULES
+    assert response.risk_score.baseline_version == "baseline_v1"
+    assert response.risk_score_value == 81
 
 
 def test_incident_summary_response_includes_assigned_user_and_alert() -> None:

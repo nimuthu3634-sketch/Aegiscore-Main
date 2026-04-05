@@ -59,5 +59,10 @@ class NoteTargetType(str, enum.Enum):
     INCIDENT = "incident"
 
 
+class ScoreMethod(str, enum.Enum):
+    BASELINE_RULES = "baseline_rules"
+    SKLEARN_MODEL = "sklearn_model"
+
+
 def enum_values(enum_class: type[enum.Enum]) -> list[str]:
     return [member.value for member in enum_class]

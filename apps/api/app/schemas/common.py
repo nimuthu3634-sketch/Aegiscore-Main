@@ -8,6 +8,7 @@ from app.models.enums import (
     DetectionType,
     IncidentPriority,
     IncidentStatus,
+    ScoreMethod,
     ResponseStatus,
     RoleName,
 )
@@ -78,6 +79,12 @@ class RiskScoreResponse(APIModel):
     score: float
     confidence: float
     reasoning: str
+    priority_label: IncidentPriority | None = None
+    scoring_method: ScoreMethod | None = None
+    baseline_version: str | None = None
+    model_version: str | None = None
+    explanation: dict[str, Any] | None = None
+    feature_snapshot: dict[str, Any] | None = None
     calculated_at: datetime
 
 

@@ -38,10 +38,16 @@ services:
       DEV_SEED_ADMIN_PASSWORD: ${DEV_SEED_ADMIN_PASSWORD:-AegisCore123!}
       DEV_SEED_ANALYST_USERNAME: ${DEV_SEED_ANALYST_USERNAME:-analyst}
       DEV_SEED_ANALYST_PASSWORD: ${DEV_SEED_ANALYST_PASSWORD:-AegisCore123!}
+      SCORING_STRATEGY: ${SCORING_STRATEGY:-baseline}
+      SCORING_BASELINE_VERSION: ${SCORING_BASELINE_VERSION:-baseline_v1}
+      SCORING_MODEL_PATH: ${SCORING_MODEL_PATH:-/srv/ai/models/aegiscore-risk-priority-model.joblib}
+      SCORING_MODEL_METADATA_PATH: ${SCORING_MODEL_METADATA_PATH:-/srv/ai/models/aegiscore-risk-priority-model.metadata.json}
+      SCORING_MODEL_VERSION: ${SCORING_MODEL_VERSION:-untrained}
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:
       - ./apps/api:/srv/apps/api
+      - ./ai:/srv/ai
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,0 +1,46 @@
+{
+  "model_version": "risk_model_20260405_134556",
+  "trained_at": "2026-04-05T13:45:56.335198+00:00",
+  "training_rows": 20,
+  "train_accuracy": 1.0,
+  "feature_columns": [
+    "source_type",
+    "detection_type",
+    "asset_criticality",
+    "source_severity",
+    "source_rule_level",
+    "repeated_event_count",
+    "time_window_density",
+    "repeated_source_ip",
+    "repeated_failed_logins",
+    "recurrence_history",
+    "destination_port",
+    "has_destination_port",
+    "privileged_account_flag",
+    "sensitive_file_flag"
+  ],
+  "categorical_columns": [
+    "source_type",
+    "detection_type",
+    "asset_criticality"
+  ],
+  "numeric_columns": [
+    "source_severity",
+    "source_rule_level",
+    "repeated_event_count",
+    "time_window_density",
+    "repeated_source_ip",
+    "repeated_failed_logins",
+    "recurrence_history",
+    "destination_port",
+    "has_destination_port",
+    "privileged_account_flag",
+    "sensitive_file_flag"
+  ],
+  "label_classes": [
+    "critical",
+    "high",
+    "low",
+    "medium"
+  ]
+}

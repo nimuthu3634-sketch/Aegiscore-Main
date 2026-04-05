@@ -2,7 +2,13 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from app.models.enums import AlertStatus, DetectionType, IncidentPriority, IncidentStatus
+from app.models.enums import (
+    AlertStatus,
+    DetectionType,
+    IncidentPriority,
+    IncidentStatus,
+    ScoreMethod,
+)
 from app.schemas.base import APIModel
 from app.schemas.common import (
     ActivityEntryResponse,
@@ -37,6 +43,11 @@ class AlertScoreExplanationResponse(APIModel):
     rationale: str
     factors: list[str]
     confidence: float | None
+    scoring_method: ScoreMethod | None = None
+    baseline_version: str | None = None
+    model_version: str | None = None
+    drivers: list[dict[str, Any]] | None = None
+    feature_snapshot: dict[str, Any] | None = None
 
 
 class AlertDetailResponse(APIModel):

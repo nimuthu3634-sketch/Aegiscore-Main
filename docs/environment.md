@@ -19,10 +19,15 @@
 - `DEV_SEED_ADMIN_PASSWORD`: seeded local admin password
 - `DEV_SEED_ANALYST_USERNAME`: seeded local analyst username
 - `DEV_SEED_ANALYST_PASSWORD`: seeded local analyst password
+- `SCORING_STRATEGY`: runtime scoring mode, either `baseline` or `model`
+- `SCORING_BASELINE_VERSION`: deterministic baseline version identifier stored with scores
+- `SCORING_MODEL_PATH`: model artifact path used when `SCORING_STRATEGY=model`
+- `SCORING_MODEL_METADATA_PATH`: metadata JSON path paired with the model artifact
+- `SCORING_MODEL_VERSION`: fallback runtime model version label for local development
 
 ## App-Specific Files
 
 - `apps/web/.env.example`: frontend runtime variables
 - `apps/api/.env.example`: API settings, auth values, seed credentials, and integration URLs
 - `apps/worker/.env.example`: worker polling and database settings
-- `ai/.env.example`: AI package data and artifact settings
+- `ai/.env.example`: AI dataset and model artifact settings for training/inference scripts

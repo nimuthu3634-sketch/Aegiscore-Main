@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from pydantic import Field
+
 from app.models.enums import AlertStatus, DetectionType, IncidentPriority, IncidentStatus
 from app.schemas.base import APIModel
 from app.schemas.common import (
@@ -41,6 +43,9 @@ class IncidentPriorityExplanationResponse(APIModel):
     summary: str
     rationale: str
     factors: list[str]
+    rollup_score: int | None = None
+    linked_alerts_count: int = 0
+    scoring_methods: list[str] = Field(default_factory=list)
 
 
 class IncidentStateTransitionCapabilitiesResponse(APIModel):

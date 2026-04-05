@@ -20,6 +20,7 @@ from app.schemas.listing import (
     AlertListStatusFilter,
     SortDirection,
 )
+from app.services.scoring.service import score_alert
 
 
 class AlertsRepository:
@@ -213,3 +214,5 @@ class AlertsRepository:
     def create_raw_and_normalized(self, raw_alert, normalized_alert) -> None:
         self.session.add(raw_alert)
         self.session.add(normalized_alert)
+        self.session.flush()
+        score_alert(self.session, normalized_alert)
