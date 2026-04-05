@@ -14,10 +14,10 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { SeverityChip } from "../components/ui/SeverityChip";
 import { StatusChip } from "../components/ui/StatusChip";
+import { LinkIncidentModal } from "../features/alerts/detail/LinkIncidentModal";
 import {
   acknowledgeAlertDetail,
   closeAlertDetail,
-  linkAlertToIncident,
   saveAlertNote,
   useAlertDetail
 } from "../features/alerts/detail/service";
@@ -30,11 +30,12 @@ export function AlertDetailPage() {
   const navigate = useNavigate();
   const { alertId } = useParams<{ alertId: string }>();
   const { data, isLoading, error, notFound, reload } = useAlertDetail(alertId);
-  const [pendingAction, setPendingAction] = useState<
-    "acknowledge" | "link" | "close" | null
-  >(null);
+  const [pendingAction, setPendingAction] = useState<"acknowledge" | "close" | null>(
+    null
+  );
   const [workflowError, setWorkflowError] = useState<string | null>(null);
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [noteError, setNoteError] = useState<string | null>(null);
@@ -129,7 +130,7 @@ export function AlertDetailPage() {
   ];
 
   async function handleWorkflowAction(
-    action: "acknowledge" | "link" | "close",
+    action: "acknowledge" | "close",
     runner: () => Promise<{ message: string }>
   ) {
     if (!alertId) {
@@ -186,6 +187,22 @@ export function AlertDetailPage() {
 
   return (
     <div className="space-y-section">
+      {isLinkModalOpen ? (
+        <LinkIncidentModal
+          open={isLinkModalOpen}
+          alertId={alert.id}
+          alertTitle={alert.title ?? alert.detectionType}
+          alertSummary={alert.normalizedSummary}
+          onClose={() => setIsLinkModalOpen(false)}
+          onSuccess={(message) => {
+            setIsLinkModalOpen(false);
+            setWorkflowError(null);
+            setWorkflowMessage(message);
+            reload();
+          }}
+        />
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button variant="ghost" size="sm" onClick={() => navigate("/alerts")}>
           Back to alerts
@@ -312,12 +329,14 @@ export function AlertDetailPage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() =>
-                    handleWorkflowAction("link", () => linkAlertToIncident(alert.id))
-                  }
+                  onClick={() => {
+                    setWorkflowError(null);
+                    setWorkflowMessage(null);
+                    setIsLinkModalOpen(true);
+                  }}
                   disabled={!canLinkIncident || pendingAction !== null}
                 >
-                  {pendingAction === "link" ? "Linking..." : "Link to incident"}
+                  Link to incident
                 </Button>
                 <Button
                   variant="ghost"
@@ -350,9 +369,16 @@ export function AlertDetailPage() {
           >
             {alert.linkedIncidentId ? (
               <div className="space-y-3">
-                <p className="type-body-sm">
-                  This alert is already linked into the broader incident investigation below.
-                </p>
+                <div className="space-y-2">
+                  <p className="type-label-md">Current linked incident</p>
+                  <p className="type-heading-sm">
+                    {alert.linkedIncidentTitle ?? "Linked incident"}
+                  </p>
+                  <p className="type-body-sm">
+                    This alert is already grouped into the incident below and no longer
+                    needs a new linkage action.
+                  </p>
+                </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge tone="brand">{alert.linkedIncidentId}</Badge>
                   <Button
@@ -366,10 +392,24 @@ export function AlertDetailPage() {
               </div>
             ) : (
               <div className="rounded-panel border border-dashed border-border-subtle bg-surface-base/30 p-4">
-                <p className="type-body-sm">
-                  No incident linkage exists yet. Use the live link action above to create
-                  a new incident now, or wire in an existing-incident selector next.
-                </p>
+                <div className="space-y-3">
+                  <p className="type-body-sm">
+                    No incident linkage exists yet. Use the live link action above to
+                    search existing incidents or intentionally create a new one.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setWorkflowError(null);
+                      setWorkflowMessage(null);
+                      setIsLinkModalOpen(true);
+                    }}
+                    disabled={!canLinkIncident}
+                  >
+                    Open incident linker
+                  </Button>
+                </div>
               </div>
             )}
           </EvidencePanel>
