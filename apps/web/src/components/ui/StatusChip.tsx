@@ -14,6 +14,7 @@ const statusToneMap: Record<
   investigating: "warning",
   contained: "success",
   resolved: "success",
+  false_positive: "neutral",
   pending_response: "warning",
   failed: "danger",
   disabled: "neutral"

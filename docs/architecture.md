@@ -21,7 +21,7 @@ AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes sec
 - `app/core`: configuration
 - `app/core/security`: JWT and password hashing helpers
 - `app/db`: database engine and session setup
-- `app/models`: SQLAlchemy models for roles, users, assets, raw alerts, normalized alerts, incidents, risk scores, response actions, and audit logs
+- `app/models`: SQLAlchemy models for roles, users, assets, raw alerts, normalized alerts, incidents, risk scores, response actions, analyst notes, and audit logs
 - `app/repositories`: database access by aggregate or resource
 - `app/schemas`: API response schemas
 - `app/services`: auth, dashboard, alerts, incidents, response actions, seed logic, serializers, and health checks
@@ -36,7 +36,15 @@ AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes sec
 - `risk_scores`: explainable alert risk-scoring records
 - `incidents`: analyst-facing incident records generated from normalized alerts
 - `response_actions`: basic automated or analyst-triggered response activity
+- `analyst_notes`: persisted notes attached directly to alert or incident investigations
 - `audit_logs`: security and workflow history for traceability
+
+## Workflow State Model
+
+- Alert lifecycle actions are persisted through explicit APIs for acknowledge, close, and link-to-incident workflows.
+- Alert display state remains frontend-friendly through derived labels such as `triaged`, `contained`, and `pending_response`.
+- Incident workflow state is modeled directly as `new`, `triaged`, `investigating`, `contained`, `resolved`, and `false_positive`.
+- Every workflow mutation writes an audit entry, and note creation also persists a first-class analyst note record.
 
 ## Detection Scope
 

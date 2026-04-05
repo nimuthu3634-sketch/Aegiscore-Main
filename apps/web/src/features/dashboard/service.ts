@@ -26,7 +26,9 @@ const incidentStatePalette = {
   new: "#9CA3AF",
   triaged: "#F59E0B",
   investigating: "#F97316",
-  resolved: "#22C55E"
+  contained: "#22C55E",
+  resolved: "#22C55E",
+  false_positive: "#9CA3AF"
 } as const;
 
 const riskPalette = {
@@ -109,14 +111,18 @@ function buildRiskDistribution(riskScores: Array<number | null>): DashboardDistr
 
 function buildIncidentStateDistribution(
   states: Array<
-    "new" | "triaged" | "investigating" | "contained" | "resolved" | "failed"
+    | "new"
+    | "triaged"
+    | "investigating"
+    | "contained"
+    | "resolved"
+    | "false_positive"
+    | "failed"
   >
 ): DashboardDistributionPoint[] {
   const normalizedStateCounts = states.reduce<Record<IncidentStateBucket, number>>(
     (counts, state) => {
-      if (state === "contained") {
-        counts.investigating += 1;
-      } else if (state === "failed") {
+      if (state === "failed") {
         counts.new += 1;
       } else {
         counts[state] += 1;
@@ -128,7 +134,9 @@ function buildIncidentStateDistribution(
       new: 0,
       triaged: 0,
       investigating: 0,
-      resolved: 0
+      contained: 0,
+      resolved: 0,
+      false_positive: 0
     }
   );
 
@@ -136,7 +144,9 @@ function buildIncidentStateDistribution(
     "new",
     "triaged",
     "investigating",
-    "resolved"
+    "contained",
+    "resolved",
+    "false_positive"
   ];
 
   return orderedBuckets.map((label) => ({

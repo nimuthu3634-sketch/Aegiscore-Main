@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
 from app.models.response_action import ResponseAction
-from app.models.enums import ResponseStatus
+from app.models.enums import ResponseMode, ResponseStatus
 from app.models.user import User
 from app.schemas.listing import (
     ResponseExecutionStatusLabel,
@@ -52,16 +52,9 @@ class ResponsesRepository:
             )
 
         if query.mode == ResponseModeLabel.DRY_RUN:
-            conditions.append(
-                or_(details_text.ilike("%dry-run%"), details_text.ilike("%dry_run%"))
-            )
+            conditions.append(ResponseAction.mode == ResponseMode.DRY_RUN)
         elif query.mode == ResponseModeLabel.LIVE:
-            conditions.append(
-                or_(
-                    details_text.not_ilike("%dry-run%"),
-                    details_text.is_(None),
-                )
-            )
+            conditions.append(ResponseAction.mode == ResponseMode.LIVE)
 
         if query.execution_status == ResponseExecutionStatusLabel.SUCCEEDED:
             conditions.append(ResponseAction.status == ResponseStatus.COMPLETED)

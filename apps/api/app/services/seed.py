@@ -14,6 +14,7 @@ from app.models.enums import (
     DetectionType,
     IncidentPriority,
     IncidentStatus,
+    ResponseMode,
     ResponseStatus,
     RoleName,
 )
@@ -277,27 +278,27 @@ def seed_database(session: Session) -> None:
         (
             active_alerts[0],
             admin_user,
-            "Open",
+            IncidentStatus.TRIAGED,
             IncidentPriority.CRITICAL,
             "Admin account creation requires immediate validation and containment.",
         ),
         (
             active_alerts[2],
             analyst_user,
-            "Investigating",
+            IncidentStatus.INVESTIGATING,
             IncidentPriority.HIGH,
             "Configuration drift on a critical system is under active investigation.",
         ),
     ]
 
-    for alert, assignee, status_label, priority, summary in incident_specs:
+    for alert, assignee, incident_status, priority, summary in incident_specs:
         incident = incidents_repository.create(
             Incident(
                 normalized_alert=alert,
                 assigned_user=assignee,
                 title=alert.title,
                 summary=summary,
-                status=IncidentStatus(status_label.lower()),
+                status=incident_status,
                 priority=priority,
                 created_at=alert.created_at + timedelta(minutes=1),
                 updated_at=now - timedelta(minutes=5),
@@ -313,6 +314,7 @@ def seed_database(session: Session) -> None:
             requested_by=admin_user,
             action_type="disable_user_account",
             status=ResponseStatus.COMPLETED,
+            mode=ResponseMode.LIVE,
             details={"username": "svc-shadow", "result": "disabled"},
             created_at=now - timedelta(minutes=15),
             executed_at=now - timedelta(minutes=14),
@@ -322,6 +324,7 @@ def seed_database(session: Session) -> None:
             requested_by=analyst_user,
             action_type="collect_configuration_backup",
             status=ResponseStatus.IN_PROGRESS,
+            mode=ResponseMode.DRY_RUN,
             details={"path": "/etc/nginx/nginx.conf", "result": "snapshot_requested"},
             created_at=now - timedelta(minutes=10),
             executed_at=None,
@@ -360,4 +363,3 @@ def seed_database(session: Session) -> None:
         audit_logs_repository.create(audit_log)
 
     session.commit()
-

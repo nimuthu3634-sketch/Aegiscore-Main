@@ -33,6 +33,10 @@ from app.schemas.incidents import (
     IncidentPriorityExplanationResponse,
     IncidentStateTransitionCapabilitiesResponse,
 )
+from app.schemas.workflows import (
+    AnalystNoteCreateResponse,
+    IncidentTransitionResponse,
+)
 
 
 def _override_dependencies() -> None:
@@ -100,7 +104,7 @@ def _sample_incident_detail() -> IncidentDetailResponse:
                 action_type="collect_configuration_backup",
                 status=ResponseStatus.IN_PROGRESS,
                 target="/etc/nginx/nginx.conf",
-                mode=None,
+                mode="dry-run",
                 result_summary="snapshot_requested",
                 details={"path": "/etc/nginx/nginx.conf", "result": "snapshot_requested"},
                 created_at=datetime.now(UTC),
@@ -136,7 +140,11 @@ def _sample_incident_detail() -> IncidentDetailResponse:
         state_transition_capabilities=IncidentStateTransitionCapabilitiesResponse(
             current_state=IncidentStatus.INVESTIGATING,
             available_actions=["contain", "resolve", "mark_false_positive"],
-            allowed_target_states=[IncidentStatus.RESOLVED],
+            allowed_target_states=[
+                IncidentStatus.CONTAINED,
+                IncidentStatus.RESOLVED,
+                IncidentStatus.FALSE_POSITIVE,
+            ],
         ),
     )
 
@@ -176,3 +184,92 @@ def test_incident_detail_route_returns_not_found(monkeypatch) -> None:
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Incident not found"}
+
+
+def test_incident_transition_route_returns_summary(monkeypatch) -> None:
+    response_payload = IncidentTransitionResponse(
+        incident_id=uuid4(),
+        previous_state=IncidentStatus.TRIAGED,
+        current_state=IncidentStatus.INVESTIGATING,
+        message="Incident transitioned to investigating.",
+    )
+    _override_dependencies()
+    monkeypatch.setattr(
+        incidents_route,
+        "transition_incident",
+        lambda db, incident_id, payload, current_user: response_payload,
+    )
+
+    try:
+        client = TestClient(app)
+        response = client.post(
+            f"/incidents/{response_payload.incident_id}/transition",
+            json={"action": "investigate"},
+        )
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 200
+    assert response.json()["current_state"] == "investigating"
+
+
+def test_incident_transition_route_returns_invalid_transition(monkeypatch) -> None:
+    _override_dependencies()
+
+    def raise_conflict(db, incident_id, payload, current_user):
+        raise HTTPException(
+            status_code=409,
+            detail="Incident cannot transition via 'contain' from state 'new'.",
+        )
+
+    monkeypatch.setattr(incidents_route, "transition_incident", raise_conflict)
+
+    try:
+        client = TestClient(app)
+        response = client.post(
+            f"/incidents/{uuid4()}/transition",
+            json={"action": "contain"},
+        )
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 409
+    assert "cannot transition" in response.json()["detail"]
+
+
+def test_incident_note_route_returns_created_note(monkeypatch) -> None:
+    role = RoleResponse(id=uuid4(), name=RoleName.ANALYST)
+    analyst = UserBriefResponse(
+        id=uuid4(),
+        username="analyst",
+        full_name="AegisCore Analyst",
+        role=role,
+    )
+    response_payload = AnalystNoteCreateResponse(
+        note=AnalystNoteResponse(
+            id="note-2",
+            author=analyst,
+            content="Escalated after confirming endpoint owner.",
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        ),
+        message="Incident note saved successfully.",
+    )
+    _override_dependencies()
+    monkeypatch.setattr(
+        incidents_route,
+        "create_incident_note",
+        lambda db, incident_id, content, current_user: response_payload,
+    )
+
+    try:
+        client = TestClient(app)
+        response = client.post(
+            f"/incidents/{uuid4()}/notes",
+            json={"content": "Escalated after confirming endpoint owner."},
+        )
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 200
+    assert response.json()["note"]["content"].startswith("Escalated")

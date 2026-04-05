@@ -17,7 +17,20 @@ from app.schemas.listing import (
 )
 from app.schemas.alerts import AlertSeverityLabel
 from app.models.enums import DetectionType
-from app.services.alerts import get_alert_detail, list_alerts
+from app.schemas.workflows import (
+    AlertLifecycleResponse,
+    AlertLinkIncidentResponse,
+    AnalystNoteCreateRequest,
+    AnalystNoteCreateResponse,
+)
+from app.services.alerts import (
+    acknowledge_alert,
+    close_alert,
+    create_alert_note,
+    get_alert_detail,
+    link_alert_incident,
+    list_alerts,
+)
 
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
@@ -62,3 +75,40 @@ def read_alerts(
 @router.get("/{alert_id}", response_model=AlertDetailResponse)
 def read_alert(alert_id: UUID, _: CurrentUser, db: DbSession) -> AlertDetailResponse:
     return get_alert_detail(db, alert_id)
+
+
+@router.post("/{alert_id}/acknowledge", response_model=AlertLifecycleResponse)
+def acknowledge_alert_route(
+    alert_id: UUID,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> AlertLifecycleResponse:
+    return acknowledge_alert(db, alert_id, current_user)
+
+
+@router.post("/{alert_id}/close", response_model=AlertLifecycleResponse)
+def close_alert_route(
+    alert_id: UUID,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> AlertLifecycleResponse:
+    return close_alert(db, alert_id, current_user)
+
+
+@router.post("/{alert_id}/link-incident", response_model=AlertLinkIncidentResponse)
+def link_alert_incident_route(
+    alert_id: UUID,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> AlertLinkIncidentResponse:
+    return link_alert_incident(db, alert_id, current_user)
+
+
+@router.post("/{alert_id}/notes", response_model=AnalystNoteCreateResponse)
+def create_alert_note_route(
+    alert_id: UUID,
+    payload: AnalystNoteCreateRequest,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> AnalystNoteCreateResponse:
+    return create_alert_note(db, alert_id, payload.content, current_user)

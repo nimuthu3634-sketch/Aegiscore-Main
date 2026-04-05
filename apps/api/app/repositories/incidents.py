@@ -4,6 +4,7 @@ from sqlalchemy import String, case, cast, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.asset import Asset
+from app.models.enums import IncidentStatus
 from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
 from app.models.response_action import ResponseAction
@@ -57,15 +58,15 @@ class IncidentsRepository:
             conditions.append(Incident.priority == query.priority.value)
 
         if query.state == IncidentListStateFilter.NEW:
-            conditions.extend([Incident.status == "open", Incident.assigned_user_id.is_(None)])
+            conditions.append(Incident.status == IncidentStatus.NEW)
         elif query.state == IncidentListStateFilter.TRIAGED:
-            conditions.extend(
-                [Incident.status == "open", Incident.assigned_user_id.is_not(None)]
-            )
+            conditions.append(Incident.status == IncidentStatus.TRIAGED)
         elif query.state == IncidentListStateFilter.INVESTIGATING:
-            conditions.append(Incident.status == "investigating")
+            conditions.append(Incident.status == IncidentStatus.INVESTIGATING)
+        elif query.state == IncidentListStateFilter.CONTAINED:
+            conditions.append(Incident.status == IncidentStatus.CONTAINED)
         elif query.state == IncidentListStateFilter.RESOLVED:
-            conditions.append(Incident.status == "resolved")
+            conditions.append(Incident.status == IncidentStatus.RESOLVED)
 
         if query.assignee:
             assignee_term = f"%{query.assignee.strip()}%"

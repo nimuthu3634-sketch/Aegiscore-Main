@@ -54,7 +54,7 @@ export type IncidentDetailApiResponse = {
   title: string;
   summary: string | null;
   priority: Severity;
-  state: "open" | "investigating" | "resolved";
+  state: "new" | "triaged" | "investigating" | "contained" | "resolved" | "false_positive";
   assignee: {
     id: string;
     username: string;
@@ -85,12 +85,12 @@ export type IncidentDetailApiResponse = {
     updated_at: string;
   }>;
   linked_alerts: Array<{
-    id: string;
-    title: string;
-    detection_type: string;
-    source_type: string;
-    severity: Severity;
-    status: "new" | "investigating" | "resolved";
+      id: string;
+      title: string;
+      detection_type: string;
+      source_type: string;
+      severity: Severity;
+      status: StatusTone;
     risk_score: number | null;
     timestamp: string;
     asset_hostname: string | null;
@@ -162,8 +162,22 @@ export type IncidentDetailApiResponse = {
     factors: string[];
   };
   state_transition_capabilities: {
-    current_state: "open" | "investigating" | "resolved";
+    current_state: "new" | "triaged" | "investigating" | "contained" | "resolved" | "false_positive";
     available_actions: string[];
-    allowed_target_states: Array<"open" | "investigating" | "resolved">;
+    allowed_target_states: Array<
+      "new" | "triaged" | "investigating" | "contained" | "resolved" | "false_positive"
+    >;
   };
+};
+
+export type IncidentTransitionApiResponse = {
+  incident_id: string;
+  previous_state: string;
+  current_state: string;
+  message: string;
+};
+
+export type IncidentAnalystNoteCreateApiResponse = {
+  note: IncidentDetailApiResponse["analyst_notes"][number];
+  message: string;
 };

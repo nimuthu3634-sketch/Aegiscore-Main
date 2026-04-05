@@ -39,6 +39,7 @@ export type StatusTone =
   | "investigating"
   | "contained"
   | "resolved"
+  | "false_positive"
   | "pending_response"
   | "failed"
   | "disabled";

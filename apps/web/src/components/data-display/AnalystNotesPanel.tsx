@@ -12,16 +12,30 @@ export type AnalystNote = {
 type AnalystNotesPanelProps = {
   notes: AnalystNote[];
   composerLabel?: string;
+  draft: string;
+  onDraftChange: (value: string) => void;
+  onSave: () => void;
+  isSaving?: boolean;
+  saveError?: string | null;
+  saveSuccess?: string | null;
+  saveDisabled?: boolean;
 };
 
 export function AnalystNotesPanel({
   notes,
-  composerLabel = "Add analyst note"
+  composerLabel = "Add analyst note",
+  draft,
+  onDraftChange,
+  onSave,
+  isSaving = false,
+  saveError,
+  saveSuccess,
+  saveDisabled = false
 }: AnalystNotesPanelProps) {
   return (
     <EvidencePanel
       title="Analyst notes"
-      description="Dense note-taking space prepared for future save and collaboration APIs."
+      description="Persisted analyst notes tied directly to the current investigation record."
     >
       <div className="space-y-4">
         {notes.length ? (
@@ -52,10 +66,24 @@ export function AnalystNotesPanel({
           <Textarea
             label={composerLabel}
             placeholder="Capture investigation context, escalation notes, or follow-up tasks."
+            value={draft}
+            onChange={(event) => onDraftChange(event.target.value)}
           />
-          <div className="flex justify-end">
-            <Button variant="secondary" size="sm">
-              Save note placeholder
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-h-[1.25rem]">
+              {saveError ? (
+                <p className="text-body-sm text-status-danger">{saveError}</p>
+              ) : saveSuccess ? (
+                <p className="text-body-sm text-status-success">{saveSuccess}</p>
+              ) : null}
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onSave}
+              disabled={isSaving || saveDisabled}
+            >
+              {isSaving ? "Saving note..." : "Save note"}
             </Button>
           </div>
         </div>

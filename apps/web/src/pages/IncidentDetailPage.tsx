@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ActivityTimeline } from "../components/data-display/ActivityTimeline";
 import { AnalystNotesPanel } from "../components/data-display/AnalystNotesPanel";
@@ -15,12 +16,23 @@ import { Button } from "../components/ui/Button";
 import { IncidentStateBadge } from "../components/ui/IncidentStateBadge";
 import { PriorityChip } from "../components/ui/PriorityChip";
 import { AgentStatusBadge, CriticalityBadge } from "../features/assets/components/AssetBadges";
-import { useIncidentDetail } from "../features/incidents/detail/service";
+import {
+  saveIncidentNote,
+  transitionIncident,
+  useIncidentDetail
+} from "../features/incidents/detail/service";
 
 export function IncidentDetailPage() {
   const navigate = useNavigate();
   const { incidentId } = useParams<{ incidentId: string }>();
   const { data, isLoading, error, notFound, reload } = useIncidentDetail(incidentId);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [transitionError, setTransitionError] = useState<string | null>(null);
+  const [transitionMessage, setTransitionMessage] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [isSavingNote, setIsSavingNote] = useState(false);
+  const [noteError, setNoteError] = useState<string | null>(null);
+  const [noteMessage, setNoteMessage] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -117,6 +129,61 @@ export function IncidentDetailPage() {
       : "secondary"
   } as const;
 
+  async function handleTransition(
+    action: "triage" | "investigate" | "contain" | "resolve" | "mark_false_positive"
+  ) {
+    if (!incidentId) {
+      return;
+    }
+
+    setPendingAction(action);
+    setTransitionError(null);
+    setTransitionMessage(null);
+
+    try {
+      const response = await transitionIncident(incidentId, action);
+      setTransitionMessage(response.message);
+      reload();
+    } catch (transitionActionError: unknown) {
+      setTransitionError(
+        transitionActionError instanceof Error
+          ? transitionActionError.message
+          : "Incident transition failed."
+      );
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function handleSaveNote() {
+    if (!incidentId) {
+      return;
+    }
+
+    if (!noteDraft.trim()) {
+      setNoteError("Note content cannot be empty.");
+      setNoteMessage(null);
+      return;
+    }
+
+    setIsSavingNote(true);
+    setNoteError(null);
+    setNoteMessage(null);
+
+    try {
+      const response = await saveIncidentNote(incidentId, noteDraft);
+      setNoteDraft("");
+      setNoteMessage(response.message);
+      reload();
+    } catch (saveError: unknown) {
+      setNoteError(
+        saveError instanceof Error ? saveError.message : "Incident note save failed."
+      );
+    } finally {
+      setIsSavingNote(false);
+    }
+  }
+
   return (
     <div className="space-y-section">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -203,6 +270,21 @@ export function IncidentDetailPage() {
           <AnalystNotesPanel
             notes={incident.notes}
             composerLabel="Add incident investigation note"
+            draft={noteDraft}
+            onDraftChange={(value) => {
+              setNoteDraft(value);
+              if (noteError) {
+                setNoteError(null);
+              }
+              if (noteMessage) {
+                setNoteMessage(null);
+              }
+            }}
+            onSave={handleSaveNote}
+            isSaving={isSavingNote}
+            saveError={noteError}
+            saveSuccess={noteMessage}
+            saveDisabled={!incidentId}
           />
         </div>
 
@@ -286,26 +368,74 @@ export function IncidentDetailPage() {
           <EvidencePanel
             eyebrow="Workflow"
             title="State transitions"
-            description="Action placeholders define the analyst transition rail for the upcoming mutation APIs."
+            description="Validated incident state transitions with persisted timeline and audit updates."
           >
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2">
-                <Button variant={actionVariants.triage} size="sm">
-                  Triage
+                <Button
+                  variant={actionVariants.triage}
+                  size="sm"
+                  onClick={() => handleTransition("triage")}
+                  disabled={
+                    pendingAction !== null ||
+                    !incident.availableActions?.includes("triage")
+                  }
+                >
+                  {pendingAction === "triage" ? "Triaging..." : "Triage"}
                 </Button>
-                <Button variant={actionVariants.investigate} size="sm">
-                  Investigate
+                <Button
+                  variant={actionVariants.investigate}
+                  size="sm"
+                  onClick={() => handleTransition("investigate")}
+                  disabled={
+                    pendingAction !== null ||
+                    !incident.availableActions?.includes("investigate")
+                  }
+                >
+                  {pendingAction === "investigate" ? "Updating..." : "Investigate"}
                 </Button>
-                <Button variant={actionVariants.contain} size="sm">
-                  Contain
+                <Button
+                  variant={actionVariants.contain}
+                  size="sm"
+                  onClick={() => handleTransition("contain")}
+                  disabled={
+                    pendingAction !== null ||
+                    !incident.availableActions?.includes("contain")
+                  }
+                >
+                  {pendingAction === "contain" ? "Containing..." : "Contain"}
                 </Button>
-                <Button variant={actionVariants.resolve} size="sm">
-                  Resolve
+                <Button
+                  variant={actionVariants.resolve}
+                  size="sm"
+                  onClick={() => handleTransition("resolve")}
+                  disabled={
+                    pendingAction !== null ||
+                    !incident.availableActions?.includes("resolve")
+                  }
+                >
+                  {pendingAction === "resolve" ? "Resolving..." : "Resolve"}
                 </Button>
               </div>
-              <Button variant={actionVariants.falsePositive} size="sm" fullWidth>
-                Mark false positive
+              <Button
+                variant={actionVariants.falsePositive}
+                size="sm"
+                fullWidth
+                onClick={() => handleTransition("mark_false_positive")}
+                disabled={
+                  pendingAction !== null ||
+                  !incident.availableActions?.includes("mark_false_positive")
+                }
+              >
+                {pendingAction === "mark_false_positive"
+                  ? "Updating..."
+                  : "Mark false positive"}
               </Button>
+              {transitionError ? (
+                <p className="text-body-sm text-status-danger">{transitionError}</p>
+              ) : transitionMessage ? (
+                <p className="text-body-sm text-status-success">{transitionMessage}</p>
+              ) : null}
             </div>
           </EvidencePanel>
         </div>

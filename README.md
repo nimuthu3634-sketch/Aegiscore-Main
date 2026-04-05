@@ -84,8 +84,21 @@ Invoke-WebRequest http://localhost:8000/incidents/<incident-id> -Headers @{ Auth
 Invoke-WebRequest http://localhost/
 ```
 
+## Workflow API Surface
+
+The current backend now supports persisted analyst workflow actions on live records:
+
+- `POST /alerts/{id}/acknowledge`
+- `POST /alerts/{id}/close`
+- `POST /alerts/{id}/link-incident`
+- `POST /alerts/{id}/notes`
+- `POST /incidents/{id}/transition`
+- `POST /incidents/{id}/notes`
+
+These operations create audit-log entries, update detail timelines, and persist analyst notes in first-class storage.
+
 ## Notes
 
 - The backend owns all external security integrations; the frontend talks only to backend APIs.
-- The backend foundation now includes roles, users, assets, raw alerts, normalized alerts, risk scores, incidents, response actions, and audit logs.
+- The backend foundation now includes roles, users, assets, raw alerts, normalized alerts, risk scores, incidents, response actions, analyst notes, and audit logs.
 - Frontend work follows the AegisCore dark SOC theme and is prepared for Figma-first design iteration in later milestones.

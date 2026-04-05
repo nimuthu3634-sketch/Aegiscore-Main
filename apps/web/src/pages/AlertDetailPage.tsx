@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AnalystNotesPanel } from "../components/data-display/AnalystNotesPanel";
 import { DetailHeader } from "../components/data-display/DetailHeader";
@@ -13,7 +14,13 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { SeverityChip } from "../components/ui/SeverityChip";
 import { StatusChip } from "../components/ui/StatusChip";
-import { useAlertDetail } from "../features/alerts/detail/service";
+import {
+  acknowledgeAlertDetail,
+  closeAlertDetail,
+  linkAlertToIncident,
+  saveAlertNote,
+  useAlertDetail
+} from "../features/alerts/detail/service";
 
 function fallbackValue(value: string | null | undefined) {
   return value ?? "n/a";
@@ -23,6 +30,15 @@ export function AlertDetailPage() {
   const navigate = useNavigate();
   const { alertId } = useParams<{ alertId: string }>();
   const { data, isLoading, error, notFound, reload } = useAlertDetail(alertId);
+  const [pendingAction, setPendingAction] = useState<
+    "acknowledge" | "link" | "close" | null
+  >(null);
+  const [workflowError, setWorkflowError] = useState<string | null>(null);
+  const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [isSavingNote, setIsSavingNote] = useState(false);
+  const [noteError, setNoteError] = useState<string | null>(null);
+  const [noteMessage, setNoteMessage] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -89,6 +105,9 @@ export function AlertDetailPage() {
   }
 
   const { alert, fetchedAt } = data;
+  const canAcknowledge = ["new", "triaged"].includes(alert.status);
+  const canLinkIncident = !alert.linkedIncidentId && alert.status !== "resolved";
+  const canClose = alert.status !== "resolved";
 
   const metadataItems: KeyValueItem[] = [
     { label: "Alert ID", value: alert.id, mono: true, emphasized: true },
@@ -108,6 +127,62 @@ export function AlertDetailPage() {
       mono: true
     }
   ];
+
+  async function handleWorkflowAction(
+    action: "acknowledge" | "link" | "close",
+    runner: () => Promise<{ message: string }>
+  ) {
+    if (!alertId) {
+      return;
+    }
+
+    setPendingAction(action);
+    setWorkflowError(null);
+    setWorkflowMessage(null);
+
+    try {
+      const response = await runner();
+      setWorkflowMessage(response.message);
+      reload();
+    } catch (actionError: unknown) {
+      setWorkflowError(
+        actionError instanceof Error
+          ? actionError.message
+          : "Workflow action failed."
+      );
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function handleSaveNote() {
+    if (!alertId) {
+      return;
+    }
+
+    if (!noteDraft.trim()) {
+      setNoteError("Note content cannot be empty.");
+      setNoteMessage(null);
+      return;
+    }
+
+    setIsSavingNote(true);
+    setNoteError(null);
+    setNoteMessage(null);
+
+    try {
+      const response = await saveAlertNote(alertId, noteDraft);
+      setNoteDraft("");
+      setNoteMessage(response.message);
+      reload();
+    } catch (saveError: unknown) {
+      setNoteError(
+        saveError instanceof Error ? saveError.message : "Note save failed."
+      );
+    } finally {
+      setIsSavingNote(false);
+    }
+  }
 
   return (
     <div className="space-y-section">
@@ -172,6 +247,21 @@ export function AlertDetailPage() {
           <AnalystNotesPanel
             notes={alert.notes}
             composerLabel="Add alert investigation note"
+            draft={noteDraft}
+            onDraftChange={(value) => {
+              setNoteDraft(value);
+              if (noteError) {
+                setNoteError(null);
+              }
+              if (noteMessage) {
+                setNoteMessage(null);
+              }
+            }}
+            onSave={handleSaveNote}
+            isSaving={isSavingNote}
+            saveError={noteError}
+            saveSuccess={noteMessage}
+            saveDisabled={!alertId}
           />
         </div>
 
@@ -203,23 +293,53 @@ export function AlertDetailPage() {
           <EvidencePanel
             eyebrow="Workflow"
             title="Lifecycle actions"
-            description="Action controls are structured here so backend mutation endpoints can plug in next."
+            description="Persisted alert lifecycle controls backed by audit logging and live detail refresh."
           >
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
-                <Button variant="secondary" size="sm">
-                  Acknowledge
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() =>
+                    handleWorkflowAction("acknowledge", () =>
+                      acknowledgeAlertDetail(alert.id)
+                    )
+                  }
+                  disabled={!canAcknowledge || pendingAction !== null}
+                >
+                  {pendingAction === "acknowledge" ? "Acknowledging..." : "Acknowledge"}
                 </Button>
-                <Button variant="secondary" size="sm">
-                  Link to incident
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() =>
+                    handleWorkflowAction("link", () => linkAlertToIncident(alert.id))
+                  }
+                  disabled={!canLinkIncident || pendingAction !== null}
+                >
+                  {pendingAction === "link" ? "Linking..." : "Link to incident"}
                 </Button>
-                <Button variant="ghost" size="sm">
-                  Close
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    handleWorkflowAction("close", () => closeAlertDetail(alert.id))
+                  }
+                  disabled={!canClose || pendingAction !== null}
+                >
+                  {pendingAction === "close" ? "Closing..." : "Close"}
                 </Button>
               </div>
-              <p className="type-body-sm">
-                These placeholder controls mark the exact action area for upcoming analyst workflow APIs.
-              </p>
+              {workflowError ? (
+                <p className="text-body-sm text-status-danger">{workflowError}</p>
+              ) : workflowMessage ? (
+                <p className="text-body-sm text-status-success">{workflowMessage}</p>
+              ) : (
+                <p className="type-body-sm">
+                  Acknowledge, incident linkage, and close actions now persist through the
+                  backend workflow APIs.
+                </p>
+              )}
             </div>
           </EvidencePanel>
 
@@ -247,7 +367,8 @@ export function AlertDetailPage() {
             ) : (
               <div className="rounded-panel border border-dashed border-border-subtle bg-surface-base/30 p-4">
                 <p className="type-body-sm">
-                  No incident linkage exists yet. The link action placeholder above is ready for future correlation workflows.
+                  No incident linkage exists yet. Use the live link action above to create
+                  and attach an incident from this alert.
                 </p>
               </div>
             )}

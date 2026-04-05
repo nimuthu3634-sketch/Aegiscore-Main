@@ -3,23 +3,39 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.models.analyst_note import AnalystNote
+from app.models.audit_log import AuditLog
+from app.models.enums import (
+    AlertStatus,
+    IncidentPriority,
+    IncidentStatus,
+    NoteTargetType,
+)
+from app.models.incident import Incident
+from app.models.user import User
+from app.repositories.analyst_notes import AnalystNotesRepository
 from app.repositories.audit_logs import AuditLogsRepository
 from app.repositories.alerts import AlertsRepository
+from app.repositories.incidents import IncidentsRepository
 from app.schemas.alerts import AlertDetailResponse
 from app.schemas.common import AlertListResponse, AlertSummaryResponse
 from app.schemas.listing import AlertListQuery, ListMetaResponse
-from app.services.serializers import to_alert_detail_response, to_alert_summary_response
+from app.schemas.workflows import (
+    AlertLifecycleResponse,
+    AlertLinkIncidentResponse,
+    AnalystNoteCreateResponse,
+)
+from app.services.serializers import (
+    to_alert_detail_response,
+    to_alert_summary_response,
+    to_analyst_note_response,
+)
 
 
 def list_alerts(session: Session, query: AlertListQuery) -> AlertListResponse:
     alerts, total = AlertsRepository(session).list_alerts(query)
     total_pages = max(1, (total + query.page_size - 1) // query.page_size)
     page = min(query.page, total_pages)
-    warnings: list[str] = []
-    if query.status and query.status.value == "contained":
-        warnings.append(
-            "status=contained is not supported by alert workflow state yet and was not applied."
-        )
 
     return AlertListResponse(
         items=[to_alert_summary_response(alert) for alert in alerts],
@@ -30,7 +46,7 @@ def list_alerts(session: Session, query: AlertListQuery) -> AlertListResponse:
             total_pages=total_pages,
             sort_by=query.sort_by.value,
             sort_direction=query.sort_direction,
-            warnings=warnings,
+            warnings=[],
         ),
     )
 
@@ -61,4 +77,271 @@ def get_alert_detail(session: Session, alert_id: UUID) -> AlertDetailResponse:
             audit_logs_repository.list_for_entity("incident", str(alert.incident.id))
         )
 
-    return to_alert_detail_response(alert, audit_logs)
+    analyst_notes = AnalystNotesRepository(session).list_for_target(
+        NoteTargetType.ALERT,
+        alert.id,
+    )
+
+    return to_alert_detail_response(alert, audit_logs, analyst_notes)
+
+
+def _priority_from_alert(alert) -> IncidentPriority:
+    risk_score = round(alert.risk_score.score * 100) if alert.risk_score else None
+    if risk_score is not None:
+        if risk_score >= 85:
+            return IncidentPriority.CRITICAL
+        if risk_score >= 70:
+            return IncidentPriority.HIGH
+        if risk_score >= 45:
+            return IncidentPriority.MEDIUM
+        return IncidentPriority.LOW
+
+    if alert.severity >= 9:
+        return IncidentPriority.CRITICAL
+    if alert.severity >= 7:
+        return IncidentPriority.HIGH
+    if alert.severity >= 4:
+        return IncidentPriority.MEDIUM
+    return IncidentPriority.LOW
+
+
+def _get_alert_for_workflow(session: Session, alert_id: UUID):
+    alert = AlertsRepository(session).get_alert_detail(alert_id)
+    if alert is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Alert not found",
+        )
+    return alert
+
+
+def _create_audit_log(
+    session: Session,
+    *,
+    actor: User,
+    entity_type: str,
+    entity_id: str,
+    action: str,
+    details: dict,
+) -> None:
+    AuditLogsRepository(session).create(
+        AuditLog(
+            actor=actor,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            action=action,
+            details=details,
+        )
+    )
+
+
+def acknowledge_alert(
+    session: Session,
+    alert_id: UUID,
+    actor: User,
+) -> AlertLifecycleResponse:
+    alert = _get_alert_for_workflow(session, alert_id)
+    previous_status = alert.status.value
+
+    if alert.status == AlertStatus.RESOLVED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Resolved alerts cannot be acknowledged.",
+        )
+
+    if alert.status == AlertStatus.INVESTIGATING:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Alert is already acknowledged and under investigation.",
+        )
+
+    alert.status = AlertStatus.INVESTIGATING
+    _create_audit_log(
+        session,
+        actor=actor,
+        entity_type="alert",
+        entity_id=str(alert.id),
+        action="alert.acknowledged",
+        details={
+            "previous_status": previous_status,
+            "current_status": alert.status.value,
+            "summary": "Alert acknowledged for analyst investigation.",
+        },
+    )
+    session.commit()
+
+    return AlertLifecycleResponse(
+        alert_id=alert.id,
+        previous_status=previous_status,
+        current_status=alert.status.value,
+        linked_incident_id=alert.incident.id if alert.incident else None,
+        message="Alert acknowledged and moved into investigation.",
+    )
+
+
+def close_alert(
+    session: Session,
+    alert_id: UUID,
+    actor: User,
+) -> AlertLifecycleResponse:
+    alert = _get_alert_for_workflow(session, alert_id)
+    previous_status = alert.status.value
+
+    if alert.status == AlertStatus.RESOLVED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Alert is already closed.",
+        )
+
+    alert.status = AlertStatus.RESOLVED
+    _create_audit_log(
+        session,
+        actor=actor,
+        entity_type="alert",
+        entity_id=str(alert.id),
+        action="alert.closed",
+        details={
+            "previous_status": previous_status,
+            "current_status": alert.status.value,
+            "summary": "Alert closed by analyst action.",
+        },
+    )
+
+    if alert.incident and alert.incident.status not in {
+        IncidentStatus.RESOLVED,
+        IncidentStatus.FALSE_POSITIVE,
+    }:
+        previous_incident_state = alert.incident.status.value
+        alert.incident.status = IncidentStatus.RESOLVED
+        _create_audit_log(
+            session,
+            actor=actor,
+            entity_type="incident",
+            entity_id=str(alert.incident.id),
+            action="incident.transition",
+            details={
+                "action": "resolve",
+                "previous_state": previous_incident_state,
+                "current_state": alert.incident.status.value,
+                "summary": "Incident resolved automatically because the only linked alert was closed.",
+            },
+        )
+
+    session.commit()
+
+    return AlertLifecycleResponse(
+        alert_id=alert.id,
+        previous_status=previous_status,
+        current_status=alert.status.value,
+        linked_incident_id=alert.incident.id if alert.incident else None,
+        message="Alert closed successfully.",
+    )
+
+
+def link_alert_incident(
+    session: Session,
+    alert_id: UUID,
+    actor: User,
+) -> AlertLinkIncidentResponse:
+    alert = _get_alert_for_workflow(session, alert_id)
+    if alert.status == AlertStatus.RESOLVED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Closed alerts cannot be linked to a new incident.",
+        )
+
+    if alert.incident is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Alert is already linked to an incident.",
+        )
+
+    incident = IncidentsRepository(session).create(
+        Incident(
+            normalized_alert=alert,
+            assigned_user=actor,
+            title=alert.title,
+            summary=alert.description
+            or f"Incident created from {alert.detection_type.value} alert.",
+            status=IncidentStatus.TRIAGED,
+            priority=_priority_from_alert(alert),
+        )
+    )
+    session.flush()
+
+    _create_audit_log(
+        session,
+        actor=actor,
+        entity_type="incident",
+        entity_id=str(incident.id),
+        action="incident.created",
+        details={
+            "alert_id": str(alert.id),
+            "priority": incident.priority.value,
+            "state": incident.status.value,
+            "summary": "Incident created from alert workflow linkage.",
+        },
+    )
+    _create_audit_log(
+        session,
+        actor=actor,
+        entity_type="alert",
+        entity_id=str(alert.id),
+        action="alert.linked_incident",
+        details={
+            "incident_id": str(incident.id),
+            "summary": "Alert linked into a newly created incident.",
+        },
+    )
+    session.commit()
+
+    return AlertLinkIncidentResponse(
+        incident_id=incident.id,
+        title=incident.title,
+        state=incident.status,
+        priority=incident.priority,
+        message="Alert linked into a new incident.",
+    )
+
+
+def create_alert_note(
+    session: Session,
+    alert_id: UUID,
+    content: str,
+    actor: User,
+) -> AnalystNoteCreateResponse:
+    alert = _get_alert_for_workflow(session, alert_id)
+    normalized_content = content.strip()
+    if not normalized_content:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Note content cannot be empty.",
+        )
+
+    note = AnalystNotesRepository(session).create(
+        AnalystNote(
+            target_type=NoteTargetType.ALERT,
+            target_id=alert.id,
+            author=actor,
+            content=normalized_content,
+        )
+    )
+    session.flush()
+    _create_audit_log(
+        session,
+        actor=actor,
+        entity_type="alert",
+        entity_id=str(alert.id),
+        action="alert.note.created",
+        details={
+            "note_id": str(note.id),
+            "content": normalized_content,
+            "summary": "Analyst note added to alert.",
+        },
+    )
+    session.commit()
+
+    return AnalystNoteCreateResponse(
+        note=to_analyst_note_response(note),
+        message="Alert note saved successfully.",
+    )

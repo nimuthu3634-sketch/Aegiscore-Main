@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from app.models.analyst_note import AnalystNote
 from app.models.asset import Asset
 from app.models.audit_log import AuditLog
 from app.models.enums import (
@@ -9,6 +10,8 @@ from app.models.enums import (
     DetectionType,
     IncidentPriority,
     IncidentStatus,
+    NoteTargetType,
+    ResponseMode,
     ResponseStatus,
     RoleName,
 )
@@ -25,7 +28,7 @@ from app.services.serializers import (
 )
 
 
-def _build_fixture() -> tuple[NormalizedAlert, Incident, list[AuditLog]]:
+def _build_fixture() -> tuple[NormalizedAlert, Incident, list[AuditLog], list[AnalystNote]]:
     role = Role(
         id=uuid4(),
         name=RoleName.ANALYST,
@@ -110,6 +113,7 @@ def _build_fixture() -> tuple[NormalizedAlert, Incident, list[AuditLog]]:
         requested_by=analyst,
         action_type="collect_configuration_backup",
         status=ResponseStatus.IN_PROGRESS,
+        mode=ResponseMode.DRY_RUN,
         details={"path": "/etc/nginx/nginx.conf", "result": "snapshot_requested"},
         created_at=datetime.now(UTC),
         executed_at=None,
@@ -126,29 +130,43 @@ def _build_fixture() -> tuple[NormalizedAlert, Incident, list[AuditLog]]:
             created_at=datetime.now(UTC),
         )
     ]
-    return alert, incident, audit_logs
+    analyst_notes = [
+        AnalystNote(
+            id=uuid4(),
+            target_type=NoteTargetType.ALERT,
+            target_id=alert.id,
+            author=analyst,
+            content="Escalated after validating unexpected configuration drift.",
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+    ]
+    return alert, incident, audit_logs, analyst_notes
 
 
 def test_alert_detail_response_includes_observables_and_related_workflow() -> None:
-    alert, _, audit_logs = _build_fixture()
+    alert, _, audit_logs, analyst_notes = _build_fixture()
 
-    response = to_alert_detail_response(alert, audit_logs)
+    response = to_alert_detail_response(alert, audit_logs, analyst_notes)
 
     assert response.source_type == "Wazuh"
     assert response.severity.value == "high"
+    assert response.status_label == "pending_response"
     assert response.source_ip == "203.0.113.44"
     assert response.destination_port == 443
     assert response.source_rule is not None
     assert response.source_rule.rule_id == "60115"
     assert response.related_responses[0].target == "/etc/nginx/nginx.conf"
+    assert response.related_responses[0].mode.value == "dry-run"
     assert response.linked_incident is not None
     assert response.score_explanation is not None
+    assert response.analyst_notes[0].content.startswith("Escalated")
 
 
 def test_incident_detail_response_builds_evidence_timeline_and_capabilities() -> None:
-    _, incident, audit_logs = _build_fixture()
+    _, incident, audit_logs, analyst_notes = _build_fixture()
 
-    response = to_incident_detail_response(incident, audit_logs)
+    response = to_incident_detail_response(incident, audit_logs, analyst_notes)
 
     assert response.state.value == "investigating"
     assert response.assignee is not None
@@ -158,3 +176,4 @@ def test_incident_detail_response_builds_evidence_timeline_and_capabilities() ->
     assert response.response_history[0].action_type == "collect_configuration_backup"
     assert "contain" in response.state_transition_capabilities.available_actions
     assert response.timeline[0].title == "Incident created"
+    assert response.analyst_notes[0].content.startswith("Escalated")

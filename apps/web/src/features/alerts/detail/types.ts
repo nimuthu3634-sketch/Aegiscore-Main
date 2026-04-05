@@ -63,6 +63,7 @@ export type AlertDetailApiResponse = {
   severity: Severity;
   severity_score: number;
   status: StatusTone;
+  status_label: StatusTone;
   risk_score: number | null;
   risk_confidence: number | null;
   priority_label: Severity | null;
@@ -163,4 +164,25 @@ export type AlertDetailApiResponse = {
     } | null;
     details: Record<string, unknown>;
   }>;
+};
+
+export type AlertLifecycleApiResponse = {
+  alert_id: string;
+  previous_status: string;
+  current_status: string;
+  linked_incident_id: string | null;
+  message: string;
+};
+
+export type AlertLinkIncidentApiResponse = {
+  incident_id: string;
+  title: string;
+  state: string;
+  priority: string;
+  message: string;
+};
+
+export type AnalystNoteCreateApiResponse = {
+  note: AlertDetailApiResponse["analyst_notes"][number];
+  message: string;
 };

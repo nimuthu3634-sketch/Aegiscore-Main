@@ -32,6 +32,11 @@ from app.schemas.common import (
     RoleResponse,
     UserBriefResponse,
 )
+from app.schemas.workflows import (
+    AlertLifecycleResponse,
+    AlertLinkIncidentResponse,
+    AnalystNoteCreateResponse,
+)
 
 
 def _override_dependencies() -> None:
@@ -60,6 +65,7 @@ def _sample_alert_detail() -> AlertDetailResponse:
         severity=AlertSeverityLabel.CRITICAL,
         severity_score=9,
         status=AlertStatus.INVESTIGATING,
+        status_label="investigating",
         risk_score=96,
         risk_confidence=0.92,
         priority_label=AlertSeverityLabel.CRITICAL,
@@ -107,7 +113,7 @@ def _sample_alert_detail() -> AlertDetailResponse:
                 action_type="disable_user_account",
                 status=ResponseStatus.COMPLETED,
                 target="svc-shadow",
-                mode=None,
+                mode="live",
                 result_summary="disabled",
                 details={"username": "svc-shadow", "result": "disabled"},
                 created_at=datetime.now(UTC),
@@ -172,3 +178,91 @@ def test_alert_detail_route_returns_not_found(monkeypatch) -> None:
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Alert not found"}
+
+
+def test_alert_acknowledge_route_returns_lifecycle_response(monkeypatch) -> None:
+    response_payload = AlertLifecycleResponse(
+        alert_id=uuid4(),
+        previous_status="new",
+        current_status="investigating",
+        linked_incident_id=None,
+        message="Alert acknowledged and moved into investigation.",
+    )
+    _override_dependencies()
+    monkeypatch.setattr(
+        alerts_route,
+        "acknowledge_alert",
+        lambda db, alert_id, current_user: response_payload,
+    )
+
+    try:
+        client = TestClient(app)
+        response = client.post(f"/alerts/{response_payload.alert_id}/acknowledge")
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 200
+    assert response.json()["current_status"] == "investigating"
+
+
+def test_alert_link_incident_route_returns_summary(monkeypatch) -> None:
+    response_payload = AlertLinkIncidentResponse(
+        incident_id=uuid4(),
+        title="Unauthorized directory account creation",
+        state=IncidentStatus.TRIAGED,
+        priority=IncidentPriority.CRITICAL,
+        message="Alert linked into a new incident.",
+    )
+    _override_dependencies()
+    monkeypatch.setattr(
+        alerts_route,
+        "link_alert_incident",
+        lambda db, alert_id, current_user: response_payload,
+    )
+
+    try:
+        client = TestClient(app)
+        response = client.post(f"/alerts/{uuid4()}/link-incident")
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 200
+    assert response.json()["state"] == "triaged"
+
+
+def test_alert_note_route_returns_created_note(monkeypatch) -> None:
+    role = RoleResponse(id=uuid4(), name=RoleName.ANALYST)
+    analyst = UserBriefResponse(
+        id=uuid4(),
+        username="analyst",
+        full_name="AegisCore Analyst",
+        role=role,
+    )
+    response_payload = AnalystNoteCreateResponse(
+        note=AnalystNoteResponse(
+            id="note-2",
+            author=analyst,
+            content="Validated alert context before escalation.",
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        ),
+        message="Alert note saved successfully.",
+    )
+    _override_dependencies()
+    monkeypatch.setattr(
+        alerts_route,
+        "create_alert_note",
+        lambda db, alert_id, content, current_user: response_payload,
+    )
+
+    try:
+        client = TestClient(app)
+        response = client.post(
+            f"/alerts/{uuid4()}/notes",
+            json={"content": "Validated alert context before escalation."},
+        )
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 200
+    assert response.json()["note"]["content"].startswith("Validated")

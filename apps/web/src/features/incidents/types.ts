@@ -54,7 +54,7 @@ export type IncidentsListApiResponse = {
     id: string;
     title: string;
     summary: string | null;
-    state_label: IncidentStateFilter | "contained";
+    state_label: IncidentStateFilter | "false_positive";
     priority: Severity;
     updated_at: string;
     detection_type: string;

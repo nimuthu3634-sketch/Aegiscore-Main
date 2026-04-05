@@ -115,7 +115,7 @@ class ResponseActionDetailResponse(APIModel):
     action_type: str
     status: ResponseStatus
     target: str | None
-    mode: str | None
+    mode: ResponseModeLabel | None
     result_summary: str | None
     details: dict[str, Any]
     created_at: datetime
@@ -128,6 +128,7 @@ class AnalystNoteResponse(APIModel):
     author: UserBriefResponse | None
     content: str
     created_at: datetime
+    updated_at: datetime | None = None
 
 
 class ActivityEntryResponse(APIModel):

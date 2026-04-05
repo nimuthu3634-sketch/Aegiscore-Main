@@ -29,7 +29,7 @@ export function mapAlertsListResponse(
       detectionType: alert.detection_type,
       sourceType: alert.source_type,
       severity: alert.severity_label,
-      status: alert.status_label === "contained" ? "investigating" : alert.status_label,
+      status: alert.status_label,
       asset: alert.asset_name ?? "Unassigned asset",
       sourceIp: alert.source_ip ?? "n/a",
       destinationPort:
@@ -53,7 +53,7 @@ export function mapIncidentsListResponse(
       id: incident.id,
       title: incident.title,
       priority: incident.priority,
-      state: incident.state_label === "contained" ? "investigating" : incident.state_label,
+      state: incident.state_label,
       detectionType: incident.detection_type,
       linkedAlertsCount: incident.linked_alerts_count,
       primaryAsset: incident.primary_asset_name ?? "Unassigned asset",

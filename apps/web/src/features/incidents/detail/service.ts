@@ -7,7 +7,12 @@ import {
   toSourceType,
   toTimelineItems
 } from "../../../lib/api/detailTransforms";
-import type { IncidentDetailApiResponse, IncidentDetailResponse } from "./types";
+import type {
+  IncidentAnalystNoteCreateApiResponse,
+  IncidentDetailApiResponse,
+  IncidentDetailResponse,
+  IncidentTransitionApiResponse
+} from "./types";
 
 type IncidentDetailState = {
   data: IncidentDetailResponse | null;
@@ -16,17 +21,6 @@ type IncidentDetailState = {
   notFound: boolean;
   reload: () => void;
 };
-
-function mapIncidentState(state: IncidentDetailApiResponse["state"]) {
-  switch (state) {
-    case "open":
-      return "new" as const;
-    case "resolved":
-      return "resolved" as const;
-    default:
-      return "investigating" as const;
-  }
-}
 
 function countAlertsForAsset(
   hostname: string,
@@ -72,7 +66,7 @@ function mapIncidentDetailResponse(
       title: payload.title,
       summary: payload.summary ?? "No incident summary available.",
       priority: payload.priority,
-      state: mapIncidentState(payload.state),
+      state: payload.state,
       assignee:
         payload.assignee?.full_name ??
         payload.assignee?.username ??
@@ -133,6 +127,29 @@ async function fetchIncidentDetail(
 
     throw error;
   }
+}
+
+export async function transitionIncident(
+  incidentId: string,
+  action: "triage" | "investigate" | "contain" | "resolve" | "mark_false_positive"
+) {
+  return fetchApiJson<IncidentTransitionApiResponse>(`/incidents/${incidentId}/transition`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ action })
+  });
+}
+
+export async function saveIncidentNote(incidentId: string, content: string) {
+  return fetchApiJson<IncidentAnalystNoteCreateApiResponse>(`/incidents/${incidentId}/notes`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ content })
+  });
 }
 
 export function useIncidentDetail(

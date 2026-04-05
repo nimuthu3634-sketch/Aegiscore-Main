@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 if TYPE_CHECKING:
+    from app.models.analyst_note import AnalystNote
     from app.models.audit_log import AuditLog
     from app.models.incident import Incident
     from app.models.response_action import ResponseAction
@@ -50,4 +51,4 @@ class User(Base):
         back_populates="requested_by"
     )
     audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="actor")
-
+    analyst_notes: Mapped[list["AnalystNote"]] = relationship(back_populates="author")

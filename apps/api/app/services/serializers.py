@@ -1,9 +1,10 @@
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from app.models.analyst_note import AnalystNote
 from app.models.asset import Asset
 from app.models.audit_log import AuditLog
-from app.models.enums import IncidentStatus, ResponseStatus
+from app.models.enums import ResponseMode, ResponseStatus
 from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
 from app.models.raw_alert import RawAlert
@@ -47,6 +48,10 @@ from app.schemas.incidents import (
     IncidentLinkedAlertResponse,
     IncidentPriorityExplanationResponse,
     IncidentStateTransitionCapabilitiesResponse,
+)
+from app.services.workflows import (
+    get_allowed_incident_target_states,
+    get_available_incident_actions,
 )
 
 
@@ -107,6 +112,14 @@ def _response_mode_label(response_action: ResponseAction) -> ResponseModeLabel |
 
 
 def _alert_status_label(alert: NormalizedAlert) -> str:
+    if alert.status.value == "resolved":
+        return "resolved"
+    if alert.incident is not None:
+        if alert.incident.status.value in {"resolved", "false_positive"}:
+            return "resolved"
+        if alert.incident.status.value == "contained":
+            return "contained"
+
     has_pending_response = bool(
         alert.incident
         and any(
@@ -116,23 +129,17 @@ def _alert_status_label(alert: NormalizedAlert) -> str:
     )
     if has_pending_response:
         return "pending_response"
-    if alert.status.value == "resolved":
-        return "resolved"
-    if alert.status.value == "investigating":
+    if alert.status.value == "investigating" or (
+        alert.incident is not None and alert.incident.status.value == "investigating"
+    ):
         return "investigating"
-    if alert.incident is not None:
+    if alert.incident is not None and alert.incident.status.value == "triaged":
         return "triaged"
     return "new"
 
 
 def _incident_state_label(incident: Incident) -> str:
-    if incident.status.value == "resolved":
-        return "resolved"
-    if incident.status.value == "investigating":
-        return "investigating"
-    if incident.assigned_user is not None:
-        return "triaged"
-    return "new"
+    return incident.status.value
 
 
 def _priority_label_from_risk(
@@ -265,6 +272,11 @@ def _extract_response_target(response_action: ResponseAction) -> str | None:
 
 
 def _extract_response_mode(response_action: ResponseAction) -> str | None:
+    if response_action.mode == ResponseMode.DRY_RUN:
+        return ResponseMode.DRY_RUN.value
+    if response_action.mode == ResponseMode.LIVE:
+        return ResponseMode.LIVE.value
+
     mode = response_action.details.get("mode")
     return str(mode) if mode is not None else None
 
@@ -284,22 +296,8 @@ def _format_audit_title(action: str) -> str:
     return action.replace(".", " ").replace("_", " ").title()
 
 
-def _build_analyst_notes(audit_logs: list[AuditLog]) -> list[AnalystNoteResponse]:
-    notes: list[AnalystNoteResponse] = []
-    for audit_log in audit_logs:
-        content = _pick_payload_value([audit_log.details], "note", "content", "message")
-        if "note" not in audit_log.action or content is None:
-            continue
-
-        notes.append(
-            AnalystNoteResponse(
-                id=str(audit_log.id),
-                author=to_user_brief_response(audit_log.actor) if audit_log.actor else None,
-                content=str(content),
-                created_at=audit_log.created_at,
-            )
-        )
-    return notes
+def _build_analyst_notes(notes: list[AnalystNote]) -> list[AnalystNoteResponse]:
+    return [to_analyst_note_response(note) for note in notes]
 
 
 def _build_alert_score_factors(alert: NormalizedAlert) -> list[str]:
@@ -335,20 +333,10 @@ def _build_incident_priority_factors(incident: Incident) -> list[str]:
 def _state_transition_capabilities(
     incident: Incident,
 ) -> IncidentStateTransitionCapabilitiesResponse:
-    if incident.status.value == "open":
-        available_actions = ["triage", "investigate", "mark_false_positive"]
-        allowed_target_states = [IncidentStatus.INVESTIGATING, IncidentStatus.RESOLVED]
-    elif incident.status.value == "investigating":
-        available_actions = ["contain", "resolve", "mark_false_positive"]
-        allowed_target_states = [IncidentStatus.RESOLVED]
-    else:
-        available_actions = ["reopen"]
-        allowed_target_states = [IncidentStatus.OPEN, IncidentStatus.INVESTIGATING]
-
     return IncidentStateTransitionCapabilitiesResponse(
         current_state=incident.status,
-        available_actions=available_actions,
-        allowed_target_states=allowed_target_states,
+        available_actions=get_available_incident_actions(incident.status),
+        allowed_target_states=get_allowed_incident_target_states(incident.status),
     )
 
 
@@ -540,6 +528,16 @@ def to_audit_log_response(audit_log: AuditLog) -> AuditLogResponse:
     )
 
 
+def to_analyst_note_response(note: AnalystNote) -> AnalystNoteResponse:
+    return AnalystNoteResponse(
+        id=str(note.id),
+        author=to_user_brief_response(note.author) if note.author else None,
+        content=note.content,
+        created_at=note.created_at,
+        updated_at=note.updated_at,
+    )
+
+
 def to_response_action_detail_response(
     response_action: ResponseAction,
 ) -> ResponseActionDetailResponse:
@@ -548,7 +546,7 @@ def to_response_action_detail_response(
         action_type=response_action.action_type,
         status=response_action.status,
         target=_extract_response_target(response_action),
-        mode=_extract_response_mode(response_action),
+        mode=_response_mode_label(response_action),
         result_summary=_extract_response_summary(response_action),
         details=response_action.details,
         created_at=response_action.created_at,
@@ -579,6 +577,7 @@ def to_activity_entry_response(audit_log: AuditLog) -> ActivityEntryResponse:
 def to_alert_detail_response(
     alert: NormalizedAlert,
     audit_logs: list[AuditLog],
+    analyst_notes: list[AnalystNote],
 ) -> AlertDetailResponse:
     priority_label = _priority_label_from_risk(alert.risk_score, alert.severity)
 
@@ -591,6 +590,7 @@ def to_alert_detail_response(
         severity=_severity_label_from_score(alert.severity),
         severity_score=alert.severity,
         status=alert.status,
+        status_label=_alert_status_label(alert),
         risk_score=round(alert.risk_score.score * 100) if alert.risk_score else None,
         risk_confidence=alert.risk_score.confidence if alert.risk_score else None,
         priority_label=priority_label,
@@ -636,7 +636,7 @@ def to_alert_detail_response(
                 reverse=True,
             )
         ],
-        analyst_notes=_build_analyst_notes(audit_logs),
+        analyst_notes=_build_analyst_notes(analyst_notes),
         audit_history=[
             to_activity_entry_response(audit_log)
             for audit_log in sorted(audit_logs, key=lambda log: log.created_at, reverse=True)
@@ -667,6 +667,7 @@ def to_incident_linked_alert_response(
 def to_incident_detail_response(
     incident: Incident,
     audit_logs: list[AuditLog],
+    analyst_notes: list[AnalystNote],
 ) -> IncidentDetailResponse:
     primary_asset = (
         to_asset_summary_response(incident.normalized_alert.asset)
@@ -760,7 +761,7 @@ def to_incident_detail_response(
                 reverse=True,
             )
         ],
-        analyst_notes=_build_analyst_notes(audit_logs),
+        analyst_notes=_build_analyst_notes(analyst_notes),
         timeline=sorted(timeline_entries, key=lambda entry: entry.timestamp),
         priority_explanation=IncidentPriorityExplanationResponse(
             label="Incident priority explanation",

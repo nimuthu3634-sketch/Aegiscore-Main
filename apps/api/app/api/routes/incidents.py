@@ -15,7 +15,18 @@ from app.schemas.listing import (
     SortDirection,
 )
 from app.schemas.alerts import AlertSeverityLabel
-from app.services.incidents import get_incident, list_incidents
+from app.schemas.workflows import (
+    AnalystNoteCreateRequest,
+    AnalystNoteCreateResponse,
+    IncidentTransitionRequest,
+    IncidentTransitionResponse,
+)
+from app.services.incidents import (
+    create_incident_note,
+    get_incident,
+    list_incidents,
+    transition_incident,
+)
 
 router = APIRouter(prefix="/incidents", tags=["incidents"])
 
@@ -60,3 +71,23 @@ def read_incident(
     db: DbSession,
 ) -> IncidentDetailResponse:
     return get_incident(db, incident_id)
+
+
+@router.post("/{incident_id}/transition", response_model=IncidentTransitionResponse)
+def transition_incident_route(
+    incident_id: UUID,
+    payload: IncidentTransitionRequest,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> IncidentTransitionResponse:
+    return transition_incident(db, incident_id, payload, current_user)
+
+
+@router.post("/{incident_id}/notes", response_model=AnalystNoteCreateResponse)
+def create_incident_note_route(
+    incident_id: UUID,
+    payload: AnalystNoteCreateRequest,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> AnalystNoteCreateResponse:
+    return create_incident_note(db, incident_id, payload.content, current_user)

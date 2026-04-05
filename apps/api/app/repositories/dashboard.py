@@ -33,7 +33,11 @@ class DashboardRepository:
         alert_count = self.session.scalar(select(func.count(NormalizedAlert.id))) or 0
         open_incident_count = (
             self.session.scalar(
-                select(func.count(Incident.id)).where(Incident.status != IncidentStatus.RESOLVED)
+                select(func.count(Incident.id)).where(
+                    Incident.status.notin_(
+                        [IncidentStatus.RESOLVED, IncidentStatus.FALSE_POSITIVE]
+                    )
+                )
             )
             or 0
         )

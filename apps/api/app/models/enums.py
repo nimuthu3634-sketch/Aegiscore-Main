@@ -27,9 +27,12 @@ class AlertStatus(str, enum.Enum):
 
 
 class IncidentStatus(str, enum.Enum):
-    OPEN = "open"
+    NEW = "new"
+    TRIAGED = "triaged"
     INVESTIGATING = "investigating"
+    CONTAINED = "contained"
     RESOLVED = "resolved"
+    FALSE_POSITIVE = "false_positive"
 
 
 class IncidentPriority(str, enum.Enum):
@@ -44,6 +47,16 @@ class ResponseStatus(str, enum.Enum):
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     FAILED = "failed"
+
+
+class ResponseMode(str, enum.Enum):
+    DRY_RUN = "dry-run"
+    LIVE = "live"
+
+
+class NoteTargetType(str, enum.Enum):
+    ALERT = "alert"
+    INCIDENT = "incident"
 
 
 def enum_values(enum_class: type[enum.Enum]) -> list[str]:

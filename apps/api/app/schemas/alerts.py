@@ -48,6 +48,7 @@ class AlertDetailResponse(APIModel):
     severity: AlertSeverityLabel
     severity_score: int
     status: AlertStatus
+    status_label: str
     risk_score: int | None
     risk_confidence: float | None
     priority_label: AlertSeverityLabel | None

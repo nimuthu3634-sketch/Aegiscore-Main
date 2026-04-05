@@ -40,7 +40,7 @@ class Incident(Base):
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[IncidentStatus] = mapped_column(
         Enum(IncidentStatus, name="incidentstatus", values_callable=enum_values),
-        default=IncidentStatus.OPEN,
+        default=IncidentStatus.NEW,
         nullable=False,
     )
     priority: Mapped[IncidentPriority] = mapped_column(

@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.models.enums import ResponseStatus, enum_values
+from app.models.enums import ResponseMode, ResponseStatus, enum_values
 
 if TYPE_CHECKING:
     from app.models.incident import Incident
@@ -38,6 +38,11 @@ class ResponseAction(Base):
     status: Mapped[ResponseStatus] = mapped_column(
         Enum(ResponseStatus, name="responsestatus", values_callable=enum_values),
         default=ResponseStatus.QUEUED,
+        nullable=False,
+    )
+    mode: Mapped[ResponseMode] = mapped_column(
+        Enum(ResponseMode, name="responsemode", values_callable=enum_values),
+        default=ResponseMode.LIVE,
         nullable=False,
     )
     details: Mapped[dict] = mapped_column(JSONB, nullable=False)

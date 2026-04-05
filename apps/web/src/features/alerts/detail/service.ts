@@ -7,7 +7,13 @@ import {
   toRelatedResponses,
   toSourceType
 } from "../../../lib/api/detailTransforms";
-import type { AlertDetailApiResponse, AlertDetailResponse } from "./types";
+import type {
+  AlertDetailApiResponse,
+  AlertDetailResponse,
+  AlertLifecycleApiResponse,
+  AlertLinkIncidentApiResponse,
+  AnalystNoteCreateApiResponse
+} from "./types";
 
 type AlertDetailState = {
   data: AlertDetailResponse | null;
@@ -26,7 +32,7 @@ function mapAlertDetailResponse(payload: AlertDetailApiResponse): AlertDetailRes
       detectionType: payload.detection_type,
       sourceType: toSourceType(payload.source_type),
       severity: payload.severity,
-      status: payload.status,
+      status: payload.status_label ?? payload.status,
       riskScore: payload.risk_score,
       priorityLabel: payload.priority_label,
       linkedIncidentId: payload.linked_incident?.id ?? null,
@@ -84,6 +90,34 @@ async function fetchAlertDetail(alertId: string): Promise<AlertDetailResponse | 
 
     throw error;
   }
+}
+
+export async function acknowledgeAlertDetail(alertId: string) {
+  return fetchApiJson<AlertLifecycleApiResponse>(`/alerts/${alertId}/acknowledge`, {
+    method: "POST"
+  });
+}
+
+export async function closeAlertDetail(alertId: string) {
+  return fetchApiJson<AlertLifecycleApiResponse>(`/alerts/${alertId}/close`, {
+    method: "POST"
+  });
+}
+
+export async function linkAlertToIncident(alertId: string) {
+  return fetchApiJson<AlertLinkIncidentApiResponse>(`/alerts/${alertId}/link-incident`, {
+    method: "POST"
+  });
+}
+
+export async function saveAlertNote(alertId: string, content: string) {
+  return fetchApiJson<AnalystNoteCreateApiResponse>(`/alerts/${alertId}/notes`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ content })
+  });
 }
 
 export function useAlertDetail(alertId: string | undefined): AlertDetailState {

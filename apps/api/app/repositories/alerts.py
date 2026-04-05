@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models.asset import Asset
 from app.models.incident import Incident
-from app.models.enums import AlertStatus, ResponseStatus
+from app.models.enums import AlertStatus, IncidentStatus, ResponseStatus
 from app.models.normalized_alert import NormalizedAlert
 from app.models.raw_alert import RawAlert
 from app.models.response_action import ResponseAction
@@ -73,13 +73,25 @@ class AlertsRepository:
                 [NormalizedAlert.status == AlertStatus.NEW, Incident.id.is_(None)]
             )
         elif query.status == AlertListStatusFilter.TRIAGED:
-            conditions.extend(
-                [NormalizedAlert.status == AlertStatus.NEW, Incident.id.is_not(None)]
-            )
+            conditions.append(Incident.status == IncidentStatus.TRIAGED)
         elif query.status == AlertListStatusFilter.INVESTIGATING:
-            conditions.append(NormalizedAlert.status == AlertStatus.INVESTIGATING)
+            conditions.append(
+                or_(
+                    NormalizedAlert.status == AlertStatus.INVESTIGATING,
+                    Incident.status == IncidentStatus.INVESTIGATING,
+                )
+            )
+        elif query.status == AlertListStatusFilter.CONTAINED:
+            conditions.append(Incident.status == IncidentStatus.CONTAINED)
         elif query.status == AlertListStatusFilter.RESOLVED:
-            conditions.append(NormalizedAlert.status == AlertStatus.RESOLVED)
+            conditions.append(
+                or_(
+                    NormalizedAlert.status == AlertStatus.RESOLVED,
+                    Incident.status.in_(
+                        [IncidentStatus.RESOLVED, IncidentStatus.FALSE_POSITIVE]
+                    ),
+                )
+            )
         elif query.status == AlertListStatusFilter.PENDING_RESPONSE:
             pending_response_exists = (
                 select(ResponseAction.id)
