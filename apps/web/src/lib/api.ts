@@ -129,11 +129,11 @@ async function extractApiError(response: Response) {
   return `API request failed with status ${response.status}`;
 }
 
-export async function fetchApiJson<T>(
+export async function fetchApiResponse(
   path: string,
   init: RequestInit = {},
   options: FetchApiJsonOptions = {}
-): Promise<T> {
+): Promise<Response> {
   const useAuth = options.auth ?? true;
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
@@ -162,7 +162,55 @@ export async function fetchApiJson<T>(
     throw new ApiRequestError(response.status, await extractApiError(response));
   }
 
+  return response;
+}
+
+export async function fetchApiJson<T>(
+  path: string,
+  init: RequestInit = {},
+  options: FetchApiJsonOptions = {}
+): Promise<T> {
+  const response = await fetchApiResponse(path, init, options);
   return (await response.json()) as T;
+}
+
+function parseDownloadFilename(
+  headerValue: string | null,
+  fallbackFilename: string
+) {
+  if (!headerValue) {
+    return fallbackFilename;
+  }
+
+  const matched = headerValue.match(/filename="?([^";]+)"?/i);
+  return matched?.[1] ?? fallbackFilename;
+}
+
+export async function downloadApiFile(
+  path: string,
+  fallbackFilename: string,
+  init: RequestInit = {},
+  options: FetchApiJsonOptions = {}
+) {
+  const response = await fetchApiResponse(path, init, options);
+  const blob = await response.blob();
+  const filename = parseDownloadFilename(
+    response.headers.get("Content-Disposition"),
+    fallbackFilename
+  );
+
+  if (typeof window !== "undefined") {
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.URL.revokeObjectURL(url);
+  }
+
+  return filename;
 }
 
 export function formatUtcDateTime(value: string | null | undefined) {

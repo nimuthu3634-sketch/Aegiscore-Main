@@ -24,7 +24,7 @@ AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes sec
 - `app/models`: SQLAlchemy models for roles, users, assets, raw alerts, normalized alerts, incidents, risk scores, response actions, analyst notes, and audit logs
 - `app/repositories`: database access by aggregate or resource
 - `app/schemas`: API response schemas
-- `app/services`: auth, dashboard, alerts, incidents, ingestion, response actions, seed logic, serializers, scoring, and health checks
+- `app/services`: auth, dashboard, alerts, incidents, ingestion, reports, response actions, seed logic, serializers, scoring, and health checks
 
 ## Backend Data Model
 
@@ -50,6 +50,13 @@ AegisCore is a single-tenant SOC platform for SMEs. The platform centralizes sec
 - Every workflow mutation writes an audit entry, and note creation also persists a first-class analyst note record.
 - After risk scoring completes, enabled response policies can evaluate the alert or rolled-up incident and create auditable response actions in either `dry-run` or `live` mode.
 - Safe internal actions such as `notify_admin`, `create_manual_review`, and `quarantine_host_flag` can complete without an external adapter; destructive actions require explicit live enablement and adapter configuration.
+
+## Reporting Flow
+
+- Backend-owned report summaries derive directly from normalized alerts, linked incidents, and response history without exposing source-specific payload structure to the frontend.
+- Daily reports focus on short-window operational review with hourly alert volume.
+- Weekly reports focus on broader SME review with daily alert volume and distribution summaries.
+- Alert, incident, and response exports support CSV or JSON output and create audit-log entries for traceability.
 
 ## Automated Response Scope
 

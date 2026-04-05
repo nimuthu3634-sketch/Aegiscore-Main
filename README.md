@@ -190,6 +190,31 @@ Invoke-RestMethod -Method Post -Uri http://localhost:8000/integrations/suricata/
 Invoke-RestMethod -Headers $headers -Uri "http://localhost:8000/dashboard/summary"
 ```
 
+## Reports And Exports
+
+AegisCore now includes practical SME-focused operational reporting with real backend data and auditable exports.
+
+- `GET /reports/daily-summary`
+- `GET /reports/weekly-summary`
+- `GET /reports/alerts/export`
+- `GET /reports/incidents/export`
+- `GET /reports/responses/export`
+
+Summary routes support optional date-range and detection/source filters. Export routes support CSV and JSON output plus operational filters aligned to alerts, incidents, and responses.
+
+Example export validation:
+
+```powershell
+$login = Invoke-RestMethod -Method Post -Uri http://localhost:8000/auth/login -ContentType "application/json" -Body '{"username":"admin","password":"AegisCore123!"}'
+$token = $login.access_token
+$headers = @{ Authorization = "Bearer $token" }
+
+Invoke-RestMethod -Headers $headers -Uri "http://localhost:8000/reports/daily-summary"
+Invoke-WebRequest -Headers $headers -Uri "http://localhost:8000/reports/alerts/export?format=csv" -OutFile alerts-export.csv
+Invoke-WebRequest -Headers $headers -Uri "http://localhost:8000/reports/incidents/export?format=json" -OutFile incidents-export.json
+Invoke-WebRequest -Headers $headers -Uri "http://localhost:8000/reports/responses/export?format=csv" -OutFile responses-export.csv
+```
+
 ## Risk Scoring
 
 AegisCore now includes a persisted risk scoring layer for alert prioritization.

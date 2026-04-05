@@ -13,6 +13,7 @@ import { AssetsPage } from "./pages/AssetsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { IncidentDetailPage } from "./pages/IncidentDetailPage";
 import { IncidentsPage } from "./pages/IncidentsPage";
+import { ReportsPage } from "./pages/ReportsPage";
 import { ResponsesPage } from "./pages/ResponsesPage";
 import { RulesPage } from "./pages/RulesPage";
 import { fetchHealthResponse, type HealthResponse } from "./lib/api";
@@ -111,6 +112,7 @@ export default function App() {
         <Route path="/assets" element={<AssetsPage />} />
         <Route path="/responses" element={<ResponsesPage />} />
         <Route path="/rules" element={<RulesPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
         <Route path="*" element={<Navigate to="/overview" replace />} />
       </Routes>
     </AppShell>
