@@ -13,8 +13,8 @@ export type LinkedAlertRow = {
   asset: string;
   sourceIp: string;
   timestamp: string;
-  riskScore: number;
-  eventId: string;
+  riskScore: number | null;
+  eventId?: string | null;
 };
 
 type LinkedAlertsTableProps = {
@@ -29,7 +29,7 @@ const columns: TableColumn<LinkedAlertRow>[] = [
     cell: (row) => (
       <div className="space-y-1">
         <div className="type-mono-sm">{row.id}</div>
-        <div className="type-mono-sm">{row.eventId}</div>
+        <div className="type-mono-sm">{row.eventId ?? "event unavailable"}</div>
       </div>
     )
   },
@@ -75,7 +75,11 @@ const columns: TableColumn<LinkedAlertRow>[] = [
   {
     id: "risk",
     header: "Risk",
-    cell: (row) => <span className="text-body-sm font-medium text-content-primary">{row.riskScore}</span>,
+    cell: (row) => (
+      <span className="text-body-sm font-medium text-content-primary">
+        {row.riskScore ?? "n/a"}
+      </span>
+    ),
     align: "right"
   }
 ];

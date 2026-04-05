@@ -106,14 +106,15 @@ export function IncidentDetailPage() {
   );
 
   const actionVariants = {
-    triage: incident.state === "new" ? "primary" : "secondary",
-    investigate:
-      incident.state === "triaged" || incident.state === "investigating"
-        ? "primary"
-        : "secondary",
-    contain: incident.state === "investigating" ? "primary" : "secondary",
-    resolve: incident.state === "contained" ? "primary" : "secondary",
-    falsePositive: incident.state === "resolved" ? "ghost" : "secondary"
+    triage: incident.availableActions?.includes("triage") ? "primary" : "secondary",
+    investigate: incident.availableActions?.includes("investigate")
+      ? "primary"
+      : "secondary",
+    contain: incident.availableActions?.includes("contain") ? "primary" : "secondary",
+    resolve: incident.availableActions?.includes("resolve") ? "primary" : "secondary",
+    falsePositive: incident.availableActions?.includes("mark_false_positive")
+      ? "ghost"
+      : "secondary"
   } as const;
 
   return (
@@ -173,16 +174,24 @@ export function IncidentDetailPage() {
           >
             <div className="space-y-4">
               <p className="type-body-sm">{incident.correlationExplanation}</p>
-              <ul className="space-y-2">
-                {incident.groupedEvidence.map((evidence) => (
-                  <li
-                    key={evidence}
-                    className="rounded-panel border border-border-subtle bg-surface-subtle/65 px-4 py-3 text-body-sm text-content-secondary"
-                  >
-                    {evidence}
-                  </li>
-                ))}
-              </ul>
+              {incident.groupedEvidence.length ? (
+                <ul className="space-y-2">
+                  {incident.groupedEvidence.map((evidence) => (
+                    <li
+                      key={evidence}
+                      className="rounded-panel border border-border-subtle bg-surface-subtle/65 px-4 py-3 text-body-sm text-content-secondary"
+                    >
+                      {evidence}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="rounded-panel border border-dashed border-border-subtle bg-surface-base/30 p-4">
+                  <p className="type-body-sm">
+                    No additional grouped evidence items were returned by the backend.
+                  </p>
+                </div>
+              )}
             </div>
           </EvidencePanel>
 

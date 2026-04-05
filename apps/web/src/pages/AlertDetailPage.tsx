@@ -92,14 +92,14 @@ export function AlertDetailPage() {
 
   const metadataItems: KeyValueItem[] = [
     { label: "Alert ID", value: alert.id, mono: true, emphasized: true },
-    { label: "Source IP", value: alert.sourceIp, mono: true },
+    { label: "Source IP", value: fallbackValue(alert.sourceIp), mono: true },
     { label: "Destination IP", value: fallbackValue(alert.destinationIp), mono: true },
     {
       label: "Destination port",
       value: fallbackValue(alert.destinationPort),
       mono: true
     },
-    { label: "Asset / hostname", value: alert.asset, emphasized: true },
+    { label: "Asset / hostname", value: fallbackValue(alert.asset), emphasized: true },
     { label: "Username", value: fallbackValue(alert.username), mono: true },
     { label: "Timestamp", value: alert.timestamp, mono: true },
     {
@@ -128,7 +128,7 @@ export function AlertDetailPage() {
             <Badge tone="outline">{alert.sourceType}</Badge>
             <SeverityChip severity={alert.severity} />
             <StatusChip status={alert.status} />
-            <Badge tone="brand">risk {alert.riskScore}</Badge>
+            <Badge tone="brand">risk {alert.riskScore ?? "n/a"}</Badge>
             {alert.linkedIncidentId ? (
               <Badge tone="outline">incident {alert.linkedIncidentId}</Badge>
             ) : (
@@ -176,13 +176,29 @@ export function AlertDetailPage() {
         </div>
 
         <div className="space-y-4">
-          <ScoreExplanationCard
-            label={alert.scoreExplanation.label}
-            summary={alert.scoreExplanation.summary}
-            rationale={alert.scoreExplanation.rationale}
-            scoreValue={<span className="type-mono-sm">{alert.scoreExplanation.score}</span>}
-            factors={alert.scoreExplanation.factors}
-          />
+          {alert.scoreExplanation ? (
+            <ScoreExplanationCard
+              label={alert.scoreExplanation.label}
+              summary={alert.scoreExplanation.summary}
+              rationale={alert.scoreExplanation.rationale}
+              scoreValue={
+                <span className="type-mono-sm">
+                  {alert.scoreExplanation.score ?? "n/a"}
+                </span>
+              }
+              factors={alert.scoreExplanation.factors}
+            />
+          ) : (
+            <EvidencePanel
+              eyebrow="Scoring"
+              title="Score explanation unavailable"
+              description="The backend did not return a risk explanation for this alert yet."
+            >
+              <p className="type-body-sm">
+                The detail flow remains connected to the backend, but this alert does not currently include a score rationale payload.
+              </p>
+            </EvidencePanel>
+          )}
 
           <EvidencePanel
             eyebrow="Workflow"

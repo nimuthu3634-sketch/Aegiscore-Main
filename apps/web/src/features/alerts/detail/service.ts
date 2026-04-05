@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
-import { mockAlertDetailsById } from "./mockData";
-import type { AlertDetailResponse } from "./types";
+import { ApiRequestError, fetchApiJson, formatUtcDateTime } from "../../../lib/api";
+import {
+  toActorLabel,
+  toAnalystNotes,
+  toKeyValueItems,
+  toRelatedResponses,
+  toSourceType
+} from "../../../lib/api/detailTransforms";
+import type { AlertDetailApiResponse, AlertDetailResponse } from "./types";
 
 type AlertDetailState = {
   data: AlertDetailResponse | null;
@@ -10,9 +17,73 @@ type AlertDetailState = {
   reload: () => void;
 };
 
+function mapAlertDetailResponse(payload: AlertDetailApiResponse): AlertDetailResponse {
+  return {
+    fetchedAt: formatUtcDateTime(new Date().toISOString()),
+    alert: {
+      id: payload.id,
+      title: payload.title,
+      detectionType: payload.detection_type,
+      sourceType: toSourceType(payload.source_type),
+      severity: payload.severity,
+      status: payload.status,
+      riskScore: payload.risk_score,
+      priorityLabel: payload.priority_label,
+      linkedIncidentId: payload.linked_incident?.id ?? null,
+      linkedIncidentTitle: payload.linked_incident?.title ?? null,
+      asset: payload.asset?.hostname ?? "Unassigned asset",
+      sourceIp: payload.source_ip,
+      destinationIp: payload.destination_ip,
+      destinationPort:
+        payload.destination_port != null ? String(payload.destination_port) : null,
+      username: payload.username,
+      timestamp: formatUtcDateTime(payload.timestamp),
+      ruleId: payload.source_rule?.rule_id ?? null,
+      sourceRule:
+        payload.source_rule?.name ??
+        payload.source_rule?.provider ??
+        null,
+      normalizedSummary:
+        payload.description ??
+        payload.score_explanation?.summary ??
+        payload.title,
+      normalizedDetails: toKeyValueItems(payload.normalized_details),
+      rawPayload: payload.raw_payload,
+      scoreExplanation: payload.score_explanation
+        ? {
+            score: payload.risk_score,
+            label: payload.score_explanation.label,
+            summary: payload.score_explanation.summary,
+            rationale: payload.score_explanation.rationale,
+            factors: payload.score_explanation.factors,
+            confidence: payload.score_explanation.confidence
+          }
+        : null,
+      relatedResponses: toRelatedResponses(payload.related_responses),
+      notes: toAnalystNotes(payload.analyst_notes),
+      auditHistory: payload.audit_history.map((entry) => ({
+        id: entry.id,
+        timestamp: formatUtcDateTime(entry.timestamp),
+        category: entry.category,
+        title: entry.title,
+        description: entry.description,
+        actor: toActorLabel(entry.actor)
+      }))
+    }
+  };
+}
+
 async function fetchAlertDetail(alertId: string): Promise<AlertDetailResponse | null> {
-  await new Promise((resolve) => window.setTimeout(resolve, 160));
-  return mockAlertDetailsById[alertId] ?? null;
+  try {
+    const response = await fetchApiJson<AlertDetailApiResponse>(`/alerts/${alertId}`);
+    return mapAlertDetailResponse(response);
+  } catch (error: unknown) {
+    if (error instanceof ApiRequestError && error.status === 404) {
+      return null;
+    }
+
+    throw error;
+  }
 }
 
 export function useAlertDetail(alertId: string | undefined): AlertDetailState {
