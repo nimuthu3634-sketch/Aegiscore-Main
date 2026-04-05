@@ -10,6 +10,7 @@ import { AppShell } from "./components/layout/AppShell";
 import { AlertDetailPage } from "./pages/AlertDetailPage";
 import { AlertsPage } from "./pages/AlertsPage";
 import { AssetsPage } from "./pages/AssetsPage";
+import { DashboardPage } from "./pages/DashboardPage";
 import { IncidentDetailPage } from "./pages/IncidentDetailPage";
 import { IncidentsPage } from "./pages/IncidentsPage";
 import { ResponsesPage } from "./pages/ResponsesPage";
@@ -26,7 +27,7 @@ function resolveActivePage(pathname: string): NavKey {
     (item) => pathname === item.path || pathname.startsWith(`${item.path}/`)
   );
 
-  return match?.id ?? "alerts";
+  return match?.id ?? "overview";
 }
 
 export default function App() {
@@ -100,15 +101,15 @@ export default function App() {
       onSearchChange={(event) => setGlobalSearch(event.target.value)}
     >
       <Routes>
-        <Route path="/" element={<Navigate to="/alerts" replace />} />
-        <Route path="/overview" element={<Navigate to="/alerts" replace />} />
+        <Route path="/" element={<Navigate to="/overview" replace />} />
+        <Route path="/overview" element={<DashboardPage />} />
         <Route path="/alerts" element={<AlertsPage />} />
         <Route path="/alerts/:alertId" element={<AlertDetailPage />} />
         <Route path="/incidents" element={<IncidentsPage />} />
         <Route path="/incidents/:incidentId" element={<IncidentDetailPage />} />
         <Route path="/assets" element={<AssetsPage />} />
         <Route path="/responses" element={<ResponsesPage />} />
-        <Route path="*" element={<Navigate to="/alerts" replace />} />
+        <Route path="*" element={<Navigate to="/overview" replace />} />
       </Routes>
     </AppShell>
   );

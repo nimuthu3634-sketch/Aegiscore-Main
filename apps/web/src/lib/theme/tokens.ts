@@ -145,7 +145,7 @@ export const primaryNavigation: NavigationItem[] = [
 ];
 
 export const analystNavigation = primaryNavigation.filter((item) =>
-  ["alerts", "incidents", "assets", "responses"].includes(item.id)
+  ["overview", "alerts", "incidents", "assets", "responses"].includes(item.id)
 );
 
 export const navPathById = primaryNavigation.reduce<Record<NavKey, string>>(
@@ -171,7 +171,7 @@ export const pageBlueprints: Record<
 > = {
   overview: {
     eyebrow: "SOC overview",
-    title: "AegisCore",
+    title: "Overview Dashboard",
     description:
       "Centralized security monitoring, prioritization, and investigation for SME analysts."
   },
