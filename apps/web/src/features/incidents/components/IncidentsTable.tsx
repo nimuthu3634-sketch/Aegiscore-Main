@@ -1,7 +1,7 @@
 import { Badge } from "../../../components/ui/Badge";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
-import { SeverityChip } from "../../../components/ui/SeverityChip";
-import { StatusChip } from "../../../components/ui/StatusChip";
+import { IncidentStateBadge } from "../../../components/ui/IncidentStateBadge";
+import { PriorityChip } from "../../../components/ui/PriorityChip";
 import type { IncidentRecord } from "../types";
 
 type IncidentsTableProps = {
@@ -29,12 +29,12 @@ const columns: TableColumn<IncidentRecord>[] = [
   {
     id: "priority",
     header: "Priority",
-    cell: (row) => <SeverityChip severity={row.priority} />
+    cell: (row) => <PriorityChip priority={row.priority} />
   },
   {
     id: "state",
     header: "State",
-    cell: (row) => <StatusChip status={row.state} />
+    cell: (row) => <IncidentStateBadge state={row.state} />
   },
   {
     id: "linked_alerts",

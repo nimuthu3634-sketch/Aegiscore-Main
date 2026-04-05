@@ -16,7 +16,7 @@ const columns: TableColumn<AlertRecord>[] = [
     header: "Alert ID",
     cell: (row) => (
       <div className="space-y-1">
-        <div className="font-medium text-content-primary">{row.id}</div>
+        <div className="type-mono-sm font-medium text-content-primary">{row.id}</div>
         <div className="type-mono-sm">{row.eventId}</div>
       </div>
     )

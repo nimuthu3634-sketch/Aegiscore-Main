@@ -7,8 +7,10 @@ import {
   useNavigate
 } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
+import { AlertDetailPage } from "./pages/AlertDetailPage";
 import { AlertsPage } from "./pages/AlertsPage";
 import { AssetsPage } from "./pages/AssetsPage";
+import { IncidentDetailPage } from "./pages/IncidentDetailPage";
 import { IncidentsPage } from "./pages/IncidentsPage";
 import { ResponsesPage } from "./pages/ResponsesPage";
 import { fetchHealthResponse, type HealthResponse } from "./lib/api";
@@ -101,7 +103,9 @@ export default function App() {
         <Route path="/" element={<Navigate to="/alerts" replace />} />
         <Route path="/overview" element={<Navigate to="/alerts" replace />} />
         <Route path="/alerts" element={<AlertsPage />} />
+        <Route path="/alerts/:alertId" element={<AlertDetailPage />} />
         <Route path="/incidents" element={<IncidentsPage />} />
+        <Route path="/incidents/:incidentId" element={<IncidentDetailPage />} />
         <Route path="/assets" element={<AssetsPage />} />
         <Route path="/responses" element={<ResponsesPage />} />
         <Route path="*" element={<Navigate to="/alerts" replace />} />

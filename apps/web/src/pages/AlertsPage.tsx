@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MetricCard } from "../components/data-display/MetricCard";
 import { SearchFilterToolbar } from "../components/data-display/SearchFilterToolbar";
 import { EmptyState } from "../components/feedback/EmptyState";
@@ -9,10 +10,8 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { SearchInput } from "../components/ui/SearchInput";
 import { Select } from "../components/ui/Select";
-import { AlertSummaryPanel } from "../features/alerts/components/AlertSummaryPanel";
 import { AlertsTable } from "../features/alerts/components/AlertsTable";
 import { useAlertsList } from "../features/alerts/service";
-import type { AlertRecord } from "../features/alerts/types";
 import { pageBlueprints } from "../lib/theme/tokens";
 
 type AlertsDateRange = "4h" | "12h" | "24h" | "all";
@@ -28,6 +27,7 @@ function toUtcDate(value: string) {
 }
 
 export function AlertsPage() {
+  const navigate = useNavigate();
   const { data, isLoading, error, reload } = useAlertsList();
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState("");
@@ -36,7 +36,6 @@ export function AlertsPage() {
   const [sourceType, setSourceType] = useState("");
   const [asset, setAsset] = useState("");
   const [dateRange, setDateRange] = useState<AlertsDateRange>("24h");
-  const [selectedAlertId, setSelectedAlertId] = useState<string>("");
 
   const alerts = data?.items ?? [];
   const generatedAt = data?.generatedAt ? new Date(data.generatedAt) : null;
@@ -77,20 +76,6 @@ export function AlertsPage() {
       matchesDateRange
     );
   });
-
-  useEffect(() => {
-    if (!filteredAlerts.length) {
-      setSelectedAlertId("");
-      return;
-    }
-
-    if (!filteredAlerts.some((alert) => alert.id === selectedAlertId)) {
-      setSelectedAlertId(filteredAlerts[0].id);
-    }
-  }, [filteredAlerts, selectedAlertId]);
-
-  const selectedAlert =
-    filteredAlerts.find((alert) => alert.id === selectedAlertId) ?? null;
 
   if (error) {
     return (
@@ -272,13 +257,17 @@ export function AlertsPage() {
       {isLoading ? (
         <LoadingTable columns={9} rows={6} />
       ) : filteredAlerts.length ? (
-        <section className="grid gap-4 xl:grid-cols-[1.5fr_0.5fr]">
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="type-body-sm">
+              Select a row to open the detailed investigation surface for that alert.
+            </p>
+            <Badge tone="outline">detail route enabled</Badge>
+          </div>
           <AlertsTable
             alerts={filteredAlerts}
-            selectedAlertId={selectedAlertId}
-            onRowClick={(alert: AlertRecord) => setSelectedAlertId(alert.id)}
+            onRowClick={(alert) => navigate(`/alerts/${alert.id}`)}
           />
-          <AlertSummaryPanel alert={selectedAlert} />
         </section>
       ) : (
         <EmptyState

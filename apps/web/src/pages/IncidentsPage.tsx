@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MetricCard } from "../components/data-display/MetricCard";
 import { SearchFilterToolbar } from "../components/data-display/SearchFilterToolbar";
 import { EmptyState } from "../components/feedback/EmptyState";
@@ -9,20 +10,18 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { SearchInput } from "../components/ui/SearchInput";
 import { Select } from "../components/ui/Select";
-import { IncidentSummaryPanel } from "../features/incidents/components/IncidentSummaryPanel";
 import { IncidentsTable } from "../features/incidents/components/IncidentsTable";
 import { useIncidentsList } from "../features/incidents/service";
-import type { IncidentRecord } from "../features/incidents/types";
 import { pageBlueprints } from "../lib/theme/tokens";
 
 export function IncidentsPage() {
+  const navigate = useNavigate();
   const { data, isLoading, error, reload } = useIncidentsList();
   const [query, setQuery] = useState("");
   const [priority, setPriority] = useState("");
   const [state, setState] = useState("");
   const [detectionType, setDetectionType] = useState("");
   const [assignee, setAssignee] = useState("");
-  const [selectedIncidentId, setSelectedIncidentId] = useState("");
 
   const incidents = data?.items ?? [];
 
@@ -51,21 +50,6 @@ export function IncidentsPage() {
       matchesAssignee
     );
   });
-
-  useEffect(() => {
-    if (!filteredIncidents.length) {
-      setSelectedIncidentId("");
-      return;
-    }
-
-    if (!filteredIncidents.some((incident) => incident.id === selectedIncidentId)) {
-      setSelectedIncidentId(filteredIncidents[0].id);
-    }
-  }, [filteredIncidents, selectedIncidentId]);
-
-  const selectedIncident =
-    filteredIncidents.find((incident) => incident.id === selectedIncidentId) ??
-    null;
 
   if (error) {
     return (
@@ -220,15 +204,17 @@ export function IncidentsPage() {
       {isLoading ? (
         <LoadingTable columns={8} rows={5} />
       ) : filteredIncidents.length ? (
-        <section className="grid gap-4 xl:grid-cols-[1.45fr_0.55fr]">
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="type-body-sm">
+              Select a queue row to open the full incident investigation workspace.
+            </p>
+            <Badge tone="outline">detail route enabled</Badge>
+          </div>
           <IncidentsTable
             incidents={filteredIncidents}
-            selectedIncidentId={selectedIncidentId}
-            onRowClick={(incident: IncidentRecord) =>
-              setSelectedIncidentId(incident.id)
-            }
+            onRowClick={(incident) => navigate(`/incidents/${incident.id}`)}
           />
-          <IncidentSummaryPanel incident={selectedIncident} />
         </section>
       ) : (
         <EmptyState
