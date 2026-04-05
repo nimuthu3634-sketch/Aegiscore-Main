@@ -56,6 +56,10 @@ Sample auth flow:
 $login = Invoke-RestMethod -Method Post -Uri http://localhost:8000/auth/login -ContentType "application/json" -Body '{"username":"admin","password":"AegisCore123!"}'
 $token = $login.access_token
 Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/dashboard/summary
+$alerts = Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/alerts
+Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri ("http://localhost:8000/alerts/" + $alerts.items[0].id)
+$incidents = Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri http://localhost:8000/incidents
+Invoke-RestMethod -Headers @{ Authorization = "Bearer $token" } -Uri ("http://localhost:8000/incidents/" + $incidents.items[0].id)
 ```
 
 ## Environment Files
@@ -75,6 +79,8 @@ docker compose exec api alembic upgrade head
 docker compose exec api python -m app.db.seed
 Invoke-WebRequest http://localhost:8000/health
 Invoke-WebRequest http://localhost:8000/auth/me -Headers @{ Authorization = "Bearer <token>" }
+Invoke-WebRequest http://localhost:8000/alerts/<alert-id> -Headers @{ Authorization = "Bearer <token>" }
+Invoke-WebRequest http://localhost:8000/incidents/<incident-id> -Headers @{ Authorization = "Bearer <token>" }
 Invoke-WebRequest http://localhost/
 ```
 

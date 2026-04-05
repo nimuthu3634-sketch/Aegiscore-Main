@@ -3,7 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter
 
 from app.api.deps import CurrentUser, DbSession
-from app.schemas.common import IncidentDetailResponse, IncidentListResponse
+from app.schemas.common import IncidentListResponse
+from app.schemas.incidents import IncidentDetailResponse
 from app.services.incidents import get_incident, list_incidents
 
 router = APIRouter(prefix="/incidents", tags=["incidents"])

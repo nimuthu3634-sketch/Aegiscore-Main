@@ -41,7 +41,22 @@ class IncidentsRepository:
         )
         return self.session.scalar(statement)
 
+    def get_incident_detail(self, incident_id: UUID) -> Incident | None:
+        statement = (
+            select(Incident)
+            .options(
+                selectinload(Incident.assigned_user).selectinload(User.role),
+                selectinload(Incident.normalized_alert).selectinload(NormalizedAlert.asset),
+                selectinload(Incident.normalized_alert).selectinload(NormalizedAlert.risk_score),
+                selectinload(Incident.normalized_alert).selectinload(NormalizedAlert.raw_alert),
+                selectinload(Incident.response_actions)
+                .selectinload(ResponseAction.requested_by)
+                .selectinload(User.role),
+            )
+            .where(Incident.id == incident_id)
+        )
+        return self.session.scalar(statement)
+
     def create(self, incident: Incident) -> Incident:
         self.session.add(incident)
         return incident
-

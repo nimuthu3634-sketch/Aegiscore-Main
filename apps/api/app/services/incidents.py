@@ -5,11 +5,11 @@ from sqlalchemy.orm import Session
 
 from app.repositories.audit_logs import AuditLogsRepository
 from app.repositories.incidents import IncidentsRepository
-from app.schemas.common import IncidentDetailResponse, IncidentListResponse
+from app.schemas.common import IncidentListResponse
+from app.schemas.incidents import IncidentDetailResponse
 from app.services.serializers import (
-    to_audit_log_response,
+    to_incident_detail_response,
     to_incident_summary_response,
-    to_response_action_reference_response,
 )
 
 def list_incidents(session: Session) -> IncidentListResponse:
@@ -20,21 +20,19 @@ def list_incidents(session: Session) -> IncidentListResponse:
 
 
 def get_incident(session: Session, incident_id: UUID) -> IncidentDetailResponse:
-    incident = IncidentsRepository(session).get_incident(incident_id)
+    incident = IncidentsRepository(session).get_incident_detail(incident_id)
     if incident is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Incident not found",
         )
 
-    audit_logs = AuditLogsRepository(session).list_for_entity("incident", str(incident.id))
-    summary = to_incident_summary_response(incident)
-
-    return IncidentDetailResponse(
-        **summary.model_dump(),
-        response_actions=[
-            to_response_action_reference_response(action)
-            for action in incident.response_actions
-        ],
-        audit_logs=[to_audit_log_response(log) for log in audit_logs],
+    audit_logs_repository = AuditLogsRepository(session)
+    audit_logs = audit_logs_repository.list_for_entity("incident", str(incident.id))
+    audit_logs.extend(
+        audit_logs_repository.list_for_entity(
+            "alert", str(incident.normalized_alert.id)
+        )
     )
+
+    return to_incident_detail_response(incident, audit_logs)

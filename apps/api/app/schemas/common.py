@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from app.models.enums import (
@@ -94,6 +95,36 @@ class ResponseActionReferenceResponse(APIModel):
     created_at: datetime
     executed_at: datetime | None
     requested_by: UserBriefResponse | None
+
+
+class ResponseActionDetailResponse(APIModel):
+    id: UUID
+    action_type: str
+    status: ResponseStatus
+    target: str | None
+    mode: str | None
+    result_summary: str | None
+    details: dict[str, Any]
+    created_at: datetime
+    executed_at: datetime | None
+    requested_by: UserBriefResponse | None
+
+
+class AnalystNoteResponse(APIModel):
+    id: str
+    author: UserBriefResponse | None
+    content: str
+    created_at: datetime
+
+
+class ActivityEntryResponse(APIModel):
+    id: str
+    timestamp: datetime
+    category: str
+    title: str
+    description: str | None
+    actor: UserBriefResponse | None
+    details: dict[str, Any]
 
 
 class AlertSummaryResponse(APIModel):
