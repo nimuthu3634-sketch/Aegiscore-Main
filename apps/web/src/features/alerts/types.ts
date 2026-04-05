@@ -1,4 +1,26 @@
 import type { Severity, StatusTone } from "../../lib/theme/tokens";
+import type { ListQueryMeta, SortDirection } from "../../lib/api/query";
+
+export type AlertsDateRange = "4h" | "12h" | "24h" | "all";
+export type AlertsSortField = "timestamp" | "severity" | "risk_score";
+export type AlertStatusFilter = Extract<
+  StatusTone,
+  "new" | "triaged" | "investigating" | "contained" | "resolved" | "pending_response"
+>;
+
+export type AlertsListQuery = {
+  search: string;
+  severity: Severity | "";
+  status: AlertStatusFilter | "";
+  detectionType: string;
+  sourceType: "" | "wazuh" | "suricata";
+  asset: string;
+  dateRange: AlertsDateRange;
+  sortBy: AlertsSortField;
+  sortDirection: SortDirection;
+  page: number;
+  pageSize: number;
+};
 
 export type AlertRecord = {
   id: string;
@@ -19,51 +41,31 @@ export type AlertsListResponse = {
   items: AlertRecord[];
   total: number;
   generatedAt: string;
+  meta: ListQueryMeta;
 };
 
 export type AlertsListApiResponse = {
+  meta: {
+    page: number;
+    page_size: number;
+    total: number;
+    total_pages: number;
+    sort_by: string;
+    sort_direction: SortDirection;
+    warnings: string[];
+  };
   items: Array<{
     id: string;
-    source: string;
-    title: string;
-    description: string | null;
     detection_type: string;
-    severity: number;
-    status: "new" | "investigating" | "resolved";
-    normalized_payload: Record<string, unknown>;
+    source_type: "Wazuh" | "Suricata";
+    severity_label: Severity;
+    status_label: AlertStatusFilter | "contained";
+    asset_name: string | null;
+    source_ip: string | null;
+    destination_port: number | null;
     created_at: string;
-    asset: {
-      id: string;
-      hostname: string;
-      ip_address: string;
-      operating_system: string | null;
-      criticality: string;
-      created_at: string;
-      updated_at: string;
-    } | null;
-    raw_alert: {
-      id: string;
-      source: string;
-      external_id: string | null;
-      detection_type: string;
-      severity: number;
-      raw_payload: Record<string, unknown>;
-      received_at: string;
-    };
-    risk_score: {
-      id: string;
-      score: number;
-      confidence: number;
-      reasoning: string;
-      calculated_at: string;
-    } | null;
-    incident: {
-      id: string;
-      title: string;
-      status: string;
-      priority: string;
-      created_at: string;
-      updated_at: string;
-    } | null;
+    risk_score_value: number | null;
+    username: string | null;
+    event_id: string | null;
   }>;
 };

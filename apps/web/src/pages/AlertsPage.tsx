@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MetricCard } from "../components/data-display/MetricCard";
 import { SearchFilterToolbar } from "../components/data-display/SearchFilterToolbar";
+import { TablePagination } from "../components/data-display/TablePagination";
 import { EmptyState } from "../components/feedback/EmptyState";
 import { ErrorState } from "../components/feedback/ErrorState";
 import { LoadingCard, LoadingTable } from "../components/feedback/LoadingState";
+import { QueryWarnings } from "../components/feedback/QueryWarnings";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
@@ -12,76 +14,61 @@ import { SearchInput } from "../components/ui/SearchInput";
 import { Select } from "../components/ui/Select";
 import { AlertsTable } from "../features/alerts/components/AlertsTable";
 import { useAlertsList } from "../features/alerts/service";
+import type { AlertsDateRange, AlertsListQuery, AlertsSortField } from "../features/alerts/types";
 import { pageBlueprints } from "../lib/theme/tokens";
-
-type AlertsDateRange = "4h" | "12h" | "24h" | "all";
-
-const dateRangeThresholds: Record<Exclude<AlertsDateRange, "all">, number> = {
-  "4h": 4 * 60 * 60 * 1000,
-  "12h": 12 * 60 * 60 * 1000,
-  "24h": 24 * 60 * 60 * 1000
-};
-
-function toUtcDate(value: string) {
-  return new Date(value.replace(" UTC", "Z").replace(" ", "T"));
-}
 
 export function AlertsPage() {
   const navigate = useNavigate();
-  const { data, isLoading, error, reload } = useAlertsList();
-  const [query, setQuery] = useState("");
-  const [severity, setSeverity] = useState("");
-  const [status, setStatus] = useState("");
+  const [search, setSearch] = useState("");
+  const [severity, setSeverity] = useState<AlertsListQuery["severity"]>("");
+  const [status, setStatus] = useState<AlertsListQuery["status"]>("");
   const [detectionType, setDetectionType] = useState("");
-  const [sourceType, setSourceType] = useState("");
+  const [sourceType, setSourceType] = useState<AlertsListQuery["sourceType"]>("");
   const [asset, setAsset] = useState("");
   const [dateRange, setDateRange] = useState<AlertsDateRange>("24h");
+  const [sortBy, setSortBy] = useState<AlertsSortField>("timestamp");
+  const [sortDirection, setSortDirection] = useState<AlertsListQuery["sortDirection"]>("desc");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
+  const query = useMemo<AlertsListQuery>(
+    () => ({
+      search,
+      severity,
+      status,
+      detectionType,
+      sourceType,
+      asset,
+      dateRange,
+      sortBy,
+      sortDirection,
+      page,
+      pageSize
+    }),
+    [
+      asset,
+      dateRange,
+      detectionType,
+      page,
+      pageSize,
+      search,
+      severity,
+      sortBy,
+      sortDirection,
+      sourceType,
+      status
+    ]
+  );
+
+  const { data, isLoading, error, reload } = useAlertsList(query);
   const alerts = data?.items ?? [];
-  const generatedAt = data?.generatedAt ? new Date(data.generatedAt) : null;
-
-  const filteredAlerts = alerts.filter((alert) => {
-    const normalizedQuery = query.trim().toLowerCase();
-    const matchesQuery =
-      !normalizedQuery ||
-      [
-        alert.id,
-        alert.detectionType,
-        alert.asset,
-        alert.sourceIp,
-        alert.destinationPort ?? "",
-        alert.username,
-        alert.eventId
-      ].some((value) => value.toLowerCase().includes(normalizedQuery));
-
-    const matchesSeverity = !severity || alert.severity === severity;
-    const matchesStatus = !status || alert.status === status;
-    const matchesDetection = !detectionType || alert.detectionType === detectionType;
-    const matchesSource = !sourceType || alert.sourceType === sourceType;
-    const matchesAsset = !asset || alert.asset === asset;
-
-    const matchesDateRange =
-      !generatedAt ||
-      dateRange === "all" ||
-      generatedAt.getTime() - toUtcDate(alert.timestamp).getTime() <=
-        dateRangeThresholds[dateRange];
-
-    return (
-      matchesQuery &&
-      matchesSeverity &&
-      matchesStatus &&
-      matchesDetection &&
-      matchesSource &&
-      matchesAsset &&
-      matchesDateRange
-    );
-  });
+  const meta = data?.meta;
 
   if (error) {
     return (
       <ErrorState
         title="Alerts could not be loaded"
-        description="The alerts surface is ready for API integration, but the current dataset request failed."
+        description="The alerts surface is running against the backend query layer, but the current request failed."
         details={error}
         action={
           <Button variant="secondary" size="sm" onClick={reload}>
@@ -100,9 +87,9 @@ export function AlertsPage() {
         description={pageBlueprints.alerts.description}
         meta={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="outline">{alerts.length} alerts in feed</Badge>
+            <Badge tone="outline">{data?.total ?? 0} alerts in feed</Badge>
             <Badge tone="brand">
-              {alerts.filter((alert) => (alert.riskScore ?? 0) >= 80).length} high-risk
+              {alerts.filter((alert) => (alert.riskScore ?? 0) >= 80).length} high-risk on page
             </Badge>
           </div>
         }
@@ -123,30 +110,27 @@ export function AlertsPage() {
         ) : (
           <>
             <MetricCard
-              label="Visible alerts"
-              value={String(filteredAlerts.length)}
-              detail="Current triage set after search and filter conditions."
+              label="Matching alerts"
+              value={String(meta?.total ?? 0)}
+              detail="Total alerts returned by the current server-side query."
               tone="highlight"
             />
             <MetricCard
               label="Critical or high"
               value={String(
-                filteredAlerts.filter(
-                  (alert) =>
-                    alert.severity === "critical" || alert.severity === "high"
+                alerts.filter(
+                  (alert) => alert.severity === "critical" || alert.severity === "high"
                 ).length
               )}
-              detail="Highest priority analyst work stays visible first."
+              detail="Current page slice of the highest priority alert work."
               tone="warning"
             />
             <MetricCard
               label="Pending response"
               value={String(
-                filteredAlerts.filter(
-                  (alert) => alert.status === "pending_response"
-                ).length
+                alerts.filter((alert) => alert.status === "pending_response").length
               )}
-              detail="Alerts already close to an automated or analyst action."
+              detail="Current page slice already linked to queued or in-progress response work."
             />
           </>
         )}
@@ -154,14 +138,25 @@ export function AlertsPage() {
 
       <SearchFilterToolbar
         title="Alert triage filters"
-        description="Search by alert ID, asset, IP, username, or event ID and refine by the most operationally relevant dimensions."
-        search={<SearchInput value={query} onChange={(event) => setQuery(event.target.value)} />}
+        description="Search by alert ID, asset, IP, username, or event ID and refine by severity, status, detection, source, asset, and time window."
+        search={
+          <SearchInput
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+          />
+        }
         filters={
           <>
             <Select
               aria-label="Filter alerts by severity"
               value={severity}
-              onChange={(event) => setSeverity(event.target.value)}
+              onChange={(event) => {
+                setSeverity(event.target.value as AlertsListQuery["severity"]);
+                setPage(1);
+              }}
               placeholder="Severity"
               options={[
                 { value: "critical", label: "Critical" },
@@ -173,7 +168,10 @@ export function AlertsPage() {
             <Select
               aria-label="Filter alerts by status"
               value={status}
-              onChange={(event) => setStatus(event.target.value)}
+              onChange={(event) => {
+                setStatus(event.target.value as AlertsListQuery["status"]);
+                setPage(1);
+              }}
               placeholder="Status"
               options={[
                 { value: "new", label: "New" },
@@ -187,36 +185,54 @@ export function AlertsPage() {
             <Select
               aria-label="Filter alerts by detection type"
               value={detectionType}
-              onChange={(event) => setDetectionType(event.target.value)}
+              onChange={(event) => {
+                setDetectionType(event.target.value);
+                setPage(1);
+              }}
               placeholder="Detection"
-              options={[...new Set(alerts.map((alert) => alert.detectionType))].map(
-                (value) => ({ value, label: value })
-              )}
+              options={[
+                { value: "brute_force", label: "brute_force" },
+                { value: "file_integrity_violation", label: "file_integrity_violation" },
+                { value: "port_scan", label: "port_scan" },
+                {
+                  value: "unauthorized_user_creation",
+                  label: "unauthorized_user_creation"
+                }
+              ]}
             />
             <Select
               aria-label="Filter alerts by source type"
               value={sourceType}
-              onChange={(event) => setSourceType(event.target.value)}
+              onChange={(event) => {
+                setSourceType(event.target.value as AlertsListQuery["sourceType"]);
+                setPage(1);
+              }}
               placeholder="Source"
-              options={[...new Set(alerts.map((alert) => alert.sourceType))].map(
-                (value) => ({ value, label: value })
-              )}
+              options={[
+                { value: "wazuh", label: "Wazuh" },
+                { value: "suricata", label: "Suricata" }
+              ]}
             />
             <Select
               aria-label="Filter alerts by asset"
               value={asset}
-              onChange={(event) => setAsset(event.target.value)}
+              onChange={(event) => {
+                setAsset(event.target.value);
+                setPage(1);
+              }}
               placeholder="Asset"
-              options={[...new Set(alerts.map((alert) => alert.asset))].map(
-                (value) => ({ value, label: value })
-              )}
+              options={[...new Set(alerts.map((alert) => alert.asset))].map((value) => ({
+                value,
+                label: value
+              }))}
             />
             <Select
               aria-label="Filter alerts by date range"
               value={dateRange}
-              onChange={(event) =>
-                setDateRange(event.target.value as AlertsDateRange)
-              }
+              onChange={(event) => {
+                setDateRange(event.target.value as AlertsDateRange);
+                setPage(1);
+              }}
               placeholder="Date range"
               options={[
                 { value: "4h", label: "Last 4 hours" },
@@ -228,21 +244,65 @@ export function AlertsPage() {
           </>
         }
         actions={
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setQuery("");
-              setSeverity("");
-              setStatus("");
-              setDetectionType("");
-              setSourceType("");
-              setAsset("");
-              setDateRange("24h");
-            }}
-          >
-            Reset filters
-          </Button>
+          <>
+            <Select
+              aria-label="Sort alerts by"
+              value={sortBy}
+              onChange={(event) => {
+                setSortBy(event.target.value as AlertsSortField);
+                setPage(1);
+              }}
+              options={[
+                { value: "timestamp", label: "Newest activity" },
+                { value: "severity", label: "Severity" },
+                { value: "risk_score", label: "Risk score" }
+              ]}
+            />
+            <Select
+              aria-label="Alert sort direction"
+              value={sortDirection}
+              onChange={(event) => {
+                setSortDirection(event.target.value as AlertsListQuery["sortDirection"]);
+                setPage(1);
+              }}
+              options={[
+                { value: "desc", label: "Descending" },
+                { value: "asc", label: "Ascending" }
+              ]}
+            />
+            <Select
+              aria-label="Alerts page size"
+              value={String(pageSize)}
+              onChange={(event) => {
+                setPageSize(Number(event.target.value));
+                setPage(1);
+              }}
+              options={[
+                { value: "10", label: "10 / page" },
+                { value: "25", label: "25 / page" },
+                { value: "50", label: "50 / page" }
+              ]}
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearch("");
+                setSeverity("");
+                setStatus("");
+                setDetectionType("");
+                setSourceType("");
+                setAsset("");
+                setDateRange("24h");
+                setSortBy("timestamp");
+                setSortDirection("desc");
+                setPage(1);
+                setPageSize(10);
+              }}
+            >
+              Reset filters
+            </Button>
+          </>
         }
         activeFilters={[
           severity && `severity:${severity}`,
@@ -250,42 +310,61 @@ export function AlertsPage() {
           detectionType && `detection:${detectionType}`,
           sourceType && `source:${sourceType}`,
           asset && `asset:${asset}`,
-          dateRange !== "24h" && `range:${dateRange}`
+          dateRange !== "24h" && `range:${dateRange}`,
+          sortBy !== "timestamp" && `sort:${sortBy}`,
+          sortDirection !== "desc" && `dir:${sortDirection}`
         ].filter(Boolean) as string[]}
       />
 
+      <QueryWarnings warnings={meta?.warnings ?? []} />
+
       {isLoading ? (
         <LoadingTable columns={9} rows={6} />
-      ) : filteredAlerts.length ? (
+      ) : alerts.length ? (
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="type-body-sm">
               Select a row to open the detailed investigation surface for that alert.
             </p>
-            <Badge tone="outline">detail route enabled</Badge>
+            <Badge tone="outline">server-backed query</Badge>
           </div>
           <AlertsTable
-            alerts={filteredAlerts}
+            alerts={alerts}
             onRowClick={(alert) => navigate(`/alerts/${alert.id}`)}
+            footer={
+              meta ? (
+                <TablePagination
+                  page={meta.page}
+                  pageSize={meta.pageSize}
+                  total={meta.total}
+                  totalPages={meta.totalPages}
+                  itemLabel="alerts"
+                  onPageChange={setPage}
+                />
+              ) : null
+            }
           />
         </section>
       ) : (
         <EmptyState
           iconName="alerts"
           title="No alerts match the current filters"
-          description="Adjust the severity, status, source, or date range filters to bring matching alerts back into the queue."
+          description="Adjust the server-side alert filters or sort options to bring matching alerts back into the queue."
           action={
             <Button
               variant="secondary"
               size="sm"
               onClick={() => {
-                setQuery("");
+                setSearch("");
                 setSeverity("");
                 setStatus("");
                 setDetectionType("");
                 setSourceType("");
                 setAsset("");
                 setDateRange("24h");
+                setSortBy("timestamp");
+                setSortDirection("desc");
+                setPage(1);
               }}
             >
               Clear filters

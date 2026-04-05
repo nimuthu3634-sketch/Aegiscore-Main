@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Badge } from "../../../components/ui/Badge";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
 import { SeverityChip } from "../../../components/ui/SeverityChip";
@@ -8,6 +9,7 @@ type AlertsTableProps = {
   alerts: AlertRecord[];
   selectedAlertId?: string;
   onRowClick: (alert: AlertRecord) => void;
+  footer?: ReactNode;
 };
 
 const columns: TableColumn<AlertRecord>[] = [
@@ -84,7 +86,8 @@ const columns: TableColumn<AlertRecord>[] = [
 export function AlertsTable({
   alerts,
   selectedAlertId,
-  onRowClick
+  onRowClick,
+  footer
 }: AlertsTableProps) {
   return (
     <DataTable
@@ -95,6 +98,7 @@ export function AlertsTable({
       selectedRowKey={selectedAlertId}
       onRowClick={onRowClick}
       dense
+      footer={footer}
     />
   );
 }

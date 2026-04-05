@@ -3,6 +3,15 @@ import type { AlertsListResponse } from "./types";
 export const mockAlertsResponse: AlertsListResponse = {
   total: 6,
   generatedAt: "2026-04-05T09:10:00Z",
+  meta: {
+    page: 1,
+    pageSize: 10,
+    total: 6,
+    totalPages: 1,
+    sortBy: "timestamp",
+    sortDirection: "desc",
+    warnings: []
+  },
   items: [
     {
       id: "ALRT-1084",

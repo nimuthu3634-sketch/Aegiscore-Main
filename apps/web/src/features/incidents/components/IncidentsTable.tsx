@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Badge } from "../../../components/ui/Badge";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
 import { IncidentStateBadge } from "../../../components/ui/IncidentStateBadge";
@@ -8,6 +9,7 @@ type IncidentsTableProps = {
   incidents: IncidentRecord[];
   selectedIncidentId?: string;
   onRowClick: (incident: IncidentRecord) => void;
+  footer?: ReactNode;
 };
 
 const columns: TableColumn<IncidentRecord>[] = [
@@ -73,7 +75,8 @@ const columns: TableColumn<IncidentRecord>[] = [
 export function IncidentsTable({
   incidents,
   selectedIncidentId,
-  onRowClick
+  onRowClick,
+  footer
 }: IncidentsTableProps) {
   return (
     <DataTable
@@ -84,6 +87,7 @@ export function IncidentsTable({
       selectedRowKey={selectedIncidentId}
       onRowClick={onRowClick}
       dense
+      footer={footer}
     />
   );
 }

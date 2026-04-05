@@ -3,6 +3,15 @@ import type { AssetsListResponse } from "./types";
 export const mockAssetsResponse: AssetsListResponse = {
   total: 6,
   generatedAt: "2026-04-05T09:10:00Z",
+  meta: {
+    page: 1,
+    pageSize: 10,
+    total: 6,
+    totalPages: 1,
+    sortBy: "hostname",
+    sortDirection: "asc",
+    warnings: []
+  },
   items: [
     {
       id: "AST-101",

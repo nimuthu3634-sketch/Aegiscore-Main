@@ -1,8 +1,11 @@
+import { useMemo, useState } from "react";
 import { MetricCard } from "../components/data-display/MetricCard";
 import { SearchFilterToolbar } from "../components/data-display/SearchFilterToolbar";
+import { TablePagination } from "../components/data-display/TablePagination";
 import { EmptyState } from "../components/feedback/EmptyState";
 import { ErrorState } from "../components/feedback/ErrorState";
 import { LoadingCard, LoadingTable } from "../components/feedback/LoadingState";
+import { QueryWarnings } from "../components/feedback/QueryWarnings";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
@@ -10,43 +13,42 @@ import { SearchInput } from "../components/ui/SearchInput";
 import { Select } from "../components/ui/Select";
 import { ResponsesTable } from "../features/responses/components/ResponsesTable";
 import { useResponsesList } from "../features/responses/service";
+import type { ResponsesListQuery, ResponsesSortField } from "../features/responses/types";
 import { pageBlueprints } from "../lib/theme/tokens";
-import { useState } from "react";
 
 export function ResponsesPage() {
-  const { data, isLoading, error, reload } = useResponsesList();
-  const [query, setQuery] = useState("");
+  const [search, setSearch] = useState("");
   const [actionType, setActionType] = useState("");
-  const [mode, setMode] = useState("");
-  const [executionStatus, setExecutionStatus] = useState("");
+  const [mode, setMode] = useState<ResponsesListQuery["mode"]>("");
+  const [executionStatus, setExecutionStatus] = useState<ResponsesListQuery["executionStatus"]>("");
+  const [sortBy, setSortBy] = useState<ResponsesSortField>("executed_at");
+  const [sortDirection, setSortDirection] = useState<ResponsesListQuery["sortDirection"]>("desc");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
+  const query = useMemo<ResponsesListQuery>(
+    () => ({
+      search,
+      actionType,
+      mode,
+      executionStatus,
+      sortBy,
+      sortDirection,
+      page,
+      pageSize
+    }),
+    [actionType, executionStatus, mode, page, pageSize, search, sortBy, sortDirection]
+  );
+
+  const { data, isLoading, error, reload } = useResponsesList(query);
   const responses = data?.items ?? [];
-
-  const filteredResponses = responses.filter((response) => {
-    const normalizedQuery = query.trim().toLowerCase();
-    const matchesQuery =
-      !normalizedQuery ||
-      [
-        response.id,
-        response.actionType,
-        response.target,
-        response.linkedEntity,
-        response.resultSummary
-      ].some((value) => value.toLowerCase().includes(normalizedQuery));
-
-    const matchesAction = !actionType || response.actionType === actionType;
-    const matchesMode = !mode || response.mode === mode;
-    const matchesExecution =
-      !executionStatus || response.executionStatus === executionStatus;
-
-    return matchesQuery && matchesAction && matchesMode && matchesExecution;
-  });
+  const meta = data?.meta;
 
   if (error) {
     return (
       <ErrorState
         title="Response history could not be loaded"
-        description="The response execution surface is ready, but the current response dataset request failed."
+        description="The response execution surface is using the backend query layer, but the current request failed."
         details={error}
         action={
           <Button variant="secondary" size="sm" onClick={reload}>
@@ -65,8 +67,8 @@ export function ResponsesPage() {
         description={pageBlueprints.responses.description}
         meta={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="outline">{responses.length} execution records</Badge>
-            <Badge tone="brand">Dry-run and live actions</Badge>
+            <Badge tone="outline">{data?.total ?? 0} execution records</Badge>
+            <Badge tone="brand">Server-backed response history</Badge>
           </div>
         }
       />
@@ -83,33 +85,29 @@ export function ResponsesPage() {
             <MetricCard
               label="Succeeded"
               value={String(
-                filteredResponses.filter(
-                  (response) => response.executionStatus === "succeeded"
-                ).length
+                responses.filter((response) => response.executionStatus === "succeeded").length
               )}
-              detail="Completed actions with clear auditable outcomes."
+              detail="Current page slice of completed actions with auditable outcomes."
               tone="highlight"
             />
             <MetricCard
               label="Warnings or failures"
               value={String(
-                filteredResponses.filter(
+                responses.filter(
                   (response) =>
                     response.executionStatus === "warning" ||
                     response.executionStatus === "failed"
                 ).length
               )}
-              detail="Actions that need analyst review before policy promotion."
+              detail="Current page slice needing analyst review before policy promotion."
               tone="warning"
             />
             <MetricCard
               label="Pending"
               value={String(
-                filteredResponses.filter(
-                  (response) => response.executionStatus === "pending"
-                ).length
+                responses.filter((response) => response.executionStatus === "pending").length
               )}
-              detail="Queued or approval-bound response actions."
+              detail="Current page slice of queued or in-progress response actions."
             />
           </>
         )}
@@ -117,14 +115,25 @@ export function ResponsesPage() {
 
       <SearchFilterToolbar
         title="Response execution filters"
-        description="Compact analyst-friendly filtering for action type, run mode, and execution outcome."
-        search={<SearchInput value={query} onChange={(event) => setQuery(event.target.value)} />}
+        description="Compact analyst-friendly server-side filtering for action type, run mode, execution outcome, and sorting."
+        search={
+          <SearchInput
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+          />
+        }
         filters={
           <>
             <Select
               aria-label="Filter responses by action type"
               value={actionType}
-              onChange={(event) => setActionType(event.target.value)}
+              onChange={(event) => {
+                setActionType(event.target.value);
+                setPage(1);
+              }}
               placeholder="Action type"
               options={[...new Set(responses.map((response) => response.actionType))].map(
                 (value) => ({ value, label: value })
@@ -133,7 +142,10 @@ export function ResponsesPage() {
             <Select
               aria-label="Filter responses by mode"
               value={mode}
-              onChange={(event) => setMode(event.target.value)}
+              onChange={(event) => {
+                setMode(event.target.value as ResponsesListQuery["mode"]);
+                setPage(1);
+              }}
               placeholder="Mode"
               options={[
                 { value: "dry-run", label: "Dry-run" },
@@ -143,7 +155,12 @@ export function ResponsesPage() {
             <Select
               aria-label="Filter responses by execution status"
               value={executionStatus}
-              onChange={(event) => setExecutionStatus(event.target.value)}
+              onChange={(event) => {
+                setExecutionStatus(
+                  event.target.value as ResponsesListQuery["executionStatus"]
+                );
+                setPage(1);
+              }}
               placeholder="Execution status"
               options={[
                 { value: "succeeded", label: "Succeeded" },
@@ -155,44 +172,108 @@ export function ResponsesPage() {
           </>
         }
         actions={
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setQuery("");
-              setActionType("");
-              setMode("");
-              setExecutionStatus("");
-            }}
-          >
-            Reset filters
-          </Button>
+          <>
+            <Select
+              aria-label="Sort responses by"
+              value={sortBy}
+              onChange={(event) => {
+                setSortBy(event.target.value as ResponsesSortField);
+                setPage(1);
+              }}
+              options={[
+                { value: "executed_at", label: "Executed at" },
+                { value: "status", label: "Status" }
+              ]}
+            />
+            <Select
+              aria-label="Response sort direction"
+              value={sortDirection}
+              onChange={(event) => {
+                setSortDirection(event.target.value as ResponsesListQuery["sortDirection"]);
+                setPage(1);
+              }}
+              options={[
+                { value: "desc", label: "Descending" },
+                { value: "asc", label: "Ascending" }
+              ]}
+            />
+            <Select
+              aria-label="Responses page size"
+              value={String(pageSize)}
+              onChange={(event) => {
+                setPageSize(Number(event.target.value));
+                setPage(1);
+              }}
+              options={[
+                { value: "10", label: "10 / page" },
+                { value: "25", label: "25 / page" },
+                { value: "50", label: "50 / page" }
+              ]}
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearch("");
+                setActionType("");
+                setMode("");
+                setExecutionStatus("");
+                setSortBy("executed_at");
+                setSortDirection("desc");
+                setPage(1);
+                setPageSize(10);
+              }}
+            >
+              Reset filters
+            </Button>
+          </>
         }
         activeFilters={[
           actionType && `action:${actionType}`,
           mode && `mode:${mode}`,
-          executionStatus && `status:${executionStatus}`
+          executionStatus && `status:${executionStatus}`,
+          sortBy !== "executed_at" && `sort:${sortBy}`,
+          sortDirection !== "desc" && `dir:${sortDirection}`
         ].filter(Boolean) as string[]}
       />
 
+      <QueryWarnings warnings={meta?.warnings ?? []} />
+
       {isLoading ? (
         <LoadingTable columns={8} rows={6} />
-      ) : filteredResponses.length ? (
-        <ResponsesTable responses={filteredResponses} />
+      ) : responses.length ? (
+        <ResponsesTable
+          responses={responses}
+          footer={
+            meta ? (
+              <TablePagination
+                page={meta.page}
+                pageSize={meta.pageSize}
+                total={meta.total}
+                totalPages={meta.totalPages}
+                itemLabel="responses"
+                onPageChange={setPage}
+              />
+            ) : null
+          }
+        />
       ) : (
         <EmptyState
           iconName="responses"
           title="No response executions match the current filters"
-          description="Clear the response filters to restore the current action history."
+          description="Clear the response filters or sort changes to restore the current action history."
           action={
             <Button
               variant="secondary"
               size="sm"
               onClick={() => {
-                setQuery("");
+                setSearch("");
                 setActionType("");
                 setMode("");
                 setExecutionStatus("");
+                setSortBy("executed_at");
+                setSortDirection("desc");
+                setPage(1);
               }}
             >
               Clear filters

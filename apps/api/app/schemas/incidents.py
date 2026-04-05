@@ -3,7 +3,6 @@ from typing import Any
 from uuid import UUID
 
 from app.models.enums import AlertStatus, DetectionType, IncidentPriority, IncidentStatus
-from app.schemas.alerts import AlertSeverityLabel
 from app.schemas.base import APIModel
 from app.schemas.common import (
     ActivityEntryResponse,
@@ -12,6 +11,7 @@ from app.schemas.common import (
     ResponseActionDetailResponse,
     UserBriefResponse,
 )
+from app.schemas.listing import AlertSeverityLabel
 
 
 class IncidentLinkedAlertResponse(APIModel):

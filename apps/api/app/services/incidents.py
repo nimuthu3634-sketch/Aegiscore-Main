@@ -7,15 +7,33 @@ from app.repositories.audit_logs import AuditLogsRepository
 from app.repositories.incidents import IncidentsRepository
 from app.schemas.common import IncidentListResponse
 from app.schemas.incidents import IncidentDetailResponse
+from app.schemas.listing import IncidentListQuery, ListMetaResponse
 from app.services.serializers import (
     to_incident_detail_response,
     to_incident_summary_response,
 )
 
-def list_incidents(session: Session) -> IncidentListResponse:
-    incidents = IncidentsRepository(session).list_incidents()
+def list_incidents(session: Session, query: IncidentListQuery) -> IncidentListResponse:
+    incidents, total = IncidentsRepository(session).list_incidents(query)
+    total_pages = max(1, (total + query.page_size - 1) // query.page_size)
+    page = min(query.page, total_pages)
+    warnings: list[str] = []
+    if query.state and query.state.value == "contained":
+        warnings.append(
+            "state=contained is not supported by the current incident state model and was not applied."
+        )
+
     return IncidentListResponse(
-        items=[to_incident_summary_response(incident) for incident in incidents]
+        items=[to_incident_summary_response(incident) for incident in incidents],
+        meta=ListMetaResponse(
+            page=page,
+            page_size=query.page_size,
+            total=total,
+            total_pages=total_pages,
+            sort_by=query.sort_by.value,
+            sort_direction=query.sort_direction,
+            warnings=warnings,
+        ),
     )
 
 

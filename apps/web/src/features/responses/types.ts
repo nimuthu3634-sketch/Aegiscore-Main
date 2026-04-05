@@ -1,5 +1,19 @@
+import type { ListQueryMeta, SortDirection } from "../../lib/api/query";
+
 export type ResponseMode = "dry-run" | "live";
 export type ResponseExecutionStatus = "succeeded" | "warning" | "failed" | "pending";
+export type ResponsesSortField = "executed_at" | "status";
+
+export type ResponsesListQuery = {
+  search: string;
+  actionType: string;
+  mode: ResponseMode | "";
+  executionStatus: ResponseExecutionStatus | "";
+  sortBy: ResponsesSortField;
+  sortDirection: SortDirection;
+  page: number;
+  pageSize: number;
+};
 
 export type ResponseRecord = {
   id: string;
@@ -16,32 +30,30 @@ export type ResponsesListResponse = {
   items: ResponseRecord[];
   total: number;
   generatedAt: string;
+  meta: ListQueryMeta;
 };
 
 export type ResponsesListApiResponse = {
+  meta: {
+    page: number;
+    page_size: number;
+    total: number;
+    total_pages: number;
+    sort_by: string;
+    sort_direction: SortDirection;
+    warnings: string[];
+  };
   items: Array<{
     id: string;
     action_type: string;
-    status: "queued" | "in_progress" | "completed" | "failed";
-    details: Record<string, unknown>;
+    execution_status_label: ResponseExecutionStatus;
+    target: string | null;
+    mode: ResponseMode | null;
+    result_summary: string | null;
     created_at: string;
     executed_at: string | null;
-    requested_by: {
-      id: string;
-      username: string;
-      full_name: string | null;
-      role: {
-        id: string;
-        name: string;
-      };
-    } | null;
     incident: {
       id: string;
-      title: string;
-      status: string;
-      priority: string;
-      created_at: string;
-      updated_at: string;
     };
   }>;
 };

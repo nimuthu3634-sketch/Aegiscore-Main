@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
 import type { AssetRecord } from "../types";
 import { AgentStatusBadge, CriticalityBadge } from "./AssetBadges";
@@ -6,6 +7,7 @@ type AssetsTableProps = {
   assets: AssetRecord[];
   selectedAssetId?: string;
   onRowClick: (asset: AssetRecord) => void;
+  footer?: ReactNode;
 };
 
 const columns: TableColumn<AssetRecord>[] = [
@@ -59,7 +61,8 @@ const columns: TableColumn<AssetRecord>[] = [
 export function AssetsTable({
   assets,
   selectedAssetId,
-  onRowClick
+  onRowClick,
+  footer
 }: AssetsTableProps) {
   return (
     <DataTable
@@ -70,6 +73,7 @@ export function AssetsTable({
       selectedRowKey={selectedAssetId}
       onRowClick={onRowClick}
       dense
+      footer={footer}
     />
   );
 }

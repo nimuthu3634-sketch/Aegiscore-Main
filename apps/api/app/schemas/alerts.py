@@ -1,4 +1,3 @@
-import enum
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -12,13 +11,7 @@ from app.schemas.common import (
     ResponseActionDetailResponse,
     UserBriefResponse,
 )
-
-
-class AlertSeverityLabel(str, enum.Enum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    CRITICAL = "critical"
+from app.schemas.listing import AlertSeverityLabel
 
 
 class AlertLinkedIncidentResponse(APIModel):

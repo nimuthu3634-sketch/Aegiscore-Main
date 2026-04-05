@@ -3,6 +3,15 @@ import type { IncidentsListResponse } from "./types";
 export const mockIncidentsResponse: IncidentsListResponse = {
   total: 5,
   generatedAt: "2026-04-05T09:10:00Z",
+  meta: {
+    page: 1,
+    pageSize: 10,
+    total: 5,
+    totalPages: 1,
+    sortBy: "updated_at",
+    sortDirection: "desc",
+    warnings: []
+  },
   items: [
     {
       id: "INC-301",

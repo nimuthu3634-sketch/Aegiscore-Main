@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
 import type { ResponseRecord } from "../types";
 import {
@@ -7,6 +8,7 @@ import {
 
 type ResponsesTableProps = {
   responses: ResponseRecord[];
+  footer?: ReactNode;
 };
 
 const columns: TableColumn<ResponseRecord>[] = [
@@ -56,7 +58,7 @@ const columns: TableColumn<ResponseRecord>[] = [
   }
 ];
 
-export function ResponsesTable({ responses }: ResponsesTableProps) {
+export function ResponsesTable({ responses, footer }: ResponsesTableProps) {
   return (
     <DataTable
       ariaLabel="Response history table"
@@ -64,6 +66,7 @@ export function ResponsesTable({ responses }: ResponsesTableProps) {
       data={responses}
       rowKey={(row) => row.id}
       dense
+      footer={footer}
     />
   );
 }

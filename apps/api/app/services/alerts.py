@@ -7,12 +7,32 @@ from app.repositories.audit_logs import AuditLogsRepository
 from app.repositories.alerts import AlertsRepository
 from app.schemas.alerts import AlertDetailResponse
 from app.schemas.common import AlertListResponse, AlertSummaryResponse
+from app.schemas.listing import AlertListQuery, ListMetaResponse
 from app.services.serializers import to_alert_detail_response, to_alert_summary_response
 
 
-def list_alerts(session: Session) -> AlertListResponse:
-    alerts = AlertsRepository(session).list_alerts()
-    return AlertListResponse(items=[to_alert_summary_response(alert) for alert in alerts])
+def list_alerts(session: Session, query: AlertListQuery) -> AlertListResponse:
+    alerts, total = AlertsRepository(session).list_alerts(query)
+    total_pages = max(1, (total + query.page_size - 1) // query.page_size)
+    page = min(query.page, total_pages)
+    warnings: list[str] = []
+    if query.status and query.status.value == "contained":
+        warnings.append(
+            "status=contained is not supported by alert workflow state yet and was not applied."
+        )
+
+    return AlertListResponse(
+        items=[to_alert_summary_response(alert) for alert in alerts],
+        meta=ListMetaResponse(
+            page=page,
+            page_size=query.page_size,
+            total=total,
+            total_pages=total_pages,
+            sort_by=query.sort_by.value,
+            sort_direction=query.sort_direction,
+            warnings=warnings,
+        ),
+    )
 
 
 def get_alert(session: Session, alert_id: UUID) -> AlertSummaryResponse:

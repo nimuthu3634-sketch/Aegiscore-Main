@@ -12,6 +12,13 @@ from app.models.enums import (
     RoleName,
 )
 from app.schemas.base import APIModel
+from app.schemas.listing import (
+    AssetAgentStatusLabel,
+    AssetEnvironmentLabel,
+    ListMetaResponse,
+    ResponseExecutionStatusLabel,
+    ResponseModeLabel,
+)
 
 
 class RoleResponse(APIModel):
@@ -42,12 +49,18 @@ class AssetSummaryResponse(APIModel):
     ip_address: str
     operating_system: str | None
     criticality: AssetCriticality
+    agent_status: AssetAgentStatusLabel | None = None
+    recent_alerts_count: int = 0
+    last_seen_at: datetime | None = None
+    open_incidents_count: int = 0
+    environment: AssetEnvironmentLabel | None = None
     created_at: datetime
     updated_at: datetime
 
 
 class AssetListResponse(APIModel):
     items: list[AssetSummaryResponse]
+    meta: ListMetaResponse
 
 
 class RawAlertSummaryResponse(APIModel):
@@ -130,21 +143,32 @@ class ActivityEntryResponse(APIModel):
 class AlertSummaryResponse(APIModel):
     id: UUID
     source: str
+    source_type: str
     title: str
     description: str | None
     detection_type: DetectionType
     severity: int
+    severity_label: str
     status: AlertStatus
+    status_label: str
     normalized_payload: dict
     created_at: datetime
     asset: AssetSummaryResponse | None
+    asset_name: str | None = None
     raw_alert: RawAlertSummaryResponse
+    event_id: str | None = None
+    source_ip: str | None = None
+    destination_ip: str | None = None
+    destination_port: int | None = None
+    username: str | None = None
     risk_score: RiskScoreResponse | None
+    risk_score_value: int | None = None
     incident: IncidentReferenceResponse | None
 
 
 class AlertListResponse(APIModel):
     items: list[AlertSummaryResponse]
+    meta: ListMetaResponse
 
 
 class IncidentSummaryResponse(APIModel):
@@ -152,15 +176,22 @@ class IncidentSummaryResponse(APIModel):
     title: str
     summary: str | None
     status: IncidentStatus
+    state_label: str
     priority: IncidentPriority
     created_at: datetime
     updated_at: datetime
     assigned_user: UserBriefResponse | None
+    assignee_name: str | None = None
+    linked_alerts_count: int = 1
+    primary_asset_name: str | None = None
+    detection_type: DetectionType
+    source_type: str
     alert: AlertSummaryResponse
 
 
 class IncidentListResponse(APIModel):
     items: list[IncidentSummaryResponse]
+    meta: ListMetaResponse
 
 
 class IncidentDetailResponse(IncidentSummaryResponse):
@@ -172,6 +203,10 @@ class ResponseActionSummaryResponse(APIModel):
     id: UUID
     action_type: str
     status: ResponseStatus
+    execution_status_label: ResponseExecutionStatusLabel
+    target: str | None
+    mode: ResponseModeLabel | None
+    result_summary: str | None
     details: dict
     created_at: datetime
     executed_at: datetime | None
@@ -181,3 +216,4 @@ class ResponseActionSummaryResponse(APIModel):
 
 class ResponseActionListResponse(APIModel):
     items: list[ResponseActionSummaryResponse]
+    meta: ListMetaResponse

@@ -3,6 +3,15 @@ import type { ResponsesListResponse } from "./types";
 export const mockResponsesResponse: ResponsesListResponse = {
   total: 6,
   generatedAt: "2026-04-05T09:10:00Z",
+  meta: {
+    page: 1,
+    pageSize: 10,
+    total: 6,
+    totalPages: 1,
+    sortBy: "executed_at",
+    sortDirection: "desc",
+    warnings: []
+  },
   items: [
     {
       id: "RSP-501",

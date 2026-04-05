@@ -1,8 +1,9 @@
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.models.asset import Asset
 from app.models.audit_log import AuditLog
-from app.models.enums import IncidentStatus
+from app.models.enums import IncidentStatus, ResponseStatus
 from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
 from app.models.raw_alert import RawAlert
@@ -14,7 +15,6 @@ from app.schemas.alerts import (
     AlertDetailResponse,
     AlertLinkedIncidentResponse,
     AlertScoreExplanationResponse,
-    AlertSeverityLabel,
     AlertSourceRuleResponse,
 )
 from app.schemas.common import (
@@ -33,6 +33,13 @@ from app.schemas.common import (
     RoleResponse,
     UserBriefResponse,
     UserResponse,
+)
+from app.schemas.listing import (
+    AlertSeverityLabel,
+    AssetAgentStatusLabel,
+    AssetEnvironmentLabel,
+    ResponseExecutionStatusLabel,
+    ResponseModeLabel,
 )
 from app.schemas.incidents import (
     IncidentDetailResponse,
@@ -59,6 +66,73 @@ def _severity_label_from_score(severity: int) -> AlertSeverityLabel:
     if severity >= 4:
         return AlertSeverityLabel.MEDIUM
     return AlertSeverityLabel.LOW
+
+
+def _asset_agent_status_from_timestamp(updated_at: datetime) -> AssetAgentStatusLabel:
+    now = datetime.now(UTC)
+    age = now - updated_at.astimezone(UTC)
+    if age <= timedelta(minutes=30):
+        return AssetAgentStatusLabel.ONLINE
+    if age <= timedelta(hours=2):
+        return AssetAgentStatusLabel.DEGRADED
+    return AssetAgentStatusLabel.OFFLINE
+
+
+def _asset_environment_from_hostname(hostname: str) -> AssetEnvironmentLabel:
+    lowered = hostname.lower()
+    if "branch" in lowered or "office" in lowered:
+        return AssetEnvironmentLabel.OFFICE
+    if "edge" in lowered or "warehouse" in lowered or "vpn" in lowered or "remote" in lowered:
+        return AssetEnvironmentLabel.REMOTE
+    return AssetEnvironmentLabel.PRODUCTION
+
+
+def _response_execution_status_label(
+    response_action: ResponseAction,
+) -> ResponseExecutionStatusLabel:
+    if response_action.status == ResponseStatus.COMPLETED:
+        return ResponseExecutionStatusLabel.SUCCEEDED
+    if response_action.status == ResponseStatus.FAILED:
+        return ResponseExecutionStatusLabel.FAILED
+    return ResponseExecutionStatusLabel.PENDING
+
+
+def _response_mode_label(response_action: ResponseAction) -> ResponseModeLabel | None:
+    mode = _extract_response_mode(response_action)
+    if mode in {"dry-run", "dry_run"}:
+        return ResponseModeLabel.DRY_RUN
+    if mode is None:
+        return None
+    return ResponseModeLabel.LIVE
+
+
+def _alert_status_label(alert: NormalizedAlert) -> str:
+    has_pending_response = bool(
+        alert.incident
+        and any(
+            action.status in {ResponseStatus.QUEUED, ResponseStatus.IN_PROGRESS}
+            for action in alert.incident.response_actions
+        )
+    )
+    if has_pending_response:
+        return "pending_response"
+    if alert.status.value == "resolved":
+        return "resolved"
+    if alert.status.value == "investigating":
+        return "investigating"
+    if alert.incident is not None:
+        return "triaged"
+    return "new"
+
+
+def _incident_state_label(incident: Incident) -> str:
+    if incident.status.value == "resolved":
+        return "resolved"
+    if incident.status.value == "investigating":
+        return "investigating"
+    if incident.assigned_user is not None:
+        return "triaged"
+    return "new"
 
 
 def _priority_label_from_risk(
@@ -306,13 +380,23 @@ def to_user_brief_response(user: User) -> UserBriefResponse:
     )
 
 
-def to_asset_summary_response(asset: Asset) -> AssetSummaryResponse:
+def to_asset_summary_response(
+    asset: Asset,
+    *,
+    recent_alerts_count: int = 0,
+    open_incidents_count: int = 0,
+) -> AssetSummaryResponse:
     return AssetSummaryResponse(
         id=asset.id,
         hostname=asset.hostname,
         ip_address=asset.ip_address,
         operating_system=asset.operating_system,
         criticality=asset.criticality,
+        agent_status=_asset_agent_status_from_timestamp(asset.updated_at),
+        recent_alerts_count=recent_alerts_count,
+        last_seen_at=asset.updated_at,
+        open_incidents_count=open_incidents_count,
+        environment=_asset_environment_from_hostname(asset.hostname),
         created_at=asset.created_at,
         updated_at=asset.updated_at,
     )
@@ -355,16 +439,26 @@ def to_alert_summary_response(alert: NormalizedAlert) -> AlertSummaryResponse:
     return AlertSummaryResponse(
         id=alert.id,
         source=alert.source,
+        source_type=_titleize_source(alert.source),
         title=alert.title,
         description=alert.description,
         detection_type=alert.detection_type,
         severity=alert.severity,
+        severity_label=_severity_label_from_score(alert.severity).value,
         status=alert.status,
+        status_label=_alert_status_label(alert),
         normalized_payload=alert.normalized_payload,
         created_at=alert.created_at,
         asset=to_asset_summary_response(alert.asset) if alert.asset else None,
+        asset_name=alert.asset.hostname if alert.asset else None,
         raw_alert=to_raw_alert_summary_response(alert.raw_alert),
+        event_id=alert.raw_alert.external_id or str(alert.raw_alert.id),
+        source_ip=_extract_source_ip(alert),
+        destination_ip=_extract_destination_ip(alert),
+        destination_port=_extract_destination_port(alert),
+        username=_extract_username(alert),
         risk_score=to_risk_score_response(alert.risk_score) if alert.risk_score else None,
+        risk_score_value=round(alert.risk_score.score * 100) if alert.risk_score else None,
         incident=to_incident_reference_response(alert.incident) if alert.incident else None,
     )
 
@@ -375,12 +469,24 @@ def to_incident_summary_response(incident: Incident) -> IncidentSummaryResponse:
         title=incident.title,
         summary=incident.summary,
         status=incident.status,
+        state_label=_incident_state_label(incident),
         priority=incident.priority,
         created_at=incident.created_at,
         updated_at=incident.updated_at,
         assigned_user=to_user_brief_response(incident.assigned_user)
         if incident.assigned_user
         else None,
+        assignee_name=incident.assigned_user.full_name
+        if incident.assigned_user and incident.assigned_user.full_name
+        else incident.assigned_user.username
+        if incident.assigned_user
+        else None,
+        linked_alerts_count=1,
+        primary_asset_name=incident.normalized_alert.asset.hostname
+        if incident.normalized_alert.asset
+        else None,
+        detection_type=incident.normalized_alert.detection_type,
+        source_type=_titleize_source(incident.normalized_alert.source),
         alert=to_alert_summary_response(incident.normalized_alert),
     )
 
@@ -408,6 +514,10 @@ def to_response_action_summary_response(
         id=response_action.id,
         action_type=response_action.action_type,
         status=response_action.status,
+        execution_status_label=_response_execution_status_label(response_action),
+        target=_extract_response_target(response_action),
+        mode=_response_mode_label(response_action),
+        result_summary=_extract_response_summary(response_action),
         details=response_action.details,
         created_at=response_action.created_at,
         executed_at=response_action.executed_at,
