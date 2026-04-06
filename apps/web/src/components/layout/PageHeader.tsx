@@ -16,12 +16,12 @@ export function PageHeader({
   actions
 }: PageHeaderProps) {
   return (
-    <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+    <div className="panel-subtle flex flex-col gap-5 p-panel xl:flex-row xl:items-end xl:justify-between">
       <div className="space-y-3">
         {eyebrow ? <p className="type-label-md">{eyebrow}</p> : null}
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <h2 className="type-display-md">{title}</h2>
-          {description ? <p className="max-w-3xl type-body-md">{description}</p> : null}
+          {description ? <p className="max-w-3xl type-body-md text-content-secondary">{description}</p> : null}
         </div>
         {meta}
       </div>

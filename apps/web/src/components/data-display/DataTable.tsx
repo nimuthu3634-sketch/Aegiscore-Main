@@ -39,10 +39,10 @@ export function DataTable<T>({
   const cellPadding = dense ? "px-4 py-3" : "px-4 py-4";
 
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card className={cn("overflow-hidden border-border-subtle/90", className)}>
       <div className="overflow-x-auto">
         <table aria-label={ariaLabel} className="min-w-full border-collapse">
-          <thead className="bg-surface-panel/80">
+          <thead className="bg-surface-panel/85">
             <tr>
               {columns.map((column) => (
                 <th
@@ -70,10 +70,10 @@ export function DataTable<T>({
                   <tr
                     key={key}
                     className={cn(
-                      "border-b border-border-subtle transition last:border-b-0",
-                      onRowClick && "cursor-pointer hover:bg-surface-accentSoft/40",
+                      "border-b border-border-subtle/90 transition-colors duration-150 last:border-b-0 odd:bg-surface-subtle/20",
+                      onRowClick && "cursor-pointer hover:bg-surface-accentSoft/35",
                       isSelected &&
-                        "bg-surface-accentSoft/60 shadow-[inset_2px_0_0_0_rgba(249,115,22,1)]"
+                        "bg-surface-accentSoft/55 shadow-[inset_2px_0_0_0_rgba(249,115,22,1)]"
                     )}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                   >
@@ -106,7 +106,7 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
-      {footer ? <div className="border-t border-border-subtle px-4 py-3">{footer}</div> : null}
+      {footer ? <div className="border-t border-border-subtle/90 bg-surface-subtle/50 px-4 py-3">{footer}</div> : null}
     </Card>
   );
 }

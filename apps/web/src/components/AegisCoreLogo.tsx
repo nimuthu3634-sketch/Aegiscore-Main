@@ -13,7 +13,7 @@ const aegisWordStyle: CSSProperties = {
   color: "rgb(var(--color-brand-ink))",
   fontFamily: '"Orbitron", "Space Grotesk", sans-serif',
   WebkitTextFillColor: "transparent",
-  WebkitTextStroke: "1.4px rgb(var(--color-brand-ink))"
+  WebkitTextStroke: "1.2px rgb(var(--color-brand-ink))"
 };
 
 const coreWordStyle: CSSProperties = {
@@ -30,15 +30,15 @@ function AegisCoreMark({ className }: { className?: string }) {
       aria-hidden="true"
     >
       <path
-        d="M48 280L166 44"
+        d="M50 278L166 46"
         stroke="rgb(var(--color-brand-ink))"
-        strokeWidth="46"
+        strokeWidth="44"
         strokeLinecap="round"
       />
       <path
-        d="M244 78L160 158H308L388 266H148"
+        d="M246 82L162 160H306L386 264H150"
         stroke="rgb(var(--color-brand-primary))"
-        strokeWidth="46"
+        strokeWidth="44"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -101,15 +101,15 @@ export function AegisCoreLogo({
     <div
       className={cn(
         "flex min-w-0 items-center",
-        compact ? "gap-2.5" : "gap-3.5",
+        compact ? "gap-2.5" : "gap-4",
         className
       )}
       data-testid="aegiscore-logo"
     >
-      <AegisCoreMark className={compact ? "h-10 sm:h-11" : "h-14 sm:h-16"} />
+      <AegisCoreMark className={compact ? "h-10 sm:h-11" : "h-14 sm:h-[4.25rem]"} />
       <div
         className={cn(
-          "hidden shrink-0 rounded-full bg-brand-divider/80 sm:block",
+          "hidden shrink-0 rounded-full bg-brand-divider/90 sm:block",
           compact ? "h-9 w-px" : "h-12 w-px"
         )}
         aria-hidden="true"
@@ -117,15 +117,15 @@ export function AegisCoreLogo({
       <TitleTag
         className={cn(
           "flex min-w-0 items-end leading-none",
-          compact ? "gap-2" : "gap-3"
+          compact ? "gap-2" : "gap-3.5"
         )}
         aria-label="AegisCore"
       >
         <span className="flex min-w-0 flex-col whitespace-nowrap">
           <span
             className={cn(
-              "block leading-none tracking-[0.16em]",
-              compact ? "text-[0.82rem]" : "text-[1.02rem] sm:text-[1.15rem]"
+              "block leading-none tracking-[0.14em]",
+              compact ? "text-[0.82rem]" : "text-[1rem] sm:text-[1.1rem]"
             )}
             style={aegisWordStyle}
           >
@@ -133,8 +133,8 @@ export function AegisCoreLogo({
           </span>
           <span
             className={cn(
-              "mt-1 block leading-none tracking-[0.12em] text-brand-primary",
-              compact ? "text-[1.5rem]" : "text-[1.9rem] sm:text-[2.15rem]"
+              "mt-1 block leading-none tracking-[0.1em] text-brand-primary",
+              compact ? "text-[1.5rem]" : "text-[1.85rem] sm:text-[2.05rem]"
             )}
             style={coreWordStyle}
           >

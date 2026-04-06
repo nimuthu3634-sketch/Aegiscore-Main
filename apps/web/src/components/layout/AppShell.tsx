@@ -41,10 +41,11 @@ export function AppShell({
   };
 
   return (
-    <div className="min-h-screen bg-shell">
+    <div className="relative min-h-screen bg-shell">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.14),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(249,115,22,0.08),transparent_36%)]" />
       {sidebarOpen ? (
         <div
-          className="fixed inset-0 z-40 bg-surface-overlay/80 px-4 py-4 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-surface-overlay/85 px-4 py-4 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
           role="presentation"
         >
@@ -53,7 +54,7 @@ export function AppShell({
           </div>
         </div>
       ) : null}
-      <div className="mx-auto min-h-screen max-w-shell lg:grid lg:grid-cols-shell">
+      <div className="relative mx-auto min-h-screen max-w-shell lg:grid lg:grid-cols-shell">
         <div className="hidden px-4 py-4 lg:block">
           <Sidebar items={items} activeId={activeId} onNavigate={handleNavigate} />
         </div>
@@ -67,7 +68,9 @@ export function AppShell({
             onSearchChange={onSearchChange}
             onMenuClick={() => setSidebarOpen(true)}
           />
-          <main className="px-4 pb-8 pt-6 md:px-6 lg:px-8">{children}</main>
+          <main className="px-4 pb-8 pt-6 md:px-6 lg:px-8">
+            <div className="mx-auto max-w-[76rem]">{children}</div>
+          </main>
         </div>
       </div>
     </div>

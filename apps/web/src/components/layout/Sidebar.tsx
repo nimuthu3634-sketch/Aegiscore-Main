@@ -24,12 +24,15 @@ export function Sidebar({
         className
       )}
     >
-      <AegisCoreLogo mode="compact" className="items-start" />
-      <div className="rounded-panel border border-brand-divider/45 bg-surface-subtle/65 px-4 py-3">
-        <p className="type-label-sm">Environment</p>
-        <p className="mt-2 text-body-sm text-content-primary">Single-tenant SME SOC</p>
+      <div className="rounded-panel border border-brand-divider/45 bg-surface-subtle/60 p-3.5">
+        <AegisCoreLogo mode="compact" className="items-start" />
+        <div className="mt-3 border-t border-border-subtle/80 pt-3">
+          <p className="type-label-sm">Environment</p>
+          <p className="mt-1.5 text-body-sm text-content-primary">Single-tenant SME SOC</p>
+        </div>
       </div>
       <nav className="flex flex-1 flex-col gap-2" aria-label="Primary">
+        <p className="px-2 type-label-sm">Operations</p>
         {items.map((item) => {
           const active = item.id === activeId;
 
@@ -39,9 +42,9 @@ export function Sidebar({
               type="button"
               onClick={() => onNavigate(item.id)}
               className={cn(
-                "focus-ring flex items-center justify-between gap-3 rounded-panel border px-3 py-3 text-left transition",
+                "focus-ring flex items-center justify-between gap-3 rounded-panel border px-3 py-3 text-left transition-all duration-150",
                 active
-                  ? "border-brand-primary/40 bg-surface-accentSoft text-content-primary shadow-[inset_3px_0_0_0_rgba(249,115,22,1)]"
+                  ? "border-brand-primary/45 bg-surface-accentSoft/55 text-content-primary shadow-[inset_3px_0_0_0_rgba(249,115,22,1),0_10px_20px_rgba(0,0,0,0.18)]"
                   : "border-transparent text-content-secondary hover:border-brand-divider/45 hover:bg-surface-subtle/65 hover:text-content-primary"
               )}
             >
