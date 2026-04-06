@@ -26,7 +26,7 @@ export function Input({
       {label ? <span className="type-label-sm text-content-secondary">{label}</span> : null}
       <span
         className={cn(
-          "focus-within:shadow-focus flex h-11 items-center gap-3 rounded-field border bg-surface-subtle/75 px-3 transition",
+          "focus-within:shadow-focus flex h-11 items-center gap-3 rounded-field border bg-white px-3 transition",
           error ? "border-status-danger/60" : "border-border-subtle"
         )}
       >

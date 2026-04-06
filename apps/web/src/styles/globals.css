@@ -7,26 +7,26 @@
 :root {
   --color-brand-primary: 249 115 22;
   --color-brand-hover: 234 88 12;
-  --color-brand-ink: 249 250 251;
-  --color-brand-divider: 75 85 99;
+  --color-brand-ink: 15 23 42;
+  --color-brand-divider: 203 213 225;
   --color-brand-glow: 251 146 60;
-  --color-bg-base: 10 10 10;
-  --color-bg-panel: 17 24 39;
-  --color-border-default: 31 41 55;
-  --color-text-primary: 249 250 251;
-  --color-text-secondary: 209 213 219;
-  --color-text-muted: 156 163 175;
+  --color-bg-base: 244 246 251;
+  --color-bg-panel: 255 255 255;
+  --color-border-default: 226 232 240;
+  --color-text-primary: 15 23 42;
+  --color-text-secondary: 51 65 85;
+  --color-text-muted: 100 116 139;
   --color-status-danger: 239 68 68;
   --color-status-success: 34 197 94;
   --color-status-warning: 245 158 11;
-  --color-surface-raised: 17 24 39;
-  --color-surface-subtle: 17 24 39;
-  --color-surface-overlay: 10 10 10;
+  --color-surface-raised: 255 255 255;
+  --color-surface-subtle: 248 250 252;
+  --color-surface-overlay: 15 23 42;
   --color-surface-accent-soft: 249 115 22;
   --color-surface-success-soft: 34 197 94;
   --color-surface-warning-soft: 245 158 11;
   --color-surface-danger-soft: 239 68 68;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
@@ -39,9 +39,9 @@ body {
   min-height: 100vh;
   background-color: rgb(var(--color-bg-base));
   background-image:
-    radial-gradient(circle at top right, rgb(var(--color-brand-glow) / 0.16), transparent 30%),
-    radial-gradient(circle at bottom left, rgb(var(--color-brand-primary) / 0.07), transparent 34%),
-    linear-gradient(180deg, rgba(17, 24, 39, 0.9) 0%, #0a0a0a 46%, #050505 100%);
+    radial-gradient(circle at top right, rgb(var(--color-brand-glow) / 0.11), transparent 30%),
+    radial-gradient(circle at bottom left, rgb(var(--color-brand-primary) / 0.05), transparent 32%),
+    linear-gradient(180deg, #f9fafc 0%, #f3f6fb 100%);
   background-attachment: fixed;
   color: rgb(var(--color-text-primary));
   font-family: Inter, "Segoe UI", sans-serif;
@@ -79,7 +79,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(10, 10, 10, 0.32);
+  background: rgba(148, 163, 184, 0.18);
 }
 
 @layer base {
@@ -102,19 +102,19 @@ body {
 
 @layer components {
   .panel-surface {
-    @apply rounded-panel border border-border-subtle bg-surface-panel shadow-panel;
+    @apply rounded-panel border border-border-subtle bg-surface-panel shadow-[0_8px_24px_rgba(15,23,42,0.06)];
   }
 
   .panel-raised {
-    @apply rounded-panel border border-border-subtle bg-surface-raised/90 shadow-float backdrop-blur;
+    @apply rounded-panel border border-border-subtle bg-surface-raised shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur;
   }
 
   .panel-subtle {
-    @apply rounded-panel border border-border-subtle bg-surface-subtle/70 shadow-panel;
+    @apply rounded-panel border border-border-subtle bg-surface-subtle shadow-[0_6px_20px_rgba(15,23,42,0.05)];
   }
 
   .section-frame {
-    @apply rounded-panel border border-border-subtle/90 bg-surface-panel/70 shadow-panel backdrop-blur;
+    @apply rounded-panel border border-border-subtle/90 bg-surface-panel shadow-[0_8px_24px_rgba(15,23,42,0.06)] backdrop-blur;
   }
 
   .focus-ring {

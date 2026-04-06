@@ -42,10 +42,10 @@ export function AppShell({
 
   return (
     <div className="relative min-h-screen bg-shell">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.14),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(249,115,22,0.08),transparent_36%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.14),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(249,115,22,0.05),transparent_40%)]" />
       {sidebarOpen ? (
         <div
-          className="fixed inset-0 z-40 bg-surface-overlay/85 px-4 py-4 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-surface-overlay/45 px-4 py-4 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
           role="presentation"
         >
@@ -55,7 +55,7 @@ export function AppShell({
         </div>
       ) : null}
       <div className="relative mx-auto min-h-screen max-w-shell lg:grid lg:grid-cols-shell">
-        <div className="hidden px-4 py-4 lg:block">
+        <div className="hidden px-3 py-3 lg:block">
           <Sidebar items={items} activeId={activeId} onNavigate={handleNavigate} />
         </div>
         <div className="min-w-0">

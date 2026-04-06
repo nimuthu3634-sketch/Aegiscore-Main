@@ -32,7 +32,7 @@ export function TopNavigation({
   onMenuClick
 }: TopNavigationProps) {
   return (
-    <header className="sticky top-0 z-20 border-b border-border-subtle bg-surface-base/75 backdrop-blur-xl">
+    <header className="sticky top-0 z-20 border-b border-border-subtle bg-white/92 backdrop-blur-xl">
       <div className="mx-auto flex max-w-shell items-center gap-3 px-4 py-4 md:px-6 lg:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Button
@@ -46,8 +46,8 @@ export function TopNavigation({
           </Button>
           <AegisCoreLogo mode="mark" className="shrink-0 sm:hidden" />
           <AegisCoreLogo mode="compact" className="hidden max-w-[14.5rem] shrink-0 sm:flex" />
-          <div className="min-w-0 flex-1 border-l border-brand-divider/60 pl-3 sm:pl-4">
-            <p className="type-label-sm hidden md:block">{pageTitle}</p>
+          <div className="min-w-0 flex-1 border-l border-border-subtle pl-3 sm:pl-4">
+            <p className="type-label-sm hidden text-content-muted md:block">{pageTitle}</p>
             <p className="truncate text-body-sm text-content-secondary">{pageDescription}</p>
           </div>
         </div>
@@ -64,7 +64,7 @@ export function TopNavigation({
           <Button
             variant="secondary"
             size="sm"
-            className="border-brand-divider/70 bg-surface-subtle/70"
+            className="border-border-subtle bg-surface-subtle/80"
             leadingIcon={<Icon name="shield" className="h-4 w-4" />}
           >
             Analyst session

@@ -24,18 +24,18 @@ export function ChartCard({
   bodyClassName
 }: ChartCardProps) {
   return (
-    <Card className={cn("h-full", className)}>
-      <div className="flex flex-wrap items-start justify-between gap-4 p-panel">
+    <Card className={cn("h-full bg-white", className)}>
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border-subtle/80 p-panel">
         <div className="space-y-2">
-          {eyebrow ? <p className="type-label-md">{eyebrow}</p> : null}
+          {eyebrow ? <p className="type-label-md text-content-muted">{eyebrow}</p> : null}
           <h3 className="type-heading-md">{title}</h3>
-          {description ? <p className="type-body-sm">{description}</p> : null}
+          {description ? <p className="type-body-sm text-content-secondary">{description}</p> : null}
         </div>
         {actions}
       </div>
       <CardContent className={cn("pt-0", bodyClassName)}>{children}</CardContent>
       {footer ? (
-        <div className="border-t border-border-subtle px-panel py-4">{footer}</div>
+        <div className="border-t border-border-subtle bg-surface-subtle/70 px-panel py-4">{footer}</div>
       ) : null}
     </Card>
   );

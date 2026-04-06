@@ -1,0 +1,15 @@
+<svg width="900" height="270" viewBox="0 0 900 270" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="270" fill="transparent"/>
+  <path d="M22 238L154 34" stroke="#0A0A0A" stroke-width="42" stroke-linecap="round"/>
+  <path d="M255 74L165 152H320L405 235H150" stroke="#F97316" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M462 24V246" stroke="#0A0A0A" stroke-width="8" stroke-linecap="round"/>
+  <g>
+    <text x="500" y="128" fill="none" stroke="#0A0A0A" stroke-width="4.5" font-size="96" font-family="Orbitron, 'Space Grotesk', 'Segoe UI', sans-serif" font-weight="600" letter-spacing="2">AEGIS</text>
+    <text x="500" y="228" fill="#F97316" font-size="112" font-family="'Saira Stencil One', 'Space Grotesk', 'Segoe UI', sans-serif" font-weight="600" letter-spacing="1">CORE</text>
+  </g>
+  <g transform="translate(836 170)">
+    <path d="M0 34L18 6" stroke="#0A0A0A" stroke-width="12" stroke-linecap="round"/>
+    <path d="M22 34L40 6" stroke="#0A0A0A" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="56" cy="40" r="8" fill="#F97316"/>
+  </g>
+</svg>

@@ -88,17 +88,17 @@ export default {
         shell: "1.125rem"
       },
       boxShadow: {
-        panel: "0 10px 30px rgba(0, 0, 0, 0.28)",
-        float: "0 18px 40px rgba(0, 0, 0, 0.38)",
-        modal: "0 24px 64px rgba(0, 0, 0, 0.46)",
+        panel: "0 8px 24px rgba(15, 23, 42, 0.08)",
+        float: "0 16px 36px rgba(15, 23, 42, 0.16)",
+        modal: "0 24px 64px rgba(15, 23, 42, 0.24)",
         focus:
           "0 0 0 1px rgba(249, 115, 22, 0.65), 0 0 0 4px rgba(249, 115, 22, 0.16)"
       },
       backgroundImage: {
         shell:
-          "radial-gradient(circle at top, rgb(var(--color-brand-glow) / 0.18), transparent 24%), linear-gradient(180deg, rgba(17, 24, 39, 0.92) 0%, #0A0A0A 46%, #050505 100%)",
+          "radial-gradient(circle at top right, rgb(var(--color-brand-glow) / 0.12), transparent 30%), radial-gradient(circle at bottom left, rgb(var(--color-brand-primary) / 0.06), transparent 34%), linear-gradient(180deg, #f9fafc 0%, #f3f6fb 100%)",
         "panel-grid":
-          "linear-gradient(rgba(156, 163, 175, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(156, 163, 175, 0.08) 1px, transparent 1px)"
+          "linear-gradient(rgba(148, 163, 184, 0.14) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.14) 1px, transparent 1px)"
       },
       backgroundSize: {
         grid: "22px 22px"

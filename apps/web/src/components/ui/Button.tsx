@@ -14,15 +14,15 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "border-brand-primary bg-brand-primary text-content-primary hover:border-brand-hover hover:bg-brand-hover",
+    "border-brand-primary bg-brand-primary text-white hover:border-brand-hover hover:bg-brand-hover",
   secondary:
-    "border-border-subtle bg-surface-raised/90 text-content-primary hover:border-brand-primary/50 hover:bg-surface-subtle/90",
+    "border-border-subtle bg-white text-content-primary hover:border-brand-primary/45 hover:bg-surface-subtle",
   ghost:
-    "border-transparent bg-transparent text-content-secondary hover:bg-surface-accentSoft/70 hover:text-content-primary",
+    "border-transparent bg-transparent text-content-secondary hover:bg-brand-primary/10 hover:text-brand-hover",
   danger:
-    "border-status-danger/40 bg-status-danger/15 text-status-danger hover:bg-status-danger/25",
+    "border-status-danger/35 bg-status-danger/10 text-status-danger hover:bg-status-danger/16",
   quiet:
-    "border-border-subtle bg-surface-subtle/60 text-content-secondary hover:text-content-primary"
+    "border-border-subtle bg-surface-subtle text-content-secondary hover:text-content-primary"
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
