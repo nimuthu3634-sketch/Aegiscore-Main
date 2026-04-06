@@ -59,6 +59,9 @@ export const themeTokens = {
   colors: {
     brandPrimary: "#F97316",
     brandHover: "#EA580C",
+    brandInk: "#F9FAFB",
+    brandDivider: "#4B5563",
+    brandGlow: "#FB923C",
     bgBase: "#0A0A0A",
     bgPanel: "#111827",
     borderDefault: "#1F2937",

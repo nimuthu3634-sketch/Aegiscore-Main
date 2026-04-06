@@ -55,7 +55,13 @@ export function LoginPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-shell">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(249,115,22,0.08),transparent_26%)]" />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at top left, rgb(var(--color-brand-glow) / 0.24), transparent 32%), radial-gradient(circle at bottom right, rgb(var(--color-brand-primary) / 0.1), transparent 26%)"
+        }}
+      />
       <div className="relative mx-auto grid min-h-screen max-w-7xl items-center gap-8 px-4 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
         <section className="space-y-6">
           <AegisCoreLogo titleAs="h1" className="items-start" />
@@ -102,7 +108,7 @@ export function LoginPage() {
           </div>
         </section>
 
-        <Card className="mx-auto w-full max-w-xl">
+        <Card className="mx-auto w-full max-w-xl border-brand-divider/45">
           <CardHeader className="block space-y-3">
             <div className="space-y-2">
               <p className="type-label-md">Operator access</p>

@@ -24,8 +24,8 @@ export function Sidebar({
         className
       )}
     >
-      <AegisCoreLogo compact />
-      <div className="rounded-panel border border-border-subtle bg-surface-subtle/65 px-4 py-3">
+      <AegisCoreLogo mode="compact" className="items-start" />
+      <div className="rounded-panel border border-brand-divider/45 bg-surface-subtle/65 px-4 py-3">
         <p className="type-label-sm">Environment</p>
         <p className="mt-2 text-body-sm text-content-primary">Single-tenant SME SOC</p>
       </div>
@@ -42,7 +42,7 @@ export function Sidebar({
                 "focus-ring flex items-center justify-between gap-3 rounded-panel border px-3 py-3 text-left transition",
                 active
                   ? "border-brand-primary/40 bg-surface-accentSoft text-content-primary shadow-[inset_3px_0_0_0_rgba(249,115,22,1)]"
-                  : "border-transparent text-content-secondary hover:border-border-subtle hover:bg-surface-subtle/65 hover:text-content-primary"
+                  : "border-transparent text-content-secondary hover:border-brand-divider/45 hover:bg-surface-subtle/65 hover:text-content-primary"
               )}
             >
               <span className="flex items-center gap-3">
@@ -58,7 +58,7 @@ export function Sidebar({
           );
         })}
       </nav>
-      <div className="rounded-panel border border-border-subtle bg-surface-subtle/65 p-4">
+      <div className="rounded-panel border border-brand-divider/45 bg-surface-subtle/65 p-4">
         <p className="type-label-sm">Backend ownership</p>
         <p className="mt-2 text-body-sm text-content-secondary">
           Wazuh and Suricata remain behind the API boundary. The UI consumes backend-only contracts.

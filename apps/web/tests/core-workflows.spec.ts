@@ -21,12 +21,17 @@ test("login route authenticates and opens the overview dashboard", async ({
   await page.goto("/login");
 
   await expectPageHeading(page, "Sign in to AegisCore");
+  await expect(page.getByTestId("aegiscore-logo")).toHaveCount(1);
+  await expect(page.getByTestId("aegiscore-logo").first()).toBeVisible();
   await page.getByLabel("Username").fill(apiUsername);
   await page.getByLabel("Password").fill(apiPassword);
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(page).toHaveURL(/\/overview$/);
   await expectPageHeading(page, "Overview Dashboard");
+  await expect(page.getByTestId("aegiscore-logo")).toHaveCount(2);
+  await expect(page.getByTestId("aegiscore-logo").first()).toBeVisible();
+  await expect(page.getByTestId("aegiscore-logo").nth(1)).toBeVisible();
 });
 
 test("overview, alerts, and incidents support route-level investigation workflows", async ({

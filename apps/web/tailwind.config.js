@@ -12,7 +12,10 @@ export default {
       colors: {
         brand: {
           primary: withOpacity("--color-brand-primary"),
-          hover: withOpacity("--color-brand-hover")
+          hover: withOpacity("--color-brand-hover"),
+          ink: withOpacity("--color-brand-ink"),
+          divider: withOpacity("--color-brand-divider"),
+          glow: withOpacity("--color-brand-glow")
         },
         surface: {
           base: withOpacity("--color-bg-base"),
@@ -93,7 +96,7 @@ export default {
       },
       backgroundImage: {
         shell:
-          "radial-gradient(circle at top, rgba(249, 115, 22, 0.18), transparent 24%), linear-gradient(180deg, rgba(17, 24, 39, 0.92) 0%, #0A0A0A 46%, #050505 100%)",
+          "radial-gradient(circle at top, rgb(var(--color-brand-glow) / 0.18), transparent 24%), linear-gradient(180deg, rgba(17, 24, 39, 0.92) 0%, #0A0A0A 46%, #050505 100%)",
         "panel-grid":
           "linear-gradient(rgba(156, 163, 175, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(156, 163, 175, 0.08) 1px, transparent 1px)"
       },

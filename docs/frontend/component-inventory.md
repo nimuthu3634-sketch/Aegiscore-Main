@@ -16,6 +16,9 @@ Confirmed future Figma mapping anchors:
 
 - `color.brand.primary`
 - `color.brand.primaryHover`
+- `color.brand.ink`
+- `color.brand.divider`
+- `color.brand.glow`
 - `color.bg.base`
 - `color.bg.panel`
 - `color.border.default`
@@ -79,7 +82,7 @@ Confirmed future Figma mapping anchors:
 
 | Component | Role | Key Variants | Primary Pages |
 | --- | --- | --- | --- |
-| `AegisCoreLogoLockup` | Brand identity | full, compact, icon-only | Login, Sidebar, Reports |
+| `AegisCoreLogoLockup` | Brand identity | full, compact, icon-only | Login, Sidebar, TopNav, Reports |
 | `NavItem` | Sidebar row | default, hover, active, badge-count | All authenticated pages |
 | `NavSectionLabel` | Sidebar grouping label | default | Sidebar |
 | `EnvironmentPill` | Tenant or environment context | default, warning | Sidebar, Login, TopNav |

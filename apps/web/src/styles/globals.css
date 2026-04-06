@@ -7,6 +7,9 @@
 :root {
   --color-brand-primary: 249 115 22;
   --color-brand-hover: 234 88 12;
+  --color-brand-ink: 249 250 251;
+  --color-brand-divider: 75 85 99;
+  --color-brand-glow: 251 146 60;
   --color-bg-base: 10 10 10;
   --color-bg-panel: 17 24 39;
   --color-border-default: 31 41 55;
@@ -36,7 +39,7 @@ body {
   min-height: 100vh;
   background-color: rgb(var(--color-bg-base));
   background-image:
-    radial-gradient(circle at top, rgba(249, 115, 22, 0.18), transparent 24%),
+    radial-gradient(circle at top, rgb(var(--color-brand-glow) / 0.18), transparent 24%),
     linear-gradient(180deg, rgba(17, 24, 39, 0.92) 0%, #0a0a0a 46%, #050505 100%);
   background-attachment: fixed;
   color: rgb(var(--color-text-primary));
@@ -58,7 +61,7 @@ body {
 }
 
 ::selection {
-  background: rgba(249, 115, 22, 0.28);
+  background: rgb(var(--color-brand-glow) / 0.28);
   color: rgb(var(--color-text-primary));
 }
 

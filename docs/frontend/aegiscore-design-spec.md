@@ -29,6 +29,7 @@ Brand principles:
 - Data should be easy to scan in dense tables without visual clutter
 - Analyst workflows should prioritize signal clarity, evidence traceability, and decisive actions
 - The AegisCore logo should appear in the authentication shell, primary sidebar brand area, and any exported report cover or report header
+- On dark product surfaces, the black portions of the logo should render as a light ink treatment so the mark stays legible without changing the orange brand accent
 
 ## 2. Color Tokens
 
@@ -40,6 +41,9 @@ Use the provided brand palette as the only base color system. Additional shades 
 | --- | --- | --- |
 | `color.brand.primary` | `#F97316` | Primary action, selected nav state, active chart trend, focused highlights |
 | `color.brand.primaryHover` | `#EA580C` | Primary hover, pressed state, active icon hover |
+| `color.brand.ink` | `#F9FAFB` | Logo wordmark ink on dark UI surfaces, premium shell brand treatments |
+| `color.brand.divider` | `#4B5563` | Logo separator stroke, branded shell dividers, subtle navigation framing |
+| `color.brand.glow` | `#FB923C` | Controlled brand halo in auth and shell backgrounds |
 | `color.bg.base` | `#0A0A0A` | App background, page canvas, auth shell background |
 | `color.bg.panel` | `#111827` | Panels, cards, sidebars, tables, modals |
 | `color.border.default` | `#1F2937` | Dividers, card borders, table grid lines, input borders |
@@ -294,6 +298,7 @@ Sidebar rules:
 - Badge counts may appear on Alerts and Incidents
 - Keep item labels short and operational
 - Avoid oversized logo or brand treatments that consume vertical space
+- The sidebar logo should use the compact lockup with the mark, divider, and wordmark visible together
 
 ### Top Navigation
 
@@ -310,6 +315,7 @@ Top-nav rules:
 - Keep it anchored and visually lighter than the sidebar
 - Do not overload it with secondary filters that belong in page toolbars
 - Search should support alert IDs, incident IDs, asset names, IPs, and usernames
+- Include a compact AegisCore brand lockup in the header so the product identity remains visible when the analyst is deep inside the console
 
 ## 12. Badge And Chip System
 
