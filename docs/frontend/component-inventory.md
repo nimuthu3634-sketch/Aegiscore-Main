@@ -90,6 +90,8 @@ Confirmed future Figma mapping anchors:
 | `HealthIndicator` | API or integration health | healthy, degraded, down | TopNav, Login |
 | `UserMenuTrigger` | Session entry point | default, open | TopNav |
 
+The official lockup uses the supplied angular mark, a vertical divider, an outlined `AEGIS` wordmark, a stencil `CORE` wordmark, and the trailing slash-dot accent rendered with brand ink and primary orange on dark product surfaces.
+
 ### Actions And Inputs
 
 | Component | Role | Key Variants | Primary Pages |

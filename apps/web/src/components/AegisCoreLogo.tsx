@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { cn } from "../lib/cn";
 
 type AegisCoreLogoMode = "full" | "compact" | "mark";
@@ -8,25 +9,36 @@ type AegisCoreLogoProps = {
   className?: string;
 };
 
+const aegisWordStyle: CSSProperties = {
+  color: "rgb(var(--color-brand-ink))",
+  fontFamily: '"Orbitron", "Space Grotesk", sans-serif',
+  WebkitTextFillColor: "transparent",
+  WebkitTextStroke: "1.4px rgb(var(--color-brand-ink))"
+};
+
+const coreWordStyle: CSSProperties = {
+  fontFamily: '"Saira Stencil One", "Space Grotesk", sans-serif'
+};
+
 function AegisCoreMark({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 118 84"
+      viewBox="0 0 440 320"
       className={cn("h-full w-auto", className)}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
       <path
-        d="M16 72L50 14"
+        d="M48 280L166 44"
         stroke="rgb(var(--color-brand-ink))"
-        strokeWidth="14"
+        strokeWidth="46"
         strokeLinecap="round"
       />
       <path
-        d="M76 24L44 46H78L92 60H36"
+        d="M244 78L160 158H308L388 266H148"
         stroke="rgb(var(--color-brand-primary))"
-        strokeWidth="14"
+        strokeWidth="46"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -38,21 +50,21 @@ function AegisCoreAccent({ compact = false }: { compact?: boolean }) {
   return (
     <span
       className={cn(
-        "mb-1 flex shrink-0 items-end gap-1",
-        compact ? "pt-2" : "pt-3"
+        "mb-0.5 flex shrink-0 items-end",
+        compact ? "gap-1 pt-1" : "gap-1.5 pt-1.5"
       )}
       aria-hidden="true"
     >
       <span
         className={cn(
           "block origin-bottom rounded-full bg-brand-ink",
-          compact ? "h-5 w-2 rotate-[34deg]" : "h-6 w-2.5 rotate-[34deg]"
+          compact ? "h-4 w-1.5 rotate-[32deg]" : "h-5 w-2 rotate-[32deg]"
         )}
       />
       <span
         className={cn(
           "block origin-bottom rounded-full bg-brand-ink",
-          compact ? "h-5 w-2 rotate-[34deg]" : "h-6 w-2.5 rotate-[34deg]"
+          compact ? "h-4 w-1.5 rotate-[32deg]" : "h-5 w-2 rotate-[32deg]"
         )}
       />
       <span
@@ -79,18 +91,7 @@ export function AegisCoreLogo({
         className={cn("flex items-center", className)}
         data-testid="aegiscore-logo-mark"
       >
-        <div className="relative flex h-10 w-14 items-center justify-center overflow-hidden rounded-[1rem] border border-brand-divider/40 bg-surface-subtle/70 px-1 shadow-panel backdrop-blur">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 35% 35%, rgb(var(--color-brand-glow) / 0.24), transparent 58%)"
-            }}
-          />
-          <div className="relative flex h-full items-center justify-center">
-            <AegisCoreMark className="h-8" />
-          </div>
-        </div>
+        <AegisCoreMark className="h-10" />
         <span className="sr-only">AegisCore</span>
       </div>
     );
@@ -98,72 +99,50 @@ export function AegisCoreLogo({
 
   return (
     <div
-      className={cn("flex min-w-0 items-center gap-3", className)}
+      className={cn(
+        "flex min-w-0 items-center",
+        compact ? "gap-2.5" : "gap-3.5",
+        className
+      )}
       data-testid="aegiscore-logo"
     >
+      <AegisCoreMark className={compact ? "h-10 sm:h-11" : "h-14 sm:h-16"} />
       <div
         className={cn(
-          "relative shrink-0 overflow-hidden rounded-[1.15rem] border border-brand-divider/35 bg-surface-subtle/70 shadow-panel backdrop-blur",
-          compact ? "h-12 w-16 px-1.5" : "h-16 w-[5.5rem] px-2"
+          "hidden shrink-0 rounded-full bg-brand-divider/80 sm:block",
+          compact ? "h-9 w-px" : "h-12 w-px"
         )}
+        aria-hidden="true"
+      />
+      <TitleTag
+        className={cn(
+          "flex min-w-0 items-end leading-none",
+          compact ? "gap-2" : "gap-3"
+        )}
+        aria-label="AegisCore"
       >
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 35% 35%, rgb(var(--color-brand-glow) / 0.24), transparent 58%)"
-          }}
-        />
-        <div className="relative flex h-full items-center justify-center">
-          <AegisCoreMark className={compact ? "h-8" : "h-11"} />
-        </div>
-      </div>
-      <div className="flex min-w-0 items-center gap-3">
-        <div
-          className={cn(
-            "hidden shrink-0 rounded-full bg-brand-divider/70 sm:block",
-            compact ? "h-10 w-px" : "h-12 w-px"
-          )}
-          aria-hidden="true"
-        />
-        <div className="min-w-0">
-          <p className={cn("type-label-sm text-content-muted", compact ? "mb-1" : "mb-2")}>
-            {compact ? "SOC console" : "Security Operations"}
-          </p>
-          <div className="flex min-w-0 items-end gap-3">
-            <TitleTag
-              className={cn(
-                "flex min-w-0 flex-col leading-none",
-                compact ? "gap-0.5" : "gap-1"
-              )}
-              aria-label="AegisCore"
-            >
-              <span
-                className={cn(
-                  "truncate font-display font-semibold tracking-[0.18em] text-brand-ink",
-                  compact ? "text-[0.82rem]" : "text-[1.05rem]"
-                )}
-              >
-                AEGIS
-              </span>
-              <span
-                className={cn(
-                  "truncate font-display font-bold tracking-[0.22em] text-brand-primary",
-                  compact ? "text-[1.35rem]" : "text-[1.85rem]"
-                )}
-              >
-                CORE
-              </span>
-            </TitleTag>
-            <AegisCoreAccent compact={compact} />
-          </div>
-          {!compact ? (
-            <p className="mt-3 text-body-sm text-content-secondary">
-              Single-tenant AI-assisted SOC console
-            </p>
-          ) : null}
-        </div>
-      </div>
+        <span className="flex min-w-0 flex-col whitespace-nowrap">
+          <span
+            className={cn(
+              "block leading-none tracking-[0.16em]",
+              compact ? "text-[0.82rem]" : "text-[1.02rem] sm:text-[1.15rem]"
+            )}
+            style={aegisWordStyle}
+          >
+            AEGIS
+          </span>
+          <span
+            className={cn(
+              "mt-1 block leading-none tracking-[0.12em] text-brand-primary",
+              compact ? "text-[1.5rem]" : "text-[1.9rem] sm:text-[2.15rem]"
+            )}
+            style={coreWordStyle}
+          >
+            CORE
+          </span>
+        </span>
+        <AegisCoreAccent compact={compact} />
+      </TitleTag>
     </div>
   );
 }

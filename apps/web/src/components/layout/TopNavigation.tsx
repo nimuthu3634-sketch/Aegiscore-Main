@@ -45,7 +45,7 @@ export function TopNavigation({
             <Icon name="menu" className="h-5 w-5" />
           </Button>
           <AegisCoreLogo mode="mark" className="shrink-0 sm:hidden" />
-          <AegisCoreLogo mode="compact" className="hidden max-w-[13rem] shrink-0 sm:flex" />
+          <AegisCoreLogo mode="compact" className="hidden max-w-[14.5rem] shrink-0 sm:flex" />
           <div className="min-w-0 flex-1 border-l border-brand-divider/60 pl-3 sm:pl-4">
             <p className="type-label-sm hidden md:block">{pageTitle}</p>
             <p className="truncate text-body-sm text-content-secondary">{pageDescription}</p>
