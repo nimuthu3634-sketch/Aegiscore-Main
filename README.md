@@ -13,6 +13,7 @@ This repository is intentionally scoped to four supported detections only:
 
 AegisCore v1 is complete for its intended SME/lab scope and intentionally excludes enterprise SaaS complexity.
 
+- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for single-tenant SME/lab SOC operation. It is not an enterprise cloud control plane, multi-tenant SaaS product, or full enterprise SOAR suite.
 - **Product status (fully implemented for scoped v1)**: centralized SOC dashboard, four-detection ingestion/normalization, risk scoring, incident and response recording, basic automated response, authenticated access (`admin`/`analyst`), and operational reporting.
 - **Live Wazuh integration (partially implemented / limited mode)**: live polling connector with auth modes, retries, checkpointing, dedupe, and status endpoints is implemented; compatibility is currently limited to common Wazuh response envelopes and may require profile tuning for other manager variants.
 - **Live Suricata integration (partially implemented / limited mode)**: live connector is implemented for `file_tail` polling of `eve.json` with inode/offset checkpointing, malformed-line handling, retries, dedupe, and status endpoints; authenticated forwarding mode is not implemented yet.
@@ -164,6 +165,7 @@ Operational health endpoints:
 - [Environment Reference](docs/environment.md)
 - [Scoring](docs/scoring.md)
 - [Operator Guide](docs/setup/operator-guide.md)
+- [Operator Runbook](docs/setup/operator-runbook.md)
 - [Analyst Guide](docs/setup/analyst-guide.md)
 - [Wazuh Live Integration](docs/setup/wazuh-live-integration.md)
 - [Suricata Live Integration](docs/setup/suricata-live-integration.md)
@@ -177,7 +179,7 @@ Operational health endpoints:
 
 - Live Suricata integration is currently limited to `file_tail` mode for `eve.json`; authenticated forwarding mode is not yet implemented.
 - Live Wazuh integration is implemented for common lab endpoint/auth shapes and currently expects a list response or a `data.affected_items`/`data.items` envelope.
-- Playwright now covers core read workflows plus key write flows (acknowledge, close, link-to-incident, notes, incident transition, and policy toggle), but still does not cover every possible negative-path mutation branch.
+- Playwright now covers core read workflows plus key write flows and selected negative paths, but still does not cover every possible negative-path mutation branch; some incident-dependent branches are conditionally skipped when no incident candidate is available in seeded runs.
 - The frontend is operational and validated, but still large enough to benefit from additional route-level code splitting over time.
 
 ## Future Work

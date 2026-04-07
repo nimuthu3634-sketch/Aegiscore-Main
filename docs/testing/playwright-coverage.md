@@ -79,7 +79,7 @@ Start the backend stack first so the frontend dev server can proxy `/api` calls 
 npm run test:web:e2e
 ```
 
-The latest successful run completed with `9 passed`.
+The latest successful run completed with `11 passed` and `2 skipped` (incident-dependent transition/policy-export branches are skipped when no incident candidate is available in the seeded run).
 
 ## Remaining Gaps
 

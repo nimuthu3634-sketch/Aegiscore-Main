@@ -2,7 +2,7 @@
 
 ## Demo Goal
 
-Show AegisCore as a serious SME-focused SOC platform prototype with a real end-to-end workflow for the four supported detections:
+Show AegisCore as a serious SME-focused final scoped v1 SOC product with a real end-to-end workflow for the four supported detections:
 
 - `brute_force`
 - `file_integrity_violation`
@@ -29,7 +29,7 @@ If you want fresh supported-detection events in the UI immediately before the de
 
 What to say:
 
-"AegisCore is a single-tenant SOC platform prototype for small and medium enterprises. It ingests security events from Wazuh and Suricata, normalizes them into a common schema, assigns risk scores, groups incidents, evaluates safe automated-response policies, and exposes the workflow through a live analyst console."
+"AegisCore is a single-tenant SOC product for small and medium enterprises in local/lab deployment scope. It ingests security events from Wazuh and Suricata, normalizes them into a common schema, assigns risk scores, groups incidents, evaluates safe automated-response policies, and exposes the workflow through a live analyst console."
 
 ## Step 1. Login
 
@@ -137,7 +137,7 @@ What to show:
 
 What to say:
 
-"Automated response in this prototype is deliberately conservative and auditable. Every policy-driven action is persisted, visible, and reviewable."
+"Automated response in this scoped v1 product is deliberately conservative and auditable. Every policy-driven action is persisted, visible, and reviewable."
 
 ## Step 7. Rules Or Policies
 
@@ -237,7 +237,7 @@ What to say:
 - If live connectors are unavailable, use the fixture-backed validation path. This is still a real backend flow, not a frontend mock.
 - Run `py -3 scripts/validate_attack_scenarios.py` shortly before the demo to ensure fresh events exist for all four supported detections.
 - If browser state is stale, sign out by clearing local storage or reopen the login page and authenticate again.
-- If asked about unsupported detections, state clearly that the prototype scope is intentionally limited to the four supported scenarios.
+- If asked about unsupported detections, state clearly that the scoped v1 product boundary is intentionally limited to the four supported scenarios.
 
 ## Manual Confirmation Checklist Before Presentation
 

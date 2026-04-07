@@ -6,6 +6,7 @@ AegisCore is positioned as a final scoped v1 single-tenant SOC product for SME/l
 
 ## Product Positioning
 
+- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for local/lab SME operation. It includes real backend-owned SOC workflows for the four supported detections and intentionally excludes enterprise cloud, multi-tenant, and broad SOAR orchestration claims.
 - **Fully implemented for scoped v1**: dashboard, four-detection ingestion/normalization, risk scoring, incident/response workflows, basic automated response, and reporting/export.
 - **Partially implemented / limited mode (live connectors)**:
   - Wazuh live polling is implemented with auth, retries, pagination, checkpointing, dedupe, and status visibility; upstream compatibility is currently limited to common envelope variants.
@@ -19,6 +20,7 @@ AegisCore is positioned as a final scoped v1 single-tenant SOC product for SME/l
 - `docker compose up --build -d` succeeds
 - database migrations apply cleanly
 - local seed command succeeds
+- [operator runbook](setup/operator-runbook.md) first-start sequence is executable as written
 - `/health` returns healthy API and database status
 - `/health/live` returns API liveness
 - `/health/ready` reports `ready` with database `up`
@@ -44,6 +46,7 @@ AegisCore is positioned as a final scoped v1 single-tenant SOC product for SME/l
 
 - restarting `api` does not require manual data recovery when `postgres_data` volume is intact
 - readiness transitions back to `ready` after restart
+- connector status endpoints return healthy or explicit dependency-state details after restart
 - migration command remains idempotent (`alembic upgrade head`)
 - local backup command for PostgreSQL has been run at least once and restore steps are documented
 - docker service logs are bounded locally via `json-file` rotation settings
@@ -78,7 +81,7 @@ py -3 scripts/validate_attack_scenarios.py
 ## Known Limitations
 
 - deterministic validation still relies heavily on fixtures despite live connector support
-- Playwright covers core route visibility plus major write workflows, but not every negative-path or role-restriction branch
+- Playwright covers core route visibility plus major write workflows and selected negative paths, but not every negative-path or role-restriction branch; incident-dependent branches can be conditionally skipped when no incident candidate exists in seeded runs
 - the frontend is operational but still benefits from additional route-level code splitting over time
 - no scheduled reporting or email-delivery workflow exists
 

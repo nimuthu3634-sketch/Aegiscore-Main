@@ -65,7 +65,7 @@ This build supports only:
 - `port_scan`
 - `unauthorized_user_creation`
 
-If a source event does not map to one of those detections, it is out of scope for the current prototype and should not be treated as validated product coverage.
+If a source event does not map to one of those detections, it is out of scope for the current scoped v1 product and should not be treated as validated coverage.
 
 ## Practical Expectations
 

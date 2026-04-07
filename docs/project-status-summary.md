@@ -6,6 +6,7 @@ AegisCore is a final scoped v1 single-tenant SOC product for SME/lab deployment.
 
 ### Product Positioning
 
+- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for single-tenant SME/lab SOC workflows (ingestion, scoring, incidents, responses, reporting, and authenticated access). It is not an enterprise multi-tenant SaaS platform and does not claim enterprise orchestration, paging, or SOAR breadth.
 - **Fully implemented for scoped v1**: centralized SOC dashboard, four-detection ingestion/normalization, risk scoring, incident and response recording, basic automated response, authenticated access, and reporting/export.
 - **Partially implemented / limited mode (live connectors)**:
   - Wazuh: live polling connector is implemented with auth, retries, pagination, checkpointing, dedupe, and status visibility; compatibility is limited to common upstream envelope variants.
@@ -115,7 +116,7 @@ At the current validated state:
 - backend test suite: passing in local Docker validation runs
 - frontend lint: passing
 - frontend production build: passing
-- Playwright suite: `9` passing browser tests
+- Playwright suite: current stable run passed with conditional incident-dependent skips (`11` passed, `2` skipped in the latest local validation run)
 - four-scenario validation script: successful across all supported detections
 
 The validated commands are:
@@ -144,7 +145,7 @@ The frontend Reports page uses those real endpoints for summary cards, distribut
 
 - role model is intentionally simple (`admin` + `analyst`) and does not provide enterprise RBAC custom role authoring
 - deterministic validation still relies heavily on fixture-backed scenarios even though live connectors and adapters are implemented
-- Playwright covers core read workflows and major write workflows, but not every negative-path role/edge branch
+- Playwright covers core read workflows and major write workflows plus selected negative paths, but not every negative-path role/edge branch; incident-dependent browser branches can be conditionally skipped when seeded runs do not produce incident candidates
 - destructive live response behavior remains safety-gated and disabled by default
 - the worker service is still a future-facing shell rather than a mature asynchronous execution subsystem
 - scheduled reporting and PDF export are not implemented

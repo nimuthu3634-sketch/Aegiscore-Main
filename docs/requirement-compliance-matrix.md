@@ -4,6 +4,8 @@ This matrix maps the proposal requirement set to the current implementation and 
 
 Scope note: AegisCore remains intentionally single-tenant and SME/lab-focused. This matrix does not claim enterprise SOC/SOAR breadth.
 
+Release-candidate note: this matrix reflects the final scoped v1 release-candidate posture, not an enterprise production-cloud claim.
+
 | Requirement | Implementation status | Code/docs evidence | Remaining limitation (if any) |
 | --- | --- | --- | --- |
 | Gather and monitor logs from monitored machines | Implemented (lab-ready) | `apps/api/app/services/integrations/wazuh_connector.py`; `apps/api/app/services/ingestion/service.py`; `docs/setup/wazuh-live-integration.md` | Wazuh endpoint envelope/auth compatibility is tuned for common lab shapes (`list`, `data.affected_items`, `data.items`) and may require profile extension for other manager variants. |
@@ -13,8 +15,8 @@ Scope note: AegisCore remains intentionally single-tenant and SME/lab-focused. T
 | AI risk scoring | Implemented (baseline default + optional ML) | `apps/api/app/services/scoring/baseline.py`; `apps/api/app/services/scoring/ml.py`; `ai/training/train_risk_model.py`; `docs/scoring.md` | ML path depends on local model artifact availability; baseline fallback is used when model artifacts are absent. |
 | Basic automated response | Implemented with safety gates | `apps/api/app/services/response_automation/execution.py`; `apps/api/app/services/response_automation/adapters.py`; `apps/api/app/services/notifications/service.py`; `docs/setup/operator-guide.md` | Destructive adapters are disabled by default and require explicit lab safety flags. |
 | Incident/response recording | Implemented and auditable | `apps/api/app/models/incident.py`; `apps/api/app/models/response_action.py`; `apps/api/app/models/audit_log.py`; `apps/api/app/services/incidents.py`; `apps/api/app/services/alerts.py`; `apps/web/src/pages/IncidentDetailPage.tsx` | No major gap for current scope; historical analytics remain operational rather than long-horizon enterprise reporting. |
-| VM/lab validation | Implemented and documented | `scripts/validate_attack_scenarios.py`; `docs/testing/end-to-end-validation.md`; `docs/release-readiness.md`; `docs/setup/operator-guide.md` | Deterministic validation still relies heavily on fixtures even though live connectors are available. |
-| Practical authenticated access | Implemented (JWT + admin/analyst) | `apps/api/app/api/routes/auth.py`; `apps/api/app/api/deps.py`; `apps/web/src/pages/LoginPage.tsx`; `apps/web/src/lib/api.ts`; `docs/setup/analyst-guide.md` | Role model is intentionally minimal (`admin`, `analyst`) and does not include enterprise RBAC customization. |
+| VM/lab validation | Implemented and documented | `scripts/validate_attack_scenarios.py`; `docs/testing/end-to-end-validation.md`; `docs/testing/playwright-coverage.md`; `docs/release-readiness.md`; `docs/setup/operator-guide.md`; `docs/setup/operator-runbook.md` | Deterministic validation still relies heavily on fixtures even though live connectors are available; some browser branches are conditionally skipped when incident candidates are unavailable in seeded runs. |
+| Practical authenticated access | Implemented (JWT + admin/analyst) | `apps/api/app/api/routes/auth.py`; `apps/api/app/api/deps.py`; `apps/web/src/pages/LoginPage.tsx`; `apps/web/src/lib/api.ts`; `apps/web/src/pages/RulesPage.tsx`; `docs/setup/analyst-guide.md` | Role model is intentionally minimal (`admin`, `analyst`) and does not include enterprise RBAC customization. |
 | Honest local/lab deployment posture | Implemented in docs and runtime guardrails | `README.md`; `docs/release-readiness.md`; `docs/project-status-summary.md`; `docker-compose.yml`; `apps/api/app/api/routes/health.py` | Not positioned for enterprise production; no claim of multi-tenant/cloud orchestration maturity. |
 
 ## Reviewer Notes

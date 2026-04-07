@@ -125,3 +125,8 @@
 - `GET /health/live`: process liveness signal.
 - `GET /health/ready`: readiness with dependency details (database and connector status).
 - Docker Compose uses service healthchecks and `depends_on` health conditions to improve local startup ordering.
+- Compose service healthchecks are intentionally practical for local/lab use:
+  - API container healthcheck probes `GET /health/live` (process liveness).
+  - Operator readiness checks should use `GET /health/ready` for dependency visibility.
+  - Connector state should be confirmed with connector status routes after restart.
+- For operational command sequences, use `docs/setup/operator-runbook.md`.

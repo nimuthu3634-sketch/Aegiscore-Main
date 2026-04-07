@@ -4,6 +4,8 @@
 
 This guide is for the person running AegisCore locally in an SME or lab environment. It focuses on safe startup, validation, and operator-facing safety controls rather than enterprise deployment patterns.
 
+For a concise command-first operating sequence, use the [Operator Runbook](operator-runbook.md).
+
 ## Local Startup
 
 ```powershell
@@ -93,6 +95,8 @@ curl http://localhost:8000/health/ready
 ```powershell
 docker compose logs --tail 200 api
 docker compose logs --tail 200 postgres
+docker compose logs --tail 200 web
+docker compose logs --tail 200 nginx
 ```
 
 4. Re-apply migrations if needed:
@@ -105,6 +109,13 @@ docker compose exec api alembic upgrade head
 
 ```powershell
 docker compose exec api python -m app.db.seed
+```
+
+6. Re-check connector health after restart:
+
+```powershell
+curl http://localhost:8000/integrations/wazuh/connector/status
+curl http://localhost:8000/integrations/suricata/connector/status
 ```
 
 Continuity note: connector checkpoints and integration state are persisted in PostgreSQL; with a persistent `postgres_data` volume, ingestion resumes from stored state after restart.
@@ -212,7 +223,7 @@ The backend supports:
 - incident export
 - response export
 
-Use CSV or JSON exports for local review and audit trails. There is no PDF or scheduled reporting workflow in this prototype.
+Use CSV or JSON exports for local review and audit trails. There is no PDF or scheduled reporting workflow in this scoped v1 product.
 
 ## Known Limits
 
