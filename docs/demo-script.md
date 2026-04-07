@@ -2,18 +2,16 @@
 
 ## Demo Goal
 
-Show AegisCore as a serious SME-focused final scoped v1 SOC product with a real end-to-end workflow for the four supported detections:
+Present AegisCore as a final scoped v1 single-tenant SME/lab SOC product, with honest boundaries and a real end-to-end workflow for only these detections:
 
 - `brute_force`
 - `file_integrity_violation`
 - `port_scan`
 - `unauthorized_user_creation`
 
-This demo script assumes the local stack is already running and seeded.
+## Pre-Demo Setup
 
-## Before The Demo
-
-Run these commands before the presentation:
+Run before presentation:
 
 ```powershell
 docker compose up --build -d
@@ -23,227 +21,110 @@ npm run test:web:e2e
 py -3 scripts/validate_attack_scenarios.py
 ```
 
-If you want fresh supported-detection events in the UI immediately before the demo, run the validation script again. It creates unique fixture identifiers so the backend treats each run as a new ingestion event.
-
-## Opening Statement
-
-What to say:
-
-"AegisCore is a single-tenant SOC product for small and medium enterprises in local/lab deployment scope. It ingests security events from Wazuh and Suricata, normalizes them into a common schema, assigns risk scores, groups incidents, evaluates safe automated-response policies, and exposes the workflow through a live analyst console."
-
-## Step 1. Login
-
-Screen:
-
-- open `http://localhost`
-- show the login page
-
-What to do:
-
-- sign in with `admin / AegisCore123!`
-
-What to say:
-
-"The system uses backend JWT authentication. Even in local development, the normal operator path is an explicit login flow."
-
-## Step 2. Overview Dashboard
-
-Screen:
-
-- Overview Dashboard
-
-What to show:
-
-- total alerts
-- high-risk alerts
-- open incidents
-- active assets
-- recent responses
-- alert volume and distribution charts
-- latest incidents and top affected assets
-
-What to say:
-
-"This overview is intended for quick SOC triage rather than decoration. It summarizes live alert, incident, asset, and response data from the backend."
-
-## Step 3. Alerts List
-
-Screen:
-
-- Alerts page
-
-What to show:
-
-- live filters for severity, detection type, source type, and date range
-- dense table layout
-- score-based prioritization and linked navigation
-
-What to say:
-
-"Alerts are normalized into a backend-owned schema so the frontend never needs to understand raw Wazuh or Suricata formats directly."
-
-## Step 4. Alert Detail
-
-Screen:
-
-- open one alert detail page
-
-What to show:
-
-- normalized metadata
-- raw payload viewer
-- score explanation
-- linked incident summary
-- related response actions
-- analyst note area
-
-What to say:
-
-"The alert detail view combines normalized evidence, preserved raw payloads, explainable scoring, and workflow context. This is where the platform bridges from detection into investigation."
-
-## Step 5. Incident Detail
-
-Screen:
-
-- open the linked incident from the alert
-
-What to show:
-
-- incident summary
-- linked alerts
-- affected assets
-- timeline
-- response history
-- analyst notes
-
-What to say:
-
-"Incidents now support multi-alert ownership, so related evidence can be grouped into one investigation record instead of remaining isolated alerts."
-
-## Step 6. Response History
-
-Screen:
-
-- Responses page
-
-What to show:
-
-- policy name
-- action type
-- target
-- dry-run or live mode
-- execution status
-- result summary
-
-What to say:
-
-"Automated response in this scoped v1 product is deliberately conservative and auditable. Every policy-driven action is persisted, visible, and reviewable."
-
-## Step 7. Rules Or Policies
-
-Screen:
-
-- Rules / Policies page
-
-What to show:
-
-- detection type
-- action type
-- score threshold
-- mode
-- enabled state
-
-What to say:
-
-"Policies are backend-owned and detection-specific. This keeps automation explainable and aligned to the project’s limited threat scope."
-
-## Step 8. Reports
-
-Screen:
-
-- Reports page
-
-What to show:
-
-- daily summary
-- weekly summary
-- charts and top assets
-- export buttons for alerts, incidents, and responses
-
-What to say:
-
-"Reports are practical rather than enterprise-heavy. The system supports real backend summaries and safe CSV or JSON exports for SME review workflows."
-
-## Step 9. Short Scenario Paths
-
-### Brute Force
-
-What to show:
-
-- alert with `brute_force`
-- high or critical score
-- linked incident
-- related response action
-
-What to say:
-
-"This scenario shows failed-login behavior being ingested, normalized, prioritized, linked into incident workflow, and exposed in reporting."
-
-### File Integrity Violation
-
-What to show:
-
-- alert with `file_integrity_violation`
-- normalized sensitive file path
-- score explanation drivers
-- response or manual-review context
-
-What to say:
-
-"This path shows that sensitive file changes are preserved in normalized form and influence the alert’s prioritization."
-
-### Port Scan
-
-What to show:
-
-- alert with `port_scan`
-- Suricata source type
-- linked incident and response history
-
-What to say:
-
-"Port scan events come through the Suricata ingestion path and still enter the same normalized scoring and incident workflow as host-based events."
-
-### Unauthorized User Creation
-
-What to show:
-
-- alert with `unauthorized_user_creation`
-- normalized username
-- incident and response visibility
-
-What to say:
-
-"This path demonstrates host-level administrative account creation being normalized and escalated through the same analyst workflow."
-
-## Step 10. Closing Statement
-
-What to say:
-
-"Within its defined scope, AegisCore now demonstrates a complete backend-owned SOC workflow: ingestion, normalization, scoring, incident handling, auditable response automation, reporting, and analyst-facing UI coverage."
-
-## Demo-Safe Fallback Notes
-
-- If live connectors are unavailable, use the fixture-backed validation path. This is still a real backend flow, not a frontend mock.
-- Run `py -3 scripts/validate_attack_scenarios.py` shortly before the demo to ensure fresh events exist for all four supported detections.
-- If browser state is stale, sign out by clearing local storage or reopen the login page and authenticate again.
-- If asked about unsupported detections, state clearly that the scoped v1 product boundary is intentionally limited to the four supported scenarios.
-
-## Manual Confirmation Checklist Before Presentation
-
-- the local stack is up
+If you need fresh events just before demo, rerun:
+
+```powershell
+py -3 scripts/validate_attack_scenarios.py
+```
+
+## Route Map Used In Demo
+
+All steps below use real frontend routes in `apps/web/src/App.tsx`:
+
+- login: `/login`
+- dashboard: `/overview`
+- alerts: `/alerts`
+- alert detail: `/alerts/{alertId}`
+- incidents: `/incidents`
+- incident detail: `/incidents/{incidentId}`
+- assets: `/assets`
+- responses: `/responses`
+- rules: `/rules`
+- reports: `/reports`
+
+## 3-Minute Demo Path (Fast Track)
+
+Use this for tight viva time windows.
+
+1. **Login (`/login`)**
+   - sign in as `admin / AegisCore123!`
+   - say: "Authentication is real JWT-based access, not a mocked bypass."
+2. **Dashboard (`/overview`)**
+   - show totals, high-risk indicators, and recent activity panels
+   - say: "This is a live summary of normalized SOC data."
+3. **Alert -> Incident (`/alerts` then `/alerts/{id}` then `/incidents/{id}`)**
+   - open one high-risk alert, show score explanation + raw payload + linked incident
+   - open linked incident and show timeline/response history
+   - say: "This demonstrates ingestion -> scoring -> incident workflow continuity."
+4. **Response + Rules + Report (`/responses`, `/rules`, `/reports`)**
+   - show auditable response outcomes
+   - show policy table with role-aware controls
+   - trigger one export on Reports
+   - say: "Automation is policy-driven and auditable, with practical reporting for SMEs."
+
+## 7-10 Minute Demo Path (Full Review)
+
+Use this when examiners want evidence depth.
+
+1. **Open with positioning (20-30s)**
+   - say: "AegisCore is a final scoped v1 SME/lab SOC product, not enterprise SaaS."
+2. **Login and role model (`/login`)**
+   - sign in as admin
+   - note admin/analyst split and backend enforcement
+3. **Dashboard (`/overview`)**
+   - show alert pressure, incident count, asset and response visibility
+4. **Alerts (`/alerts`)**
+   - demonstrate filters (severity/detection/source/date)
+   - open one supported detection item
+5. **Alert detail (`/alerts/{id}`)**
+   - show normalized fields, raw payload, score explanation, related responses
+   - mention duplicate protection and normalized backend contract
+6. **Incident detail (`/incidents/{id}`)**
+   - show linked alerts, timeline, notes, response history, notification evidence if present
+7. **Responses (`/responses`)**
+   - explain dry-run vs live behavior and safety gates
+   - emphasize auditable result summaries
+8. **Rules (`/rules`)**
+   - show detection-specific policy rows
+   - mention analyst view is read-only, admin can mutate
+9. **Reports (`/reports`)**
+   - show daily/weekly cards and export actions
+10. **Close with scope statement (30s)**
+   - four detections only
+   - live connectors are implemented with documented limits
+   - deterministic validation remains fixture-backed by design
+
+## Fallback If Live Connectors Are Unavailable
+
+If Wazuh/Suricata lab connectivity is down, keep the demo valid with fixture-backed validation:
+
+1. seed deterministic scenarios:
+   - `py -3 scripts/validate_attack_scenarios.py`
+2. confirm API/process health:
+   - `http://localhost/api/health`
+   - `http://localhost/api/health/live`
+   - `http://localhost/api/health/ready`
+3. confirm connector status visibility still works:
+   - `http://localhost/api/integrations/wazuh/connector/status`
+   - `http://localhost/api/integrations/suricata/connector/status`
+4. state clearly:
+   - "Live connector path exists, but this demo run uses fixture-backed deterministic validation."
+
+This remains a real backend flow (ingestion, normalization, scoring, incidenting, response, reporting), not a frontend-only mock.
+
+## Viva-Defense Notes During Demo
+
+- Why valid final product: complete scoped workflow is implemented and validated end-to-end.
+- Why not enterprise: intentionally single-tenant SME/lab design boundary.
+- Why four detections: explicit requirement boundary to keep implementation defensible and testable.
+- Where Q&A is documented: [viva-qa.md](viva-qa.md).
+
+## Manual Checklist Before Presentation
+
+- local stack is up and healthy
 - seeded credentials work
-- the overview dashboard loads
-- at least one alert and incident for each supported detection is present
-- the Reports page exports successfully
-- the Responses page shows policy-driven execution records
+- `/overview` loads correctly
+- at least one alert/incident per supported detection is available
+- `/responses` shows policy execution records
+- `/reports` export triggers successfully
+- demo fallback command (`py -3 scripts/validate_attack_scenarios.py`) is ready

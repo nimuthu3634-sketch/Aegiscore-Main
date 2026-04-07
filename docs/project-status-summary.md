@@ -207,6 +207,7 @@ Requirement traceability for proposal review is documented in [requirement-compl
 
 - system overview and commands: [README.md](../README.md)
 - architecture: [architecture.md](architecture.md)
+- viva prep and likely questions: [viva-qa.md](viva-qa.md)
 - operator workflow: [operator-guide.md](setup/operator-guide.md)
 - analyst workflow: [analyst-guide.md](setup/analyst-guide.md)
 - validation: [end-to-end-validation.md](testing/end-to-end-validation.md)
@@ -223,3 +224,32 @@ Requirement traceability for proposal review is documented in [requirement-compl
 ### Honest Project Position
 
 AegisCore is a final scoped v1 product for SME/lab review and operation. It demonstrates an end-to-end SOC workflow with real backend logic and real frontend integration, with clearly documented limits around connector compatibility breadth, deeper edge-path browser coverage, and production-style hardening.
+
+## 13. Viva Quick Defense
+
+### What The System Does
+
+- ingests supported Wazuh and Suricata events
+- normalizes data into one alert schema
+- scores alerts with baseline AI/risk logic (plus optional ML path)
+- groups and tracks incidents with audit history
+- evaluates policy-driven automated responses with safety gates
+- provides analyst/admin workflows and reporting/export in one SOC console
+
+### What Is Complete
+
+- full scoped flow for the four supported detections is implemented
+- backend role enforcement is in place for sensitive mutations
+- reporting and export are live and usable
+- deterministic validation path is documented and repeatable
+
+### What Is Still Limited
+
+- Suricata live integration is currently `file_tail` mode only
+- Wazuh compatibility is broad for common lab envelopes, not all variants
+- destructive live response paths are intentionally guarded by explicit flags
+- deterministic acceptance validation remains fixture-backed by default
+
+### Why This Is Still A Valid Final Scoped Product
+
+Within the declared SME/lab boundary, AegisCore now provides a complete, testable, and auditable SOC workflow from ingestion to response and reporting. The remaining gaps are explicitly documented scope limits, not missing core pipeline functionality.

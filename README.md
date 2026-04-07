@@ -9,6 +9,33 @@ This repository is intentionally scoped to four supported detections only:
 - `port_scan`
 - `unauthorized_user_creation`
 
+## Start Here (Examiner Flow)
+
+If you are reviewing AegisCore for final academic submission, use this quick flow:
+
+1. Understand the product scope:
+   - final scoped v1, single-tenant SME/lab SOC workflow
+   - intentionally limited to four detections listed above
+2. Run the platform:
+   - `docker compose up --build -d`
+   - `docker compose exec api alembic upgrade head`
+   - `docker compose exec api python -m app.db.seed`
+3. Validate core behavior:
+   - `docker compose run --rm --no-deps api pytest`
+   - `npm run lint:web`
+   - `npm run build:web`
+   - `npm run test:web:e2e`
+   - `py -3 scripts/validate_attack_scenarios.py`
+4. Review handoff docs:
+   - architecture: [docs/architecture.md](docs/architecture.md)
+   - project status: [docs/project-status-summary.md](docs/project-status-summary.md)
+   - requirement evidence: [docs/requirement-compliance-matrix.md](docs/requirement-compliance-matrix.md)
+   - release checklist: [docs/release-readiness.md](docs/release-readiness.md)
+   - demo walkthrough: [docs/demo-script.md](docs/demo-script.md)
+   - operator and analyst guides:
+     - [docs/setup/operator-guide.md](docs/setup/operator-guide.md)
+     - [docs/setup/analyst-guide.md](docs/setup/analyst-guide.md)
+
 ## Product Positioning
 
 AegisCore v1 is complete for its intended SME/lab scope and intentionally excludes enterprise SaaS complexity.
@@ -19,7 +46,7 @@ AegisCore v1 is complete for its intended SME/lab scope and intentionally exclud
 - **Live Suricata integration (partially implemented / limited mode)**: live connector is implemented for `file_tail` polling of `eve.json` with inode/offset checkpointing, malformed-line handling, retries, dedupe, and status endpoints; authenticated forwarding mode is not implemented yet.
 - **Validation posture (fixture-backed deterministic baseline)**: repeatable acceptance validation relies primarily on fixture-backed ingestion and browser/API tests; live connector checks are supported as optional VM/lab verification.
 
-## Monorepo Layout
+## Repository Tour
 
 - `apps/web`: React + TypeScript + Tailwind SOC console
 - `apps/api`: FastAPI + SQLAlchemy + Alembic backend
@@ -29,6 +56,16 @@ AegisCore v1 is complete for its intended SME/lab scope and intentionally exclud
 - `infra/docker`: Dockerfiles for the local stack
 - `scripts`: validation and local helper scripts
 - `docs`: architecture, setup, testing, scoring, and release-readiness guides
+
+## Submission Docs
+
+- [Project Status Summary](docs/project-status-summary.md)
+- [Demo Script](docs/demo-script.md)
+- [Requirement Compliance Matrix](docs/requirement-compliance-matrix.md)
+- [Release Readiness](docs/release-readiness.md)
+- [Operator Guide](docs/setup/operator-guide.md)
+- [Analyst Guide](docs/setup/analyst-guide.md)
+- [Operator Runbook](docs/setup/operator-runbook.md)
 
 ## Local Quick Start
 

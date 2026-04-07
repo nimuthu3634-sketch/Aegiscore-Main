@@ -1,5 +1,9 @@
 # Release Readiness
 
+## Final Freeze Note
+
+This repository state is the final submission candidate freeze for scoped v1 academic handoff unless a blocker is found in final verification. Any post-freeze change should be treated as blocker-only remediation and revalidated.
+
 ## Intended Readiness Level
 
 AegisCore is positioned as a final scoped v1 single-tenant SOC product for SME/lab deployment. It is not presented as an enterprise production cloud service.
@@ -97,3 +101,34 @@ py -3 scripts/validate_attack_scenarios.py
 
 - Proposal/requirement alignment evidence is maintained in [requirement-compliance-matrix.md](requirement-compliance-matrix.md).
 - Use that matrix during review to separate implemented behavior from intentional local/lab constraints.
+
+## Latest Freeze Verification Snapshot
+
+Execution date: 2026-04-07 (local freeze pass).
+
+| Check | Command | Result | Notes |
+| --- | --- | --- | --- |
+| Backend tests | `docker compose run --rm --no-deps api pytest` | Blocked in this shell | Docker client could not connect to `dockerDesktopLinuxEngine` pipe during freeze run. |
+| Frontend lint | `npm run lint:web` | Passed | No lint errors. |
+| Frontend build | `npm run build:web` | Passed | Production bundle built successfully with Vite. |
+| Playwright | `npm run test:web:e2e` | Failed (blocker) | Test login bootstrap failed with `/auth/login` proxy socket-hang-up; first 3 specs failed before suite continuation. |
+| Attack scenario validation | `py -3 scripts/validate_attack_scenarios.py` | Failed (blocker) | Reproduced failure: `brute_force: daily report did not include any matching alerts.` |
+
+Freeze route-surface smoke checks (authenticated API) returned `200` for:
+
+- `/api/dashboard/summary`
+- `/api/alerts`
+- `/api/incidents`
+- `/api/alerts/{id}`
+- `/api/incidents/{id}`
+- `/api/assets`
+- `/api/responses`
+- `/api/policies`
+- `/api/reports/daily-summary`
+- `/api/reports/alerts/export?format=json`
+- `/api/reports/responses/export?format=json`
+
+Auth behavior was confirmed during freeze:
+
+- `/api/auth/login` returned a valid JWT for seeded admin credentials.
+- connector status routes require auth and returned `401` when called without token (expected).
