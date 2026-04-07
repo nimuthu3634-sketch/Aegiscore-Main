@@ -133,3 +133,26 @@ def test_policies_patch_route_rejects_analyst_role(monkeypatch) -> None:
 
     assert response.status_code == 403
     assert "Insufficient role permissions" in response.json()["detail"]
+
+
+def test_policies_list_route_allows_analyst_role(monkeypatch) -> None:
+    policy = _sample_policy()
+    app.dependency_overrides[deps.get_current_user] = lambda: SimpleNamespace(
+        username="analyst",
+        role=SimpleNamespace(name=RoleName.ANALYST),
+    )
+    app.dependency_overrides[get_db_session] = lambda: None
+    monkeypatch.setattr(
+        policies_route,
+        "list_policies",
+        lambda db: ResponsePolicyListResponse(items=[policy]),
+    )
+
+    try:
+        client = TestClient(app)
+        response = client.get("/policies")
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["id"] == str(policy.id)

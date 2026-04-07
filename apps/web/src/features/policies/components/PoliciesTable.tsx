@@ -10,6 +10,7 @@ type PoliciesTableProps = {
   policies: PolicyRecord[];
   pendingPolicyId?: string | null;
   onToggle: (policy: PolicyRecord) => void;
+  canToggle: boolean;
   footer?: ReactNode;
 };
 
@@ -17,6 +18,7 @@ export function PoliciesTable({
   policies,
   pendingPolicyId,
   onToggle,
+  canToggle,
   footer
 }: PoliciesTableProps) {
   const columns: TableColumn<PolicyRecord>[] = [
@@ -88,9 +90,11 @@ export function PoliciesTable({
           size="sm"
           data-testid={`policy-toggle-${row.id}`}
           onClick={() => onToggle(row)}
-          disabled={pendingPolicyId === row.id}
+          disabled={!canToggle || pendingPolicyId === row.id}
         >
-          {pendingPolicyId === row.id
+          {!canToggle
+            ? "Admin only"
+            : pendingPolicyId === row.id
             ? row.enabled
               ? "Disabling..."
               : "Enabling..."

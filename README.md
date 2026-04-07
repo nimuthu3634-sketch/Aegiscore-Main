@@ -106,6 +106,7 @@ Role model is intentionally minimal and single-tenant:
 
 - `admin`: full API access, including policy mutation and manual ingestion endpoints
 - `analyst`: investigation and reporting access across alerts, incidents, responses, assets, dashboard, and reports
+- frontend behavior mirrors this boundary: policy toggle controls are admin-only and analyst sessions see read-only policy state
 
 This is authenticated role-based access for scoped SME/lab v1, not enterprise RBAC.
 
@@ -138,6 +139,8 @@ Current ingestion endpoints:
 - `POST /integrations/suricata/events` (`admin` only)
 - `GET /integrations/wazuh/connector/status`
 - `GET /integrations/suricata/connector/status`
+
+Server-side role enforcement is authoritative; UI restrictions are an operator UX layer and do not replace backend permission checks.
 
 Operational note: in normal VM/lab use, enable both live connectors and treat manual ingestion routes as test/demo tools.
 

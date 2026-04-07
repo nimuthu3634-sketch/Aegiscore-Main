@@ -12,6 +12,7 @@ import { Select } from "../components/ui/Select";
 import { PoliciesTable } from "../features/policies/components/PoliciesTable";
 import { updatePolicyEnabled, usePolicies } from "../features/policies/service";
 import type { PolicyMode, PolicyRecord, PolicyTarget } from "../features/policies/types";
+import { getStoredSessionRole } from "../lib/api";
 import { formatTokenLabel } from "../lib/formatters";
 import { pageBlueprints } from "../lib/theme/tokens";
 
@@ -26,6 +27,7 @@ export function RulesPage() {
   const [pendingPolicyId, setPendingPolicyId] = useState<string | null>(null);
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const canTogglePolicies = getStoredSessionRole() === "admin";
 
   const { data, isLoading, error, reload } = usePolicies();
   const policies = useMemo(() => data?.items ?? [], [data]);
@@ -87,6 +89,14 @@ export function RulesPage() {
   );
 
   async function handleToggle(policy: PolicyRecord) {
+    if (!canTogglePolicies) {
+      setUpdateError(
+        "Policy enable/disable requires an admin session. Analyst sessions are read-only on this page."
+      );
+      setUpdateMessage(null);
+      return;
+    }
+
     setPendingPolicyId(policy.id);
     setUpdateMessage(null);
     setUpdateError(null);
@@ -187,7 +197,11 @@ export function RulesPage() {
 
       <SearchFilterToolbar
         title="Policy filters"
-        description="Backend-owned policies can be enabled or disabled here. Threshold, action, and mode edits remain backend-managed in this build."
+        description={
+          canTogglePolicies
+            ? "Backend-owned policies can be enabled or disabled here. Threshold, action, and mode edits remain backend-managed in this build."
+            : "Backend-owned policies are visible here in analyst read-only mode. Policy enable/disable requires an admin session."
+        }
         search={
           <SearchInput
             value={search}
@@ -269,6 +283,10 @@ export function RulesPage() {
         <p className="text-body-sm text-status-danger">{updateError}</p>
       ) : updateMessage ? (
         <p className="text-body-sm text-status-success">{updateMessage}</p>
+      ) : !canTogglePolicies ? (
+        <p className="type-body-sm" data-testid="policy-admin-only-hint">
+          Admin role required: analysts can review policy state but cannot toggle enablement.
+        </p>
       ) : null}
 
       {isLoading && !data ? (
@@ -278,6 +296,7 @@ export function RulesPage() {
           policies={filteredPolicies}
           pendingPolicyId={pendingPolicyId}
           onToggle={handleToggle}
+          canToggle={canTogglePolicies}
         />
       ) : (
         <EmptyState

@@ -247,3 +247,53 @@ def test_ingestion_routes_reject_analyst_role() -> None:
 
     assert response.status_code == 403
     assert "Insufficient role permissions" in response.json()["detail"]
+
+
+def test_connector_status_routes_allow_analyst_role(monkeypatch) -> None:
+    app.dependency_overrides[deps.get_current_user] = lambda: SimpleNamespace(
+        username="analyst",
+        role=SimpleNamespace(name=RoleName.ANALYST),
+    )
+    app.dependency_overrides[get_db_session] = lambda: None
+    monkeypatch.setattr(
+        ingestion_route,
+        "get_wazuh_connector_status",
+        lambda db: WazuhConnectorStatusResponse(
+            connector="wazuh_live_connector",
+            enabled=True,
+            status="healthy",
+            last_success_at=None,
+            last_error_at=None,
+            last_error_message=None,
+            last_checkpoint_timestamp=None,
+            checkpoint_external_ids=[],
+            metrics={"poll_count": 0, "total_fetched": 0, "total_ingested": 0},
+        ),
+    )
+    monkeypatch.setattr(
+        ingestion_route,
+        "get_suricata_connector_status",
+        lambda db: SuricataConnectorStatusResponse(
+            connector="suricata_live_connector",
+            enabled=True,
+            mode="file_tail",
+            source_path="/var/log/suricata/eve.json",
+            status="healthy",
+            last_success_at=None,
+            last_error_at=None,
+            last_error_message=None,
+            checkpoint_offset=None,
+            checkpoint_inode=None,
+            metrics={"poll_count": 0, "total_fetched": 0, "total_ingested": 0},
+        ),
+    )
+
+    try:
+        client = TestClient(app)
+        wazuh_response = client.get("/integrations/wazuh/connector/status")
+        suricata_response = client.get("/integrations/suricata/connector/status")
+    finally:
+        _clear_overrides()
+
+    assert wazuh_response.status_code == 200
+    assert suricata_response.status_code == 200

@@ -47,7 +47,7 @@ The Incidents page groups linked alerts into an investigation record.
 
 - Assets: review monitored endpoints, agent posture, recent alerts, and open-incident exposure
 - Responses: review dry-run or live actions, execution status, and policy context
-- Rules / Policies: review enabled detection-specific response policies (toggle requires `admin`)
+- Rules / Policies: review enabled detection-specific response policies in read-only mode (toggle requires `admin`)
 - Reports: review daily or weekly operational summaries and export alert, incident, or response datasets
 
 ## Role Guardrails

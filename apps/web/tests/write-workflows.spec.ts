@@ -296,7 +296,7 @@ test("incident transitions, policy toggles, and reports export trigger stay oper
   request
 }) => {
   const token = await loginByApi(request);
-  const seededScenarios = await seedThreatScenarios(request);
+  await seedThreatScenarios(request);
   const transitionIncidentId = await resolveIncidentIdForWorkflow(request, token);
   test.skip(!transitionIncidentId, "No incident records available for transition workflow coverage.");
   const transitionCandidate = { id: transitionIncidentId!, state_label: "triaged" };
@@ -420,10 +420,8 @@ test("analyst role cannot mutate policy enabled state", async ({
   await page.goto("/rules");
   const firstToggle = page.locator('[data-testid^="policy-toggle-"]').first();
   await expect(firstToggle).toBeVisible();
-  await firstToggle.click();
-  await expect(
-    page.getByText("Insufficient role permissions for this action.")
-  ).toBeVisible();
+  await expect(firstToggle).toBeDisabled();
+  await expect(page.getByTestId("policy-admin-only-hint")).toBeVisible();
 
   const policiesResponse = await getWithAuth<{
     items: Array<{ id: string; enabled: boolean }>;

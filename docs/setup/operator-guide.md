@@ -36,8 +36,10 @@ Primary local URLs:
   - can perform all analyst investigation and reporting actions
 - `analyst`:
   - can investigate alerts/incidents, add notes, transition incidents, review responses, and use reports
+  - can read policy state and connector status
   - cannot update response policy state
   - cannot submit manual ingestion events
+  - sees policy controls in read-only mode in the frontend
 
 ## Local Validation Commands
 

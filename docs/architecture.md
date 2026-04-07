@@ -60,6 +60,8 @@ AegisCore is a single-tenant SOC platform for SMEs. It centralizes alert review,
 - Roles are intentionally limited to `admin` and `analyst`.
 - `admin` can mutate response policies and submit manual ingestion events.
 - `analyst` can execute investigation workflows and read operational/reporting surfaces, but cannot mutate policy state or submit manual ingestion events.
+- Admin-only API mutations are explicit at route level (`PATCH /policies/{id}`, `POST /integrations/wazuh/events`, `POST /integrations/suricata/events`).
+- Analyst and admin both retain read/investigation access (`GET /policies`, connector status routes, alerts/incidents/responses/reports read APIs, and investigation workflow writes).
 - The role model is explicit and scoped for single-tenant SME operation; there is no enterprise RBAC matrix, tenant hierarchy, or custom role builder.
 
 ## Scoring And Response Model
