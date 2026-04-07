@@ -77,7 +77,7 @@ Fallback:
 - backend tests: passed (`98 passed`, `1 warning`) via `docker compose run --rm --no-deps --entrypoint pytest api`
 - frontend lint: passed
 - frontend build: passed
-- Playwright: passed (`13 passed`)
+- Playwright: passed (`13 passed` in the latest freeze validation run)
 - attack scenario validation: passed (all four scenarios)
 
 Blockers remediated in this freeze cycle:

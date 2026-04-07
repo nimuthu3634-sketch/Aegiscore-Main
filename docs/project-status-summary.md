@@ -116,7 +116,7 @@ At the current validated state:
 - backend test suite: passing in local Docker validation runs
 - frontend lint: passing
 - frontend production build: passing
-- Playwright suite: current stable run passed with conditional incident-dependent skips (`11` passed, `2` skipped in the latest local validation run)
+- Playwright suite: passed (`13 passed` in the latest freeze validation run)
 - four-scenario validation script: successful across all supported detections
 
 The validated commands are:

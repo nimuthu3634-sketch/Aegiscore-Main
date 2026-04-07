@@ -87,7 +87,7 @@ py -3 scripts/validate_attack_scenarios.py
 - deterministic validation still relies heavily on fixtures despite live connector support
 - Playwright covers core route visibility plus major write workflows and selected negative paths, but not every negative-path or role-restriction branch; incident-dependent branches can be conditionally skipped when no incident candidate exists in seeded runs
 - the frontend is operational but still benefits from additional route-level code splitting over time
-- no scheduled reporting or email-delivery workflow exists
+- no scheduled reporting workflow exists; notification delivery is supported via backend `log` mode and optional SMTP configuration
 
 ## Future Work
 
@@ -111,7 +111,7 @@ Execution date: 2026-04-07 (post-blocker remediation re-run).
 | Backend tests | `docker compose run --rm --no-deps --entrypoint pytest api` | Passed | `98 passed`, `1 warning`. |
 | Frontend lint | `npm run lint:web` | Passed | No lint errors. |
 | Frontend build | `npm run build:web` | Passed | Production bundle built successfully with Vite. |
-| Playwright | `npm run test:web:e2e` | Passed | `13 passed`. |
+| Playwright | `npm run test:web:e2e` | Passed | `13 passed` in the latest freeze validation run. |
 | Attack scenario validation | `py -3 scripts/validate_attack_scenarios.py` | Passed | All four supported scenarios validated end-to-end. |
 
 Freeze route-surface smoke checks (authenticated API) returned `200` for:
