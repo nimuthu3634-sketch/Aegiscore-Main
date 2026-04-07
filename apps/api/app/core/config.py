@@ -135,6 +135,34 @@ class Settings(BaseSettings):
         default=1,
         alias="AUTOMATED_RESPONSE_MAX_RETRIES",
     )
+    automated_response_builtin_adapters_enabled: bool = Field(
+        default=True,
+        alias="AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED",
+    )
+    automated_response_lab_adapters_enabled: bool = Field(
+        default=False,
+        alias="AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED",
+    )
+    automated_response_block_ip_backend: str = Field(
+        default="ledger",
+        alias="AUTOMATED_RESPONSE_BLOCK_IP_BACKEND",
+    )
+    automated_response_disable_user_backend: str = Field(
+        default="ledger",
+        alias="AUTOMATED_RESPONSE_DISABLE_USER_BACKEND",
+    )
+    automated_response_ledger_path: str = Field(
+        default="/tmp/aegiscore-response-ledger.jsonl",
+        alias="AUTOMATED_RESPONSE_LEDGER_PATH",
+    )
+    automated_response_host_tag_path: str = Field(
+        default="/tmp/aegiscore-host-tags.jsonl",
+        alias="AUTOMATED_RESPONSE_HOST_TAG_PATH",
+    )
+    automated_response_enable_host_tag_write: bool = Field(
+        default=False,
+        alias="AUTOMATED_RESPONSE_ENABLE_HOST_TAG_WRITE",
+    )
     response_adapter_block_ip_script: str | None = Field(
         default=None,
         alias="RESPONSE_ADAPTER_BLOCK_IP_SCRIPT",

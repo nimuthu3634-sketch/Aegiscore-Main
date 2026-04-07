@@ -63,6 +63,15 @@ class FakeSession:
             ]
             obj.response_actions = linked_responses
 
+    def scalar(self, statement):  # noqa: ANN001
+        return None
+
+    def get(self, model, obj_id):  # noqa: ANN001
+        for candidate in self.added:
+            if isinstance(candidate, model) and getattr(candidate, "id", None) == obj_id:
+                return candidate
+        return None
+
 
 def _settings(**overrides: object) -> SimpleNamespace:
     defaults = {
@@ -73,6 +82,13 @@ def _settings(**overrides: object) -> SimpleNamespace:
         "response_adapter_quarantine_host_flag_script": None,
         "response_adapter_create_manual_review_script": None,
         "response_adapter_notify_admin_script": None,
+        "automated_response_builtin_adapters_enabled": True,
+        "automated_response_lab_adapters_enabled": True,
+        "automated_response_block_ip_backend": "ledger",
+        "automated_response_disable_user_backend": "ledger",
+        "automated_response_ledger_path": "/tmp/aegiscore-test-ledger.jsonl",
+        "automated_response_host_tag_path": "/tmp/aegiscore-test-host-tags.jsonl",
+        "automated_response_enable_host_tag_write": False,
         "notifications_enabled": False,
         "notifications_mode": "log",
         "notifications_risk_threshold": 85,
@@ -211,7 +227,11 @@ def test_evaluate_alert_policies_executes_dry_run_for_high_risk_alert(monkeypatc
         min_risk_score=85,
     )
 
-    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(automated_response_block_ip_backend="iptables"),
+    )
     monkeypatch.setattr(
         PoliciesRepository,
         "find_matching_policies",
@@ -257,7 +277,11 @@ def test_evaluate_alert_policies_blocks_live_destructive_action_by_default(monke
         min_risk_score=90,
     )
 
-    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(automated_response_block_ip_backend="iptables"),
+    )
     monkeypatch.setattr(
         PoliciesRepository,
         "find_matching_policies",
@@ -296,11 +320,7 @@ def test_evaluate_incident_policies_uses_stubbed_live_adapter(monkeypatch) -> No
         min_risk_score=75,
     )
 
-    monkeypatch.setattr(
-        execution,
-        "get_settings",
-        lambda: _settings(response_adapter_notify_admin_script="/tmp/fake-notify"),
-    )
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings(notifications_enabled=True))
     monkeypatch.setattr(
         PoliciesRepository,
         "find_matching_policies",
@@ -313,17 +333,20 @@ def test_evaluate_incident_policies_uses_stubbed_live_adapter(monkeypatch) -> No
     )
     monkeypatch.setattr(
         adapters,
-        "_run_script",
-        lambda script_path, payload: (0, "notification sent", ""),
+        "send_admin_notification",
+        lambda session, incident, trigger_value, response_action=None: [
+            SimpleNamespace(status="sent", error_message=None),
+        ],
     )
+    session.add(incident)
 
     response = execution.evaluate_incident_policies(session, incident)[0]
 
     assert response.status == ResponseStatus.COMPLETED
     assert response.mode == ResponseMode.LIVE
     assert response.target_value == "AegisCore administrators"
-    assert response.result_summary == "Administrator notification delivered."
-    assert response.result_message == "notification sent"
+    assert "built-in notification service" in (response.result_summary or "")
+    assert "Notification events created for 1 recipients." == response.result_message
     assert response.attempt_count == 1
 
 
@@ -348,10 +371,7 @@ def test_evaluate_incident_policies_retries_and_logs_failed_execution(monkeypatc
     monkeypatch.setattr(
         execution,
         "get_settings",
-        lambda: _settings(
-            automated_response_max_retries=2,
-            response_adapter_notify_admin_script="/tmp/fake-notify",
-        ),
+        lambda: _settings(automated_response_max_retries=2, notifications_enabled=True),
     )
     monkeypatch.setattr(
         PoliciesRepository,
@@ -365,9 +385,12 @@ def test_evaluate_incident_policies_retries_and_logs_failed_execution(monkeypatc
     )
     monkeypatch.setattr(
         adapters,
-        "_run_script",
-        lambda script_path, payload: (1, "", "adapter unavailable"),
+        "send_admin_notification",
+        lambda session, incident, trigger_value, response_action=None: [
+            SimpleNamespace(status="failed", error_message="adapter unavailable"),
+        ],
     )
+    session.add(incident)
 
     response = execution.evaluate_incident_policies(session, incident)[0]
 
@@ -488,7 +511,14 @@ def test_evaluate_alert_policies_records_live_admin_notification_for_user_creati
         min_risk_score=90,
     )
 
-    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings(notifications_enabled=True))
+    monkeypatch.setattr(
+        adapters,
+        "send_admin_notification",
+        lambda session, incident, trigger_value, response_action=None: [
+            SimpleNamespace(status="sent", error_message=None),
+        ],
+    )
     monkeypatch.setattr(
         PoliciesRepository,
         "find_matching_policies",
@@ -505,6 +535,6 @@ def test_evaluate_alert_policies_records_live_admin_notification_for_user_creati
     assert response.status == ResponseStatus.COMPLETED
     assert response.mode == ResponseMode.LIVE
     assert response.target_value == "AegisCore administrators"
-    assert response.result_summary == "Administrator notification recorded."
-    assert response.details["notification_recorded"] is True
+    assert "built-in notification service" in (response.result_summary or "")
+    assert response.details["delivered"] == 1
     assert "response.execution_completed" in _audit_actions(session)

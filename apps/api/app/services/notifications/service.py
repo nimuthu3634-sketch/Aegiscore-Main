@@ -333,6 +333,26 @@ def notify_for_response_result(
     )
 
 
+def send_admin_notification(
+    session: Session,
+    *,
+    incident: Incident,
+    trigger_value: str,
+    response_action: ResponseAction | None = None,
+) -> list[NotificationEvent]:
+    settings = get_settings()
+    if not settings.notifications_enabled:
+        return []
+    return _notify_many(
+        session,
+        incident=incident,
+        response_action=response_action,
+        trigger_type="notify_admin",
+        trigger_value=trigger_value,
+        dedupe_suffix=f"notify-admin-{trigger_value}",
+    )
+
+
 def list_incident_notifications(
     incident: Incident,
 ) -> list[NotificationEvent]:

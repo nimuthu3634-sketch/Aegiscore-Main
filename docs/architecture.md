@@ -61,7 +61,8 @@ AegisCore is a single-tenant SOC platform for SMEs. It centralizes alert review,
 - The deterministic baseline is the production-safe default.
 - The optional scikit-learn model stays loadable and auditable through stored model metadata.
 - Safe internal actions such as `notify_admin`, `create_manual_review`, and `quarantine_host_flag` can complete without an external script.
-- Destructive live actions require explicit configuration and remain blocked by default in development.
+- `block_ip` and `disable_user` now have built-in lab adapters with safe `ledger` backends by default; destructive backends require explicit safety flags.
+- Destructive live actions remain blocked by default in development.
 
 ## Reporting Model
 

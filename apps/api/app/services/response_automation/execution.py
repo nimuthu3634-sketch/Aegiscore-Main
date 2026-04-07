@@ -271,6 +271,7 @@ def _execute_response_action(
 
         final_result = execute_adapter(
             AdapterContext(
+                session=session,
                 action_type=ResponseActionType(response_action.action_type),
                 mode=response_action.mode,
                 target_value=response_action.target_value,

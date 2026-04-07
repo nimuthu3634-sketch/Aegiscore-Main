@@ -75,8 +75,22 @@ Supported policy actions:
 Operator expectations:
 
 - `dry-run` should be the default mode while validating policies.
-- `live` mode should be used only when adapter scripts and local controls are understood.
+- `live` mode should be used only when lab adapter gates are explicitly enabled.
 - every policy evaluation and response outcome is written into response history and audit logs
+
+Built-in adapter behavior in lab mode:
+
+- `block_ip`: supports `ledger` (safe default) and `iptables` (guarded destructive mode)
+- `disable_user`: supports `ledger` (safe default) and `linux_lock` via `passwd -l` (guarded destructive mode)
+- `quarantine_host_flag`: persists containment state in backend DB and can optionally emit a safe host-tag record
+- `create_manual_review`: records manual-review workflow evidence and incident audit entries
+- `notify_admin`: routes through the backend notification subsystem (`log` or `smtp`)
+
+Required live gates for lab execution:
+
+- `AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED=true`
+- `AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true`
+- `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true` only when intentionally enabling `iptables` or `linux_lock`
 
 ## Reports And Exports
 

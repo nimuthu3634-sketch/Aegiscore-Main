@@ -2,6 +2,7 @@ from app.models.analyst_note import AnalystNote
 from app.models.asset import Asset
 from app.models.audit_log import AuditLog
 from app.models.base import Base
+from app.models.containment_flag import ContainmentFlag
 from app.models.ingestion_failure import IngestionFailure
 from app.models.incident import Incident
 from app.models.integration_state import IntegrationState
@@ -19,6 +20,7 @@ __all__ = [
     "AnalystNote",
     "AuditLog",
     "Base",
+    "ContainmentFlag",
     "IngestionFailure",
     "Incident",
     "IntegrationState",

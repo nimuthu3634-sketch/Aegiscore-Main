@@ -52,6 +52,13 @@
 - `SCORING_MODEL_VERSION`: fallback runtime model version label for local development
 - `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE`: safety gate for live destructive adapters such as `block_ip` and `disable_user`; keep `false` for local development
 - `AUTOMATED_RESPONSE_MAX_RETRIES`: maximum automated execution attempts before a response action is marked failed
+- `AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED`: enables first-party backend adapters for response actions
+- `AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED`: explicit gate for running live lab adapters
+- `AUTOMATED_RESPONSE_BLOCK_IP_BACKEND`: backend for `block_ip` (`ledger`, `iptables`, or `script`)
+- `AUTOMATED_RESPONSE_DISABLE_USER_BACKEND`: backend for `disable_user` (`ledger`, `linux_lock`, or `script`)
+- `AUTOMATED_RESPONSE_LEDGER_PATH`: JSONL ledger path used by built-in lab-safe action backends
+- `AUTOMATED_RESPONSE_HOST_TAG_PATH`: JSONL path for optional host-tag output from quarantine action
+- `AUTOMATED_RESPONSE_ENABLE_HOST_TAG_WRITE`: when true, quarantine writes an additional safe host tag entry
 - `RESPONSE_ADAPTER_BLOCK_IP_SCRIPT`: optional script path for live `block_ip`
 - `RESPONSE_ADAPTER_DISABLE_USER_SCRIPT`: optional script path for live `disable_user`
 - `RESPONSE_ADAPTER_QUARANTINE_HOST_FLAG_SCRIPT`: optional script path for live `quarantine_host_flag`
@@ -89,8 +96,10 @@
 ## Automated Response Safety Notes
 
 - Automated response is policy-driven and currently scoped to `brute_force`, `file_integrity_violation`, `port_scan`, and `unauthorized_user_creation`.
-- Destructive live actions are intentionally blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.
-- If a live adapter script path is unset for a supported action, AegisCore records a warning or internal completion event rather than silently failing.
+- Built-in adapters are first-party and backend-owned; they do not require external scripts for lab-safe defaults.
+- Live execution still requires `AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true`.
+- Destructive adapters remain blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.
+- `ledger` backends are safe defaults for local/lab operation and persist action evidence without destructive host changes.
 - Response execution attempts, final outcomes, and policy matches are written to audit history and exposed through the response history APIs.
 
 ## Ingestion Notes
