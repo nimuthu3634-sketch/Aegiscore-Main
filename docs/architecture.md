@@ -84,9 +84,9 @@ AegisCore is a single-tenant SOC platform for SMEs. It centralizes alert review,
 - Browser authentication remains explicit by default.
 - Optional local browser auto-auth is gated behind `VITE_ENABLE_DEV_AUTH_BOOTSTRAP=true`.
 - Raw payloads remain backend-owned and never need to be interpreted directly by the frontend.
-- Validation uses the real API surface with fixture-backed ingestion until live connector polling or webhook auth is implemented.
+- Validation uses the real API surface with fixture-backed ingestion as the deterministic baseline, and optional live connector polling in VM/lab environments.
 
 ## Known Limitations
 
-- Browser tests validate the core read path well, but not every write flow yet.
+- Browser tests validate core read paths and major write paths, but not every role-restriction or edge-path branch yet.
 - Some asset enrichment remains backend-derived rather than source-owned because the project stays intentionally SME-scoped.

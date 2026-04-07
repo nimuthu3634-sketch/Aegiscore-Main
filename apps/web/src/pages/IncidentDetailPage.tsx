@@ -210,7 +210,7 @@ export function IncidentDetailPage() {
         actions={
           <div className="flex flex-wrap gap-3">
             <Button variant="secondary" size="sm">
-              Export incident placeholder
+              Export incident evidence
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/alerts")}>
               Open alerts queue

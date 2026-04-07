@@ -98,16 +98,16 @@ The project has been validated across the implemented end-to-end flow for the fo
 - report visibility
 - frontend route and detail visibility
 
-Validation uses the real backend ingestion and workflow APIs, but relies on fixture-backed Wazuh-style and Suricata-style events rather than live connector polling.
+Validation uses the real backend ingestion and workflow APIs, with fixture-backed scenarios as the default repeatable proof path and optional live-connector lab verification.
 
 ## 6. Test Summary
 
 At the current validated state:
 
-- backend test suite: `85` passing tests
+- backend test suite: passing in local Docker validation runs
 - frontend lint: passing
 - frontend production build: passing
-- Playwright suite: `7` passing browser tests
+- Playwright suite: `9` passing browser tests
 - four-scenario validation script: successful across all supported detections
 
 The validated commands are:
@@ -136,15 +136,16 @@ The frontend Reports page uses those real endpoints for summary cards, distribut
 
 - role model is intentionally simple (`admin` + `analyst`) and does not provide enterprise RBAC custom role authoring
 - validation still relies heavily on fixture-backed scenarios even though live connectors and adapters are implemented
-- Playwright covers core read workflows and scenario visibility, but not every write workflow
+- Playwright covers core read workflows and major write workflows, but not every negative-path role/edge branch
 - destructive live response behavior remains safety-gated and disabled by default
 - the worker service is still a future-facing shell rather than a mature asynchronous execution subsystem
 - scheduled reporting and PDF export are not implemented
 
 ## 9. Future Improvements
 
-- implement live Wazuh and Suricata connector auth and polling or webhook ingestion
-- expand browser coverage for notes, transitions, policy toggles, and other write flows
+- extend Wazuh compatibility profiles for additional upstream envelope/query variants
+- add Suricata authenticated forwarding mode in addition to `file_tail`
+- expand browser coverage for analyst-role restriction and terminal/edge workflow assertions
 - add replay handling for ingestion failures
 - deepen safe live-response adapters for supported action types
 - continue incremental frontend code splitting if the dashboard grows
@@ -191,6 +192,8 @@ The detailed presentation sequence is documented in [demo-script.md](/Users/nimu
 
 ## 12. Team Handoff Notes
 
+Requirement traceability for proposal review is documented in [requirement-compliance-matrix.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/requirement-compliance-matrix.md).
+
 ### Where to Start
 
 - system overview and commands: [README.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/README.md)
@@ -209,4 +212,4 @@ The detailed presentation sequence is documented in [demo-script.md](/Users/nimu
 
 ### Honest Project Position
 
-AegisCore is in a strong prototype state for academic review and lab demonstration. It demonstrates an end-to-end SOC workflow with real backend logic and real frontend integration, but it still has clearly documented limits around live connector maturity, deeper browser coverage, and production-style operational hardening.
+AegisCore is in a strong prototype state for academic review and lab demonstration. It demonstrates an end-to-end SOC workflow with real backend logic and real frontend integration, with clearly documented limits around connector compatibility breadth, deeper edge-path browser coverage, and production-style operational hardening.

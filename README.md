@@ -156,19 +156,21 @@ Operational health endpoints:
 - [Notifications Setup](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/notifications.md)
 - [End-to-End Validation](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/testing/end-to-end-validation.md)
 - [Playwright Coverage](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/testing/playwright-coverage.md)
+- [Requirement Compliance Matrix](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/requirement-compliance-matrix.md)
 - [Release Readiness](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/release-readiness.md)
 
 ## Known Limitations
 
 - Live Suricata connector currently supports `file_tail` mode for `eve.json` and does not yet include webhook-forward auth mode.
 - Live Wazuh polling depends on the lab endpoint/auth shape and currently expects a list response or a `data.affected_items`/`data.items` envelope.
-- Playwright covers core read workflows and scenario visibility, but not every mutation path.
+- Playwright now covers core read workflows plus key write flows (acknowledge, close, link-to-incident, notes, incident transition, and policy toggle), but still does not cover every possible negative-path mutation branch.
 - The frontend is operational and validated, but still large enough to benefit from additional route-level code splitting over time.
 
 ## Future Work
 
 - add authenticated forwarding mode support for Suricata live connector
 - improve Wazuh connector compatibility profiles for additional Wazuh endpoint query/filter patterns
-- expand browser coverage for notes, transitions, and policy mutation flows
+- add analyst-role negative-path browser checks for restricted actions
+- expand browser coverage for remaining terminal/edge workflow branches
 - move selected heavy frontend routes to dynamic imports if bundle size becomes a sustained local problem
 - add background replay handling for ingestion failures and deeper adapter integrations for live response actions

@@ -69,14 +69,19 @@ py -3 scripts/validate_attack_scenarios.py
 ## Known Limitations
 
 - validation still relies heavily on fixtures despite live connector support
-- Playwright covers core route and scenario visibility, not every write workflow
+- Playwright covers core route visibility plus major write workflows, but not every negative-path or role-restriction branch
 - the frontend is operational but still benefits from additional route-level code splitting over time
 - no scheduled reporting or email-delivery workflow exists
 
 ## Future Work
 
-- implement live connector auth and polling or webhook ingestion for Wazuh and Suricata
-- extend browser coverage to mutation-heavy analyst workflows
+- add Suricata authenticated forwarding mode beyond `file_tail`
+- extend browser coverage to role-restriction and remaining edge-case mutation paths
 - add background replay handling for failed ingestions
 - deepen adapter integrations for safe live response actions
 - continue splitting the frontend bundle if the console grows substantially
+
+## Requirement Traceability
+
+- Proposal/requirement alignment evidence is maintained in [requirement-compliance-matrix.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/requirement-compliance-matrix.md).
+- Use that matrix during review to separate implemented behavior from intentional local/lab constraints.

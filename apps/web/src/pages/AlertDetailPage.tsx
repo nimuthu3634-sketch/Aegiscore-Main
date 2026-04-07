@@ -239,7 +239,7 @@ export function AlertDetailPage() {
               </Button>
             ) : null}
             <Button variant="secondary" size="sm">
-              Export evidence placeholder
+              Export evidence
             </Button>
           </div>
         }

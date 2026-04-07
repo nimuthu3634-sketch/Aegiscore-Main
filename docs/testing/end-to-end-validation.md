@@ -65,12 +65,12 @@ The latest successful run of `py -3 scripts/validate_attack_scenarios.py` return
 
 ## Honest Remaining Gaps
 
-- Live upstream connector auth and polling are still separate future work. This validation uses the real backend ingestion endpoints with fixture-backed Wazuh and Suricata payloads.
-- Browser coverage focuses on core operational navigation, read visibility, reports, and scenario evidence. It does not yet cover every write workflow such as notes, state transitions, and policy editing in Playwright.
+- Live connector support exists for Wazuh and Suricata, but deterministic validation in this document still uses fixture-backed ingestion as the default repeatable proof path.
+- Browser coverage now includes major write workflows (notes, transitions, policy toggles, and alert lifecycle/linking), but does not yet cover every negative-path role restriction or terminal edge case in Playwright.
 - Daily summary visibility is confirmed for the supported detections, but there is no scheduled or emailed reporting workflow yet.
 
 ## Future Validation Work
 
-- add browser coverage for incident transitions, note persistence, and policy toggles
+- add browser checks for analyst-restricted mutation paths and selected terminal-state transitions
 - add fixture-backed regression cases for retry-heavy malformed ingestion sequences
-- extend local validation once live Wazuh or Suricata polling is added
+- extend connector-compatibility validation against additional live Wazuh API envelope variants and Suricata forwarding modes
