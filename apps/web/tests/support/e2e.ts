@@ -5,6 +5,7 @@ import type { APIRequestContext, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 const accessTokenStorageKey = "aegiscore.access_token";
+const sessionRoleStorageKey = "aegiscore.session_role";
 const apiUsername = process.env.PLAYWRIGHT_API_USERNAME ?? "admin";
 const apiPassword = process.env.PLAYWRIGHT_API_PASSWORD ?? "AegisCore123!";
 const analystUsername = process.env.PLAYWRIGHT_ANALYST_USERNAME ?? "analyst";
@@ -168,19 +169,25 @@ export async function attachAuthenticatedSession(
     credentials.username,
     credentials.password
   );
+  const roleName =
+    credentials.username.toLowerCase() === analystUsername.toLowerCase()
+      ? "analyst"
+      : "admin";
   await page.addInitScript(
-    ([storageKey, accessToken]) => {
+    ([storageKey, roleKey, accessToken, sessionRole]) => {
       window.localStorage.setItem(storageKey, accessToken);
+      window.localStorage.setItem(roleKey, sessionRole);
     },
-    [accessTokenStorageKey, token]
+    [accessTokenStorageKey, sessionRoleStorageKey, token, roleName]
   );
   return token;
 }
 
 export async function clearStoredSession(page: Page) {
-  await page.addInitScript((storageKey) => {
+  await page.addInitScript(([storageKey, roleKey]) => {
     window.localStorage.removeItem(storageKey);
-  }, accessTokenStorageKey);
+    window.localStorage.removeItem(roleKey);
+  }, [accessTokenStorageKey, sessionRoleStorageKey]);
 }
 
 export async function seedThreatScenarios(

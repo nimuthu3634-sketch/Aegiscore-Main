@@ -672,7 +672,12 @@ def export_incident_report(
         window_start=window_start,
         window_end=window_end,
     )
-    items = [_incident_export_item(incident) for incident in incidents]
+    items: list[IncidentExportItemResponse] = []
+    for incident in incidents:
+        try:
+            items.append(_incident_export_item(incident))
+        except ValueError:
+            continue
     filters = _serialize_filters(
         query,
         ["date_from", "date_to", "priority", "state", "assignee", "detection_type"],

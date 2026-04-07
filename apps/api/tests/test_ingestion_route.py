@@ -282,8 +282,8 @@ def test_connector_status_routes_allow_analyst_role(monkeypatch) -> None:
             last_success_at=None,
             last_error_at=None,
             last_error_message=None,
-            checkpoint_offset=None,
-            checkpoint_inode=None,
+            checkpoint_offset=0,
+            checkpoint_inode=0,
             metrics={"poll_count": 0, "total_fetched": 0, "total_ingested": 0},
         ),
     )

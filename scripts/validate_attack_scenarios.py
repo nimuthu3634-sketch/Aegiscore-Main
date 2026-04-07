@@ -6,6 +6,7 @@ import os
 import sys
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError
@@ -65,6 +66,17 @@ SCENARIOS = [
 
 class ValidationError(RuntimeError):
     pass
+
+
+def _date_string_from_timestamp(timestamp: str, *, scenario_key: str) -> str:
+    normalized = timestamp.replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise ValidationError(
+            f"{scenario_key}: alert timestamp was not ISO-8601 parseable: {timestamp!r}."
+        ) from exc
+    return parsed.date().isoformat()
 
 
 def request_json(
@@ -202,6 +214,14 @@ def validate_scenario(
     if not alert_detail.get("score_explanation"):
         raise ValidationError(f"{scenario.key}: score explanation is missing.")
 
+    alert_timestamp = alert_detail.get("timestamp")
+    if not isinstance(alert_timestamp, str) or not alert_timestamp:
+        raise ValidationError(f"{scenario.key}: alert timestamp is missing.")
+    alert_date = _date_string_from_timestamp(
+        alert_timestamp,
+        scenario_key=scenario.key,
+    )
+
     linked_incident = alert_detail.get("linked_incident")
     if not isinstance(linked_incident, dict) or not linked_incident.get("id"):
         raise ValidationError(f"{scenario.key}: linked incident is missing.")
@@ -224,7 +244,11 @@ def validate_scenario(
         base_url=base_url,
         path="/reports/daily-summary",
         token=token,
-        query={"detection_type": scenario.detection_type},
+        query={
+            "detection_type": scenario.detection_type,
+            "date_from": alert_date,
+            "date_to": alert_date,
+        },
     )
     if int(report_summary.get("total_alerts") or 0) < 1:
         raise ValidationError(
@@ -251,6 +275,33 @@ def print_markdown_table(results: list[dict[str, Any]]) -> None:
                 **item
             )
         )
+
+
+def ensure_supported_policies_enabled(*, base_url: str, token: str) -> None:
+    response = request_json(base_url=base_url, path="/policies", token=token)
+    items = response.get("items")
+    if not isinstance(items, list):
+        return
+
+    supported = {scenario.detection_type for scenario in SCENARIOS}
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        detection_type = item.get("detection_type")
+        policy_id = item.get("id")
+        enabled = item.get("enabled")
+        if (
+            detection_type in supported
+            and isinstance(policy_id, str)
+            and enabled is False
+        ):
+            request_json(
+                base_url=base_url,
+                path=f"/policies/{policy_id}",
+                method="PATCH",
+                payload={"enabled": True},
+                token=token,
+            )
 
 
 def parse_args() -> argparse.Namespace:
@@ -281,6 +332,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     token = login(base_url=args.base_url, username=args.username, password=args.password)
+    ensure_supported_policies_enabled(base_url=args.base_url, token=token)
     results: list[dict[str, Any]] = []
 
     for scenario in SCENARIOS:

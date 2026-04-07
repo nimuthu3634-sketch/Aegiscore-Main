@@ -32,9 +32,23 @@ def list_incidents(session: Session, query: IncidentListQuery) -> IncidentListRe
     incidents, total = IncidentsRepository(session).list_incidents(query)
     total_pages = max(1, (total + query.page_size - 1) // query.page_size)
     page = min(query.page, total_pages)
+    items = []
+    warnings: list[str] = []
+    skipped_without_primary_alert = 0
+
+    for incident in incidents:
+        try:
+            items.append(to_incident_summary_response(incident))
+        except ValueError:
+            skipped_without_primary_alert += 1
+
+    if skipped_without_primary_alert:
+        warnings.append(
+            "Skipped incident records that do not have linked alerts."
+        )
 
     return IncidentListResponse(
-        items=[to_incident_summary_response(incident) for incident in incidents],
+        items=items,
         meta=ListMetaResponse(
             page=page,
             page_size=query.page_size,
@@ -42,7 +56,7 @@ def list_incidents(session: Session, query: IncidentListQuery) -> IncidentListRe
             total_pages=total_pages,
             sort_by=query.sort_by.value,
             sort_direction=query.sort_direction,
-            warnings=[],
+            warnings=warnings,
         ),
     )
 
@@ -81,11 +95,17 @@ def get_incident(session: Session, incident_id: UUID) -> IncidentDetailResponse:
         incident.id,
     )
 
-    return to_incident_detail_response(
-        incident,
-        list(audit_logs_by_id.values()),
-        analyst_notes,
-    )
+    try:
+        return to_incident_detail_response(
+            incident,
+            list(audit_logs_by_id.values()),
+            analyst_notes,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Incident not found",
+        ) from exc
 
 
 def _get_incident_for_workflow(session: Session, incident_id: UUID):
