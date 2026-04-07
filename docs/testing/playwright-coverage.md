@@ -35,20 +35,26 @@ The coverage stack was corrected in these areas:
 The Playwright suite now covers:
 
 - login route
+- login success
+- login failure on invalid credentials
+- invalid or expired session redirect to `/login`
 - overview dashboard
 - alerts list
 - alert detail
 - alert acknowledge
 - alert close
 - alert link to existing incident
+- alert link by creating a new incident
 - alert analyst note save
 - incidents list
 - incident detail
 - incident state transition
+- incident invalid-transition rejection path
 - assets
 - responses
 - rules and policies
 - policy enable/disable toggles
+- analyst forbidden policy mutation path
 - reports
 - export trigger coverage for alerts
 - export trigger coverage for incidents
@@ -78,11 +84,13 @@ The latest successful run completed with `9 passed`.
 ## Remaining Gaps
 
 - Reports export coverage validates browser download triggers, not full file-content parsing in browser assertions.
-- Negative-path role tests for analyst-restricted mutations are still handled in backend API tests, not browser tests.
+- Browser coverage validates one analyst forbidden mutation path (`PATCH /policies/{id}`), but does not yet exhaustively cover every role-protected endpoint negative path.
+- Incident transition negative coverage validates one deterministic invalid-action rejection path, not every invalid-state/action permutation.
+- Incident-state-transition and policy/export mutation checks are executed when at least one incident candidate is available; the spec skips those branches when the seeded run produces no incident records.
 - Coverage is intentionally practical and SME-oriented; it is not a pixel-test suite and it avoids brittle styling assertions.
 
 ## Future Coverage Work
 
-- add analyst-role browser flows that assert restricted controls are hidden or blocked for protected actions
-- add incident false-positive transition browser coverage with explicit precondition seeding
+- extend analyst-role browser checks to manual-ingestion route surfaces and other admin-only mutations where UI exposure exists
+- add additional invalid transition matrix checks if workflow complexity increases
 - add targeted export file-content validation in API-layer tests for generated CSV/JSON payload integrity

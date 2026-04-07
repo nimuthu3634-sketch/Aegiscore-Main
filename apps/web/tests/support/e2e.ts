@@ -7,6 +7,8 @@ import { expect } from "@playwright/test";
 const accessTokenStorageKey = "aegiscore.access_token";
 const apiUsername = process.env.PLAYWRIGHT_API_USERNAME ?? "admin";
 const apiPassword = process.env.PLAYWRIGHT_API_PASSWORD ?? "AegisCore123!";
+const analystUsername = process.env.PLAYWRIGHT_ANALYST_USERNAME ?? "analyst";
+const analystPassword = process.env.PLAYWRIGHT_ANALYST_PASSWORD ?? "AegisCore123!";
 const fixturesDir = path.resolve(
   process.cwd(),
   "../api/tests/fixtures/ingestion"
@@ -133,10 +135,18 @@ function loadFixturePayload(
 }
 
 export async function loginByApi(request: APIRequestContext) {
+  return loginByApiWithCredentials(request, apiUsername, apiPassword);
+}
+
+export async function loginByApiWithCredentials(
+  request: APIRequestContext,
+  username: string,
+  password: string
+) {
   const response = await request.post("/api/auth/login", {
     data: {
-      username: apiUsername,
-      password: apiPassword
+      username,
+      password
     }
   });
 
@@ -147,9 +157,17 @@ export async function loginByApi(request: APIRequestContext) {
 
 export async function attachAuthenticatedSession(
   page: Page,
-  request: APIRequestContext
+  request: APIRequestContext,
+  credentials: { username: string; password: string } = {
+    username: apiUsername,
+    password: apiPassword
+  }
 ) {
-  const token = await loginByApi(request);
+  const token = await loginByApiWithCredentials(
+    request,
+    credentials.username,
+    credentials.password
+  );
   await page.addInitScript(
     ([storageKey, accessToken]) => {
       window.localStorage.setItem(storageKey, accessToken);
@@ -204,3 +222,4 @@ export async function expectPageHeading(page: Page, title: string) {
 }
 
 export { apiPassword, apiUsername };
+export { analystPassword, analystUsername };

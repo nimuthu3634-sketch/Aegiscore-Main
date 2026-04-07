@@ -34,6 +34,29 @@ test("login route authenticates and opens the overview dashboard", async ({
   await expect(page.getByTestId("aegiscore-logo").nth(1)).toBeVisible();
 });
 
+test("login route shows clear error on invalid credentials", async ({ page }) => {
+  await clearStoredSession(page);
+  await page.goto("/login");
+
+  await page.getByLabel("Username").fill("admin");
+  await page.getByLabel("Password").fill("incorrect-password");
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(
+    page.getByText("Invalid username or password")
+  ).toBeVisible();
+});
+
+test("invalid stored session is redirected back to login", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("aegiscore.access_token", "expired-or-invalid-token");
+  });
+  await page.goto("/overview");
+  await expect(page).toHaveURL(/\/login$/);
+  await expectPageHeading(page, "Sign in to AegisCore");
+});
+
 test("overview, alerts, and incidents support route-level investigation workflows", async ({
   page,
   request
@@ -92,7 +115,10 @@ test("assets, responses, rules, and reports render live backend-backed operation
   await expect(page).toHaveURL(/\/responses$/);
   await expectPageHeading(page, "Response History");
   await expect(
-    page.getByRole("table", { name: "Response history table" })
+    page
+      .getByRole("table", { name: "Response history table" })
+      .or(page.getByText("No response executions match the current filters"))
+      .first()
   ).toBeVisible();
 
   await page

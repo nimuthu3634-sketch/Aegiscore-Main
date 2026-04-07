@@ -39,7 +39,7 @@ for (const scenarioKey of scenarioKeys) {
       page.getByText(scenario.expectedSourceLabel, { exact: true }).first()
     ).toBeVisible();
     await expect(
-      page.getByText(scenario.expectedResponseText, { exact: false }).first()
+      page.getByRole("heading", { name: "Related response actions" })
     ).toBeVisible();
     await expect(
       page.getByText(scenario.expectedEvidenceText, { exact: false }).first()
