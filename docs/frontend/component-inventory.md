@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document converts the confirmed Figma page blueprint into an implementation-oriented component inventory. It is intended to be used alongside the design spec in [docs/frontend/aegiscore-design-spec.md](/C:/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/frontend/aegiscore-design-spec.md).
+This document converts the confirmed Figma page blueprint into an implementation-oriented component inventory. It is intended to be used alongside the design spec in [docs/frontend/aegiscore-design-spec.md](aegiscore-design-spec.md).
 
 Confirmed future Figma mapping anchors:
 
@@ -327,7 +327,7 @@ High-fidelity screens should directly reference the token and component names in
 
 Until Figma canvas editing is available again, use this priority order:
 
-1. [AGENTS.md](/C:/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/AGENTS.md)
-2. [docs/frontend/aegiscore-design-spec.md](/C:/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/frontend/aegiscore-design-spec.md)
-3. [docs/frontend/component-inventory.md](/C:/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/frontend/component-inventory.md)
-4. Existing app shell and frontend implementation in [apps/web](/C:/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/apps/web)
+1. [AGENTS.md](../../AGENTS.md)
+2. [docs/frontend/aegiscore-design-spec.md](aegiscore-design-spec.md)
+3. [docs/frontend/component-inventory.md](component-inventory.md)
+4. Existing app shell and frontend implementation in [apps/web](../../apps/web)

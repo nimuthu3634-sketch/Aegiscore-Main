@@ -83,5 +83,5 @@ py -3 scripts/validate_attack_scenarios.py
 
 ## Requirement Traceability
 
-- Proposal/requirement alignment evidence is maintained in [requirement-compliance-matrix.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/requirement-compliance-matrix.md).
+- Proposal/requirement alignment evidence is maintained in [requirement-compliance-matrix.md](requirement-compliance-matrix.md).
 - Use that matrix during review to separate implemented behavior from intentional local/lab constraints.

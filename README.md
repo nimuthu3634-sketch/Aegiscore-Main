@@ -146,18 +146,18 @@ Operational health endpoints:
 
 ## Documentation Map
 
-- [Architecture](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/architecture.md)
-- [Environment Reference](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/environment.md)
-- [Scoring](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/scoring.md)
-- [Operator Guide](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/operator-guide.md)
-- [Analyst Guide](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/analyst-guide.md)
-- [Wazuh Live Integration](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/wazuh-live-integration.md)
-- [Suricata Live Integration](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/suricata-live-integration.md)
-- [Notifications Setup](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/notifications.md)
-- [End-to-End Validation](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/testing/end-to-end-validation.md)
-- [Playwright Coverage](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/testing/playwright-coverage.md)
-- [Requirement Compliance Matrix](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/requirement-compliance-matrix.md)
-- [Release Readiness](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/release-readiness.md)
+- [Architecture](docs/architecture.md)
+- [Environment Reference](docs/environment.md)
+- [Scoring](docs/scoring.md)
+- [Operator Guide](docs/setup/operator-guide.md)
+- [Analyst Guide](docs/setup/analyst-guide.md)
+- [Wazuh Live Integration](docs/setup/wazuh-live-integration.md)
+- [Suricata Live Integration](docs/setup/suricata-live-integration.md)
+- [Notifications Setup](docs/setup/notifications.md)
+- [End-to-End Validation](docs/testing/end-to-end-validation.md)
+- [Playwright Coverage](docs/testing/playwright-coverage.md)
+- [Requirement Compliance Matrix](docs/requirement-compliance-matrix.md)
+- [Release Readiness](docs/release-readiness.md)
 
 ## Known Limitations
 

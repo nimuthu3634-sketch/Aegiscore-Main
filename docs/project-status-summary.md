@@ -188,20 +188,20 @@ The recommended demo flow is:
 8. show the reports page and export actions
 9. demonstrate one short path for each supported detection
 
-The detailed presentation sequence is documented in [demo-script.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/demo-script.md).
+The detailed presentation sequence is documented in [demo-script.md](demo-script.md).
 
 ## 12. Team Handoff Notes
 
-Requirement traceability for proposal review is documented in [requirement-compliance-matrix.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/requirement-compliance-matrix.md).
+Requirement traceability for proposal review is documented in [requirement-compliance-matrix.md](requirement-compliance-matrix.md).
 
 ### Where to Start
 
-- system overview and commands: [README.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/README.md)
-- architecture: [architecture.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/architecture.md)
-- operator workflow: [operator-guide.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/operator-guide.md)
-- analyst workflow: [analyst-guide.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/analyst-guide.md)
-- validation: [end-to-end-validation.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/testing/end-to-end-validation.md)
-- browser coverage: [playwright-coverage.md](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/testing/playwright-coverage.md)
+- system overview and commands: [README.md](../README.md)
+- architecture: [architecture.md](architecture.md)
+- operator workflow: [operator-guide.md](setup/operator-guide.md)
+- analyst workflow: [analyst-guide.md](setup/analyst-guide.md)
+- validation: [end-to-end-validation.md](testing/end-to-end-validation.md)
+- browser coverage: [playwright-coverage.md](testing/playwright-coverage.md)
 
 ### Practical Handoff Points
 
