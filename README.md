@@ -1,6 +1,6 @@
 # AegisCore
 
-AegisCore is a single-tenant, SME-focused SOC platform prototype. It ingests Wazuh and Suricata events, normalizes them into a shared alert model, scores risk, groups incidents, records analyst workflow, evaluates safe automated-response policies, and exposes the resulting data through a backend-owned web console.
+AegisCore is a final scoped v1 SOC product for single-tenant SME/lab deployment. It ingests Wazuh and Suricata events, normalizes them into a shared alert model, scores risk, groups incidents, records analyst workflow, evaluates safe automated-response policies, and exposes the resulting data through a backend-owned web console.
 
 This repository is intentionally scoped to four supported detections only:
 
@@ -8,6 +8,15 @@ This repository is intentionally scoped to four supported detections only:
 - `file_integrity_violation`
 - `port_scan`
 - `unauthorized_user_creation`
+
+## Product Positioning
+
+AegisCore v1 is complete for its intended SME/lab scope and intentionally excludes enterprise SaaS complexity.
+
+- **Product status (fully implemented for scoped v1)**: centralized SOC dashboard, four-detection ingestion/normalization, risk scoring, incident and response recording, basic automated response, authenticated access (`admin`/`analyst`), and operational reporting.
+- **Live Wazuh integration (partially implemented / limited mode)**: live polling connector with auth modes, retries, checkpointing, dedupe, and status endpoints is implemented; compatibility is currently limited to common Wazuh response envelopes and may require profile tuning for other manager variants.
+- **Live Suricata integration (partially implemented / limited mode)**: live connector is implemented for `file_tail` polling of `eve.json` with inode/offset checkpointing, malformed-line handling, dedupe, and status endpoints; authenticated forwarding mode is not implemented yet.
+- **Validation posture (fixture-backed deterministic baseline)**: repeatable acceptance validation relies primarily on fixture-backed ingestion and browser/API tests; live connector checks are supported as optional VM/lab verification.
 
 ## Monorepo Layout
 
@@ -98,7 +107,7 @@ Role model is intentionally minimal and single-tenant:
 - `admin`: full API access, including policy mutation and manual ingestion endpoints
 - `analyst`: investigation and reporting access across alerts, incidents, responses, assets, dashboard, and reports
 
-This is authenticated role-based access for SME prototype scope, not enterprise RBAC.
+This is authenticated role-based access for scoped SME/lab v1, not enterprise RBAC.
 
 Current live workflow endpoints:
 
@@ -142,7 +151,7 @@ Operational health endpoints:
 - Raw source payloads are preserved for auditability and debugging.
 - Automated response is policy-driven and limited to the supported detection scope.
 - Destructive live actions remain blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.
-- This prototype is intentionally single-tenant and SME-oriented. It does not include multi-tenant SaaS or enterprise SOAR complexity.
+- This v1 product is intentionally single-tenant and SME-oriented. It does not include multi-tenant SaaS or enterprise SOAR complexity.
 
 ## Documentation Map
 
@@ -161,8 +170,8 @@ Operational health endpoints:
 
 ## Known Limitations
 
-- Live Suricata connector currently supports `file_tail` mode for `eve.json` and does not yet include webhook-forward auth mode.
-- Live Wazuh polling depends on the lab endpoint/auth shape and currently expects a list response or a `data.affected_items`/`data.items` envelope.
+- Live Suricata integration is currently limited to `file_tail` mode for `eve.json`; authenticated forwarding mode is not yet implemented.
+- Live Wazuh integration is implemented for common lab endpoint/auth shapes and currently expects a list response or a `data.affected_items`/`data.items` envelope.
 - Playwright now covers core read workflows plus key write flows (acknowledge, close, link-to-incident, notes, incident transition, and policy toggle), but still does not cover every possible negative-path mutation branch.
 - The frontend is operational and validated, but still large enough to benefit from additional route-level code splitting over time.
 

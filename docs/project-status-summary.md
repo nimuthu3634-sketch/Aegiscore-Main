@@ -2,7 +2,15 @@
 
 ## 1. System Overview
 
-AegisCore is a single-tenant, SME-focused SOC platform prototype built to centralize security event review, alert prioritization, incident investigation, basic automated response, and operational reporting. The current system is designed for local or lab deployment rather than enterprise production rollout.
+AegisCore is a final scoped v1 single-tenant SOC product for SME/lab deployment. It centralizes security event review, alert prioritization, incident investigation, basic automated response, and operational reporting. It is intentionally not positioned as an enterprise cloud/SaaS deployment model.
+
+### Product Positioning
+
+- **Fully implemented for scoped v1**: centralized SOC dashboard, four-detection ingestion/normalization, risk scoring, incident and response recording, basic automated response, authenticated access, and reporting/export.
+- **Partially implemented / limited mode (live connectors)**:
+  - Wazuh: live polling connector is implemented with auth, retries, checkpointing, dedupe, and status visibility; compatibility is limited to common upstream envelope variants.
+  - Suricata: live connector is implemented for `file_tail` mode on `eve.json`; authenticated forwarding mode is not yet implemented.
+- **Fixture-backed validation baseline**: deterministic regression validation is still primarily fixture-backed, with optional live VM/lab verification.
 
 The implemented platform covers the full backend-owned workflow for a narrow and deliberate scope:
 
@@ -98,7 +106,7 @@ The project has been validated across the implemented end-to-end flow for the fo
 - report visibility
 - frontend route and detail visibility
 
-Validation uses the real backend ingestion and workflow APIs, with fixture-backed scenarios as the default repeatable proof path and optional live-connector lab verification.
+Validation uses real backend ingestion/workflow APIs. The default repeatable proof path is fixture-backed, with optional live-connector VM/lab checks.
 
 ## 6. Test Summary
 
@@ -135,7 +143,7 @@ The frontend Reports page uses those real endpoints for summary cards, distribut
 ## 8. Known Limitations
 
 - role model is intentionally simple (`admin` + `analyst`) and does not provide enterprise RBAC custom role authoring
-- validation still relies heavily on fixture-backed scenarios even though live connectors and adapters are implemented
+- deterministic validation still relies heavily on fixture-backed scenarios even though live connectors and adapters are implemented
 - Playwright covers core read workflows and major write workflows, but not every negative-path role/edge branch
 - destructive live response behavior remains safety-gated and disabled by default
 - the worker service is still a future-facing shell rather than a mature asynchronous execution subsystem
@@ -212,4 +220,4 @@ Requirement traceability for proposal review is documented in [requirement-compl
 
 ### Honest Project Position
 
-AegisCore is in a strong prototype state for academic review and lab demonstration. It demonstrates an end-to-end SOC workflow with real backend logic and real frontend integration, with clearly documented limits around connector compatibility breadth, deeper edge-path browser coverage, and production-style operational hardening.
+AegisCore is a final scoped v1 product for SME/lab review and operation. It demonstrates an end-to-end SOC workflow with real backend logic and real frontend integration, with clearly documented limits around connector compatibility breadth, deeper edge-path browser coverage, and production-style hardening.

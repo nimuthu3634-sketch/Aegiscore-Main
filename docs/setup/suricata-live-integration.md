@@ -2,6 +2,12 @@
 
 This guide enables continuous Suricata ingestion in AegisCore using `eve.json` tail polling.
 
+## Readiness Level
+
+- **Implemented**: live Suricata connector in `file_tail` mode with inode/offset checkpointing, retries, malformed-line logging, duplicate protection, and connector status visibility.
+- **Limited mode**: authenticated forwarding endpoint mode is not implemented yet.
+- **Validation baseline**: fixture-backed ingestion remains the default deterministic validation path; live Suricata checks are optional VM/lab verification.
+
 ## Scope Guardrails
 
 - Supported detections remain limited to:

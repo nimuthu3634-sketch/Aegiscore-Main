@@ -2,6 +2,12 @@
 
 This guide enables continuous live Wazuh ingestion in AegisCore while preserving the existing backend normalization, scoring, incident creation, and response automation flow.
 
+## Readiness Level
+
+- **Implemented**: live Wazuh polling connector with auth modes (`basic`, `token`, `bearer`), retries, checkpointing, duplicate protection, and connector status visibility.
+- **Limited mode**: compatibility currently targets common Wazuh response envelopes (`list`, `data.affected_items`, `data.items`) and may require tuning for other manager/API variants.
+- **Validation baseline**: fixture-backed ingestion remains the default deterministic validation path; live Wazuh checks are optional VM/lab verification.
+
 ## Scope Guardrails
 
 - Supported detections remain limited to:

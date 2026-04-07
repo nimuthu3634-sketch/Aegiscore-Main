@@ -2,7 +2,15 @@
 
 ## Intended Readiness Level
 
-AegisCore is currently positioned as a serious SME-focused SOC platform prototype for local lab deployment and demonstration. It is not presented as a finished enterprise production service.
+AegisCore is positioned as a final scoped v1 single-tenant SOC product for SME/lab deployment. It is not presented as an enterprise production cloud service.
+
+## Product Positioning
+
+- **Fully implemented for scoped v1**: dashboard, four-detection ingestion/normalization, risk scoring, incident/response workflows, basic automated response, and reporting/export.
+- **Partially implemented / limited mode (live connectors)**:
+  - Wazuh live polling is implemented with auth, retries, checkpointing, dedupe, and status visibility; upstream compatibility is currently limited to common envelope variants.
+  - Suricata live ingestion is implemented in `file_tail` mode for `eve.json`; authenticated forwarding mode is not implemented yet.
+- **Fixture-backed validation baseline**: release validation is deterministic and primarily fixture-backed, with optional live connector checks in VM/lab environments.
 
 ## Local Release Checklist
 
@@ -68,7 +76,7 @@ py -3 scripts/validate_attack_scenarios.py
 
 ## Known Limitations
 
-- validation still relies heavily on fixtures despite live connector support
+- deterministic validation still relies heavily on fixtures despite live connector support
 - Playwright covers core route visibility plus major write workflows, but not every negative-path or role-restriction branch
 - the frontend is operational but still benefits from additional route-level code splitting over time
 - no scheduled reporting or email-delivery workflow exists
