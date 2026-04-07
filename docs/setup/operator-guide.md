@@ -173,11 +173,26 @@ Operator expectations:
 
 Built-in adapter behavior in lab mode:
 
-- `block_ip`: supports `ledger` (safe default) and `iptables` (guarded destructive mode)
-- `disable_user`: supports `ledger` (safe default) and `linux_lock` via `passwd -l` (guarded destructive mode)
-- `quarantine_host_flag`: persists containment state in backend DB and can optionally emit a safe host-tag record
-- `create_manual_review`: records manual-review workflow evidence and incident audit entries
-- `notify_admin`: routes through the backend notification subsystem (`log` or `smtp`)
+- `block_ip`
+  - does: validates source IP targets and records containment in the lab ledger (`ledger`) or inserts/verifies an `iptables` drop rule (`iptables`)
+  - does not: apply destructive host firewall changes unless explicitly enabled
+  - required flags: `AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED=true`, `AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true`; for `iptables`, also `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`
+- `disable_user`
+  - does: validates Linux-safe usernames and records account-disable evidence in the lab ledger (`ledger`) or executes `passwd -l` (`linux_lock`)
+  - does not: lock operating-system accounts unless explicitly enabled
+  - required flags: `AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED=true`, `AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true`; for `linux_lock`, also `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`
+- `quarantine_host_flag`
+  - does: persists active containment state in `containment_flags`, records incident audit entries, and can write an optional host-tag record
+  - does not: isolate endpoints on the network fabric; this is a containment signal for analyst workflow
+  - required flags: `AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED=true`, `AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true`; optional `AUTOMATED_RESPONSE_ENABLE_HOST_TAG_WRITE=true`
+- `create_manual_review`
+  - does: writes incident audit evidence and a ledger event that a manual-review workflow was opened
+  - does not: create ticketing-system artifacts in external ITSM/SOAR tools
+  - required flags: `AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED=true`, `AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true`
+- `notify_admin`
+  - does: dispatches through the backend notification subsystem with persisted delivery attempts/results
+  - does not: provide paging escalation or enterprise on-call routing
+  - required flags: `NOTIFICATIONS_ENABLED=true` plus configured `NOTIFICATIONS_ADMIN_RECIPIENTS`; mode is selected with `NOTIFICATIONS_MODE=log|smtp`
 
 Required live gates for lab execution:
 

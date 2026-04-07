@@ -184,4 +184,4 @@ Operational health endpoints:
 - add analyst-role negative-path browser checks for restricted actions
 - expand browser coverage for remaining terminal/edge workflow branches
 - move selected heavy frontend routes to dynamic imports if bundle size becomes a sustained local problem
-- add background replay handling for ingestion failures and deeper adapter integrations for live response actions
+- add background replay handling for ingestion failures and broaden lab validation coverage for destructive adapter paths

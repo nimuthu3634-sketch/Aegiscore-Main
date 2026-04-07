@@ -87,7 +87,7 @@ py -3 scripts/validate_attack_scenarios.py
 - add Suricata authenticated forwarding mode beyond `file_tail`
 - extend browser coverage to role-restriction and remaining edge-case mutation paths
 - add background replay handling for failed ingestions
-- deepen adapter integrations for safe live response actions
+- broaden lab verification coverage for explicitly gated destructive adapter paths
 - continue splitting the frontend bundle if the console grows substantially
 
 ## Requirement Traceability

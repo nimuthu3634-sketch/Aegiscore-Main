@@ -66,6 +66,23 @@ def _append_json_line(path: str, payload: dict) -> None:
         handle.write("\n")
 
 
+def _with_contract_details(
+    *,
+    action_name: str,
+    preconditions: list[str],
+    mode_requirements: list[str],
+    extra: dict | None = None,
+) -> dict:
+    return {
+        **(extra or {}),
+        "adapter_contract": {
+            "action": action_name,
+            "preconditions": preconditions,
+            "mode_requirements": mode_requirements,
+        },
+    }
+
+
 def _incident_uuid_from_payload(payload: dict) -> UUID | None:
     incident_payload = payload.get("incident")
     if not isinstance(incident_payload, dict):
@@ -108,7 +125,10 @@ def _dry_run_result(context: AdapterContext) -> AdapterExecutionResult:
             f"Policy {context.policy_name} matched and AegisCore simulated "
             f"{context.action_type.value} in dry-run mode."
         ),
-        details={"simulated": True},
+        details={
+            "simulated": True,
+            "mode": "dry_run",
+        },
     )
 
 
@@ -206,6 +226,14 @@ def _destructive_guard(action_name: str, *, settings: Settings) -> AdapterExecut
 
 
 def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> AdapterExecutionResult:
+    preconditions = [
+        "Resolved target_value must be a valid IPv4 or IPv6 address.",
+    ]
+    mode_requirements = [
+        "Policy mode must be live for non-simulated execution.",
+        "AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED=true.",
+        "AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true.",
+    ]
     guarded = _lab_live_guard(context, settings=settings, action_name="block_ip")
     if guarded is not None:
         return guarded
@@ -215,23 +243,40 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
         return _warning_result(
             summary="Live block_ip skipped because target preconditions failed.",
             message=target_error,
-            extra={"target_value": context.target_value},
+            extra=_with_contract_details(
+                action_name="block_ip",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"target_value": context.target_value},
+            ),
         )
 
     assert context.target_value is not None
     backend = settings.automated_response_block_ip_backend.lower()
     if backend == "ledger":
-        _append_json_line(
-            settings.automated_response_ledger_path,
-            {
-                "timestamp": datetime.now(UTC).isoformat(),
-                "action": "block_ip",
-                "target_value": context.target_value,
-                "policy_name": context.policy_name,
-                "incident_id": str(_incident_uuid_from_payload(context.payload) or ""),
-                "mode": "live",
-            },
-        )
+        try:
+            _append_json_line(
+                settings.automated_response_ledger_path,
+                {
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "action": "block_ip",
+                    "target_value": context.target_value,
+                    "policy_name": context.policy_name,
+                    "incident_id": str(_incident_uuid_from_payload(context.payload) or ""),
+                    "mode": "live",
+                },
+            )
+        except OSError as exc:
+            return _failed_result(
+                summary=f"Failed to record block_ip for {context.target_value} in lab ledger.",
+                message=str(exc),
+                extra=_with_contract_details(
+                    action_name="block_ip",
+                    preconditions=preconditions,
+                    mode_requirements=mode_requirements,
+                    extra={"backend": "ledger", "target_ip": context.target_value},
+                ),
+            )
         _create_incident_audit(
             context,
             action="incident.containment.block_ip.recorded",
@@ -247,10 +292,16 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
                 "AegisCore recorded a built-in lab block_ip action in the response "
                 "ledger without issuing system firewall changes."
             ),
-            extra={"backend": "ledger", "target_ip": context.target_value},
+            extra=_with_contract_details(
+                action_name="block_ip",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"backend": "ledger", "target_ip": context.target_value},
+            ),
         )
 
     if backend == "iptables":
+        mode_requirements.append("AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true for iptables backend.")
         blocked = _destructive_guard("block_ip", settings=settings)
         if blocked is not None:
             return blocked
@@ -262,7 +313,12 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
                 context,
                 summary=f"IP {context.target_value} already blocked in iptables.",
                 message="No changes applied because the rule already exists.",
-                extra={"backend": "iptables", "rule_present": True},
+                extra=_with_contract_details(
+                    action_name="block_ip",
+                    preconditions=preconditions,
+                    mode_requirements=mode_requirements,
+                    extra={"backend": "iptables", "rule_present": True},
+                ),
             )
 
         add_code, add_stdout, add_stderr = _run_command(add_cmd)
@@ -271,6 +327,11 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
                 summary=f"Failed to block IP {context.target_value} in iptables.",
                 message=add_stderr or add_stdout or "iptables insert command failed.",
                 extra={
+                    **_with_contract_details(
+                        action_name="block_ip",
+                        preconditions=preconditions,
+                        mode_requirements=mode_requirements,
+                    ),
                     "backend": "iptables",
                     "check_stderr": check_stderr,
                     "check_stdout": check_stdout,
@@ -295,6 +356,11 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
                 summary=f"Failed to verify block rule for {context.target_value}; rollback attempted.",
                 message="iptables verification failed after insert.",
                 extra={
+                    **_with_contract_details(
+                        action_name="block_ip",
+                        preconditions=preconditions,
+                        mode_requirements=mode_requirements,
+                    ),
                     "backend": "iptables",
                     "verify_stderr": verify_stderr,
                     "rollback_code": rollback_code,
@@ -306,7 +372,12 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
             context,
             summary=f"IP {context.target_value} blocked via iptables.",
             message=add_stdout or "iptables rule inserted and verified.",
-            extra={"backend": "iptables", "target_ip": context.target_value},
+            extra=_with_contract_details(
+                action_name="block_ip",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"backend": "iptables", "target_ip": context.target_value},
+            ),
         )
 
     if backend == "script" and settings.response_adapter_block_ip_script:
@@ -318,13 +389,23 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
             return _failed_result(
                 summary=f"Legacy script failed for block_ip {context.target_value}.",
                 message=stderr or stdout or "Legacy block_ip script failed.",
-                extra={"backend": "script", "return_code": return_code},
+                extra=_with_contract_details(
+                    action_name="block_ip",
+                    preconditions=preconditions,
+                    mode_requirements=mode_requirements,
+                    extra={"backend": "script", "return_code": return_code},
+                ),
             )
         return _completed_result(
             context,
             summary=f"Legacy script applied block_ip for {context.target_value}.",
             message=stdout or "Legacy block_ip script completed.",
-            extra={"backend": "script", "return_code": return_code},
+            extra=_with_contract_details(
+                action_name="block_ip",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"backend": "script", "return_code": return_code},
+            ),
         )
 
     return _warning_result(
@@ -333,11 +414,24 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
             "Choose AUTOMATED_RESPONSE_BLOCK_IP_BACKEND as 'ledger', 'iptables', or "
             "'script' with a configured script path."
         ),
-        extra={"backend": backend},
+        extra=_with_contract_details(
+            action_name="block_ip",
+            preconditions=preconditions,
+            mode_requirements=mode_requirements,
+            extra={"backend": backend},
+        ),
     )
 
 
 def _execute_disable_user(context: AdapterContext, *, settings: Settings) -> AdapterExecutionResult:
+    preconditions = [
+        "Resolved target_value must be a safe Linux username.",
+    ]
+    mode_requirements = [
+        "Policy mode must be live for non-simulated execution.",
+        "AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED=true.",
+        "AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true.",
+    ]
     guarded = _lab_live_guard(context, settings=settings, action_name="disable_user")
     if guarded is not None:
         return guarded
@@ -347,23 +441,40 @@ def _execute_disable_user(context: AdapterContext, *, settings: Settings) -> Ada
         return _warning_result(
             summary="Live disable_user skipped because target preconditions failed.",
             message=target_error,
-            extra={"target_value": context.target_value},
+            extra=_with_contract_details(
+                action_name="disable_user",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"target_value": context.target_value},
+            ),
         )
 
     assert context.target_value is not None
     backend = settings.automated_response_disable_user_backend.lower()
     if backend == "ledger":
-        _append_json_line(
-            settings.automated_response_ledger_path,
-            {
-                "timestamp": datetime.now(UTC).isoformat(),
-                "action": "disable_user",
-                "target_value": context.target_value,
-                "policy_name": context.policy_name,
-                "incident_id": str(_incident_uuid_from_payload(context.payload) or ""),
-                "mode": "live",
-            },
-        )
+        try:
+            _append_json_line(
+                settings.automated_response_ledger_path,
+                {
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "action": "disable_user",
+                    "target_value": context.target_value,
+                    "policy_name": context.policy_name,
+                    "incident_id": str(_incident_uuid_from_payload(context.payload) or ""),
+                    "mode": "live",
+                },
+            )
+        except OSError as exc:
+            return _failed_result(
+                summary=f"Failed to record disable_user for {context.target_value} in lab ledger.",
+                message=str(exc),
+                extra=_with_contract_details(
+                    action_name="disable_user",
+                    preconditions=preconditions,
+                    mode_requirements=mode_requirements,
+                    extra={"backend": "ledger", "username": context.target_value},
+                ),
+            )
         _create_incident_audit(
             context,
             action="incident.containment.disable_user.recorded",
@@ -379,10 +490,16 @@ def _execute_disable_user(context: AdapterContext, *, settings: Settings) -> Ada
                 "AegisCore recorded a built-in lab disable_user action without "
                 "executing a destructive system account change."
             ),
-            extra={"backend": "ledger", "username": context.target_value},
+            extra=_with_contract_details(
+                action_name="disable_user",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"backend": "ledger", "username": context.target_value},
+            ),
         )
 
     if backend == "linux_lock":
+        mode_requirements.append("AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true for linux_lock backend.")
         blocked = _destructive_guard("disable_user", settings=settings)
         if blocked is not None:
             return blocked
@@ -391,20 +508,35 @@ def _execute_disable_user(context: AdapterContext, *, settings: Settings) -> Ada
             return _warning_result(
                 summary=f"User {context.target_value} not found for disable_user.",
                 message=user_check_stderr or "The target Linux user was not found.",
-                extra={"backend": "linux_lock", "username": context.target_value},
+                extra=_with_contract_details(
+                    action_name="disable_user",
+                    preconditions=preconditions,
+                    mode_requirements=mode_requirements,
+                    extra={"backend": "linux_lock", "username": context.target_value},
+                ),
             )
         lock_code, lock_stdout, lock_stderr = _run_command(["passwd", "-l", context.target_value])
         if lock_code != 0:
             return _failed_result(
                 summary=f"Failed to lock Linux user {context.target_value}.",
                 message=lock_stderr or lock_stdout or "passwd -l command failed.",
-                extra={"backend": "linux_lock", "username": context.target_value},
+                extra=_with_contract_details(
+                    action_name="disable_user",
+                    preconditions=preconditions,
+                    mode_requirements=mode_requirements,
+                    extra={"backend": "linux_lock", "username": context.target_value},
+                ),
             )
         return _completed_result(
             context,
             summary=f"Linux user {context.target_value} locked.",
             message=lock_stdout or "User account lock completed.",
-            extra={"backend": "linux_lock", "username": context.target_value},
+            extra=_with_contract_details(
+                action_name="disable_user",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"backend": "linux_lock", "username": context.target_value},
+            ),
         )
 
     if backend == "script" and settings.response_adapter_disable_user_script:
@@ -416,13 +548,23 @@ def _execute_disable_user(context: AdapterContext, *, settings: Settings) -> Ada
             return _failed_result(
                 summary=f"Legacy script failed for disable_user {context.target_value}.",
                 message=stderr or stdout or "Legacy disable_user script failed.",
-                extra={"backend": "script", "return_code": return_code},
+                extra=_with_contract_details(
+                    action_name="disable_user",
+                    preconditions=preconditions,
+                    mode_requirements=mode_requirements,
+                    extra={"backend": "script", "return_code": return_code},
+                ),
             )
         return _completed_result(
             context,
             summary=f"Legacy script applied disable_user for {context.target_value}.",
             message=stdout or "Legacy disable_user script completed.",
-            extra={"backend": "script", "return_code": return_code},
+            extra=_with_contract_details(
+                action_name="disable_user",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"backend": "script", "return_code": return_code},
+            ),
         )
 
     return _warning_result(
@@ -431,11 +573,25 @@ def _execute_disable_user(context: AdapterContext, *, settings: Settings) -> Ada
             "Choose AUTOMATED_RESPONSE_DISABLE_USER_BACKEND as 'ledger', 'linux_lock', "
             "or 'script' with a configured script path."
         ),
-        extra={"backend": backend},
+        extra=_with_contract_details(
+            action_name="disable_user",
+            preconditions=preconditions,
+            mode_requirements=mode_requirements,
+            extra={"backend": backend},
+        ),
     )
 
 
 def _execute_notify_admin(context: AdapterContext, *, settings: Settings) -> AdapterExecutionResult:
+    preconditions = [
+        "Execution payload must include a valid incident.id.",
+        "Incident record must exist in the database.",
+        "NOTIFICATIONS_ENABLED=true.",
+    ]
+    mode_requirements = [
+        "Policy mode must be live for non-simulated execution.",
+        "Notification subsystem must be configured with recipients.",
+    ]
     if context.mode == ResponseMode.DRY_RUN:
         return _dry_run_result(context)
     if not settings.notifications_enabled:
@@ -445,7 +601,12 @@ def _execute_notify_admin(context: AdapterContext, *, settings: Settings) -> Ada
                 "Set NOTIFICATIONS_ENABLED=true to allow built-in notify_admin "
                 "live delivery through the notification subsystem."
             ),
-            extra={"notifications_enabled": False},
+            extra=_with_contract_details(
+                action_name="notify_admin",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"notifications_enabled": False},
+            ),
         )
 
     incident_id = _incident_uuid_from_payload(context.payload)
@@ -453,7 +614,12 @@ def _execute_notify_admin(context: AdapterContext, *, settings: Settings) -> Ada
         return _failed_result(
             summary="Administrator notification failed due to missing incident context.",
             message="Could not resolve incident ID from response execution payload.",
-            extra={"incident_id": None},
+            extra=_with_contract_details(
+                action_name="notify_admin",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"incident_id": None},
+            ),
         )
 
     incident = context.session.get(Incident, incident_id)
@@ -461,7 +627,12 @@ def _execute_notify_admin(context: AdapterContext, *, settings: Settings) -> Ada
         return _failed_result(
             summary="Administrator notification failed due to missing incident record.",
             message=f"Incident {incident_id} was not found for notify_admin execution.",
-            extra={"incident_id": str(incident_id)},
+            extra=_with_contract_details(
+                action_name="notify_admin",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"incident_id": str(incident_id)},
+            ),
         )
 
     notification_events = send_admin_notification(
@@ -476,26 +647,66 @@ def _execute_notify_admin(context: AdapterContext, *, settings: Settings) -> Ada
                 "Notifications are enabled, but no recipients were configured in "
                 "NOTIFICATIONS_ADMIN_RECIPIENTS."
             ),
-            extra={"attempted": 0},
+            extra=_with_contract_details(
+                action_name="notify_admin",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"attempted": 0},
+            ),
         )
 
     failed = [event for event in notification_events if event.status == "failed"]
+    delivered = len(notification_events) - len(failed)
     if failed:
+        if delivered > 0:
+            return _warning_result(
+                summary="Administrator notification partially delivered; some recipients failed.",
+                message=failed[0].error_message or "One or more notification deliveries failed.",
+                extra=_with_contract_details(
+                    action_name="notify_admin",
+                    preconditions=preconditions,
+                    mode_requirements=mode_requirements,
+                    extra={
+                        "attempted": len(notification_events),
+                        "delivered": delivered,
+                        "failed": len(failed),
+                    },
+                ),
+            )
         return _failed_result(
-            summary="Administrator notification failed for one or more recipients.",
+            summary="Administrator notification failed for all recipients.",
             message=failed[0].error_message or "Notification delivery failed.",
-            extra={"attempted": len(notification_events), "failed": len(failed)},
+            extra=_with_contract_details(
+                action_name="notify_admin",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"attempted": len(notification_events), "delivered": 0, "failed": len(failed)},
+            ),
         )
 
     return _completed_result(
         context,
         summary="Administrator notification delivered through built-in notification service.",
         message=f"Notification events created for {len(notification_events)} recipients.",
-        extra={"attempted": len(notification_events), "delivered": len(notification_events)},
+        extra=_with_contract_details(
+            action_name="notify_admin",
+            preconditions=preconditions,
+            mode_requirements=mode_requirements,
+            extra={"attempted": len(notification_events), "delivered": len(notification_events)},
+        ),
     )
 
 
 def _execute_quarantine_flag(context: AdapterContext, *, settings: Settings) -> AdapterExecutionResult:
+    preconditions = [
+        "Resolved target_value must contain a hostname.",
+        "Execution payload must include a valid incident.id.",
+    ]
+    mode_requirements = [
+        "Policy mode must be live for non-simulated execution.",
+        "AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED=true.",
+        "AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true.",
+    ]
     guarded = _lab_live_guard(context, settings=settings, action_name="quarantine_host_flag")
     if guarded is not None:
         return guarded
@@ -504,7 +715,12 @@ def _execute_quarantine_flag(context: AdapterContext, *, settings: Settings) -> 
         return _warning_result(
             summary="Live quarantine_host_flag skipped because hostname was missing.",
             message="AegisCore could not resolve a target hostname for quarantine flagging.",
-            extra={"target_value": context.target_value},
+            extra=_with_contract_details(
+                action_name="quarantine_host_flag",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"target_value": context.target_value},
+            ),
         )
 
     incident_id = _incident_uuid_from_payload(context.payload)
@@ -512,7 +728,12 @@ def _execute_quarantine_flag(context: AdapterContext, *, settings: Settings) -> 
         return _failed_result(
             summary="Quarantine host flag failed because incident context was missing.",
             message="A valid incident ID was not present in the response execution payload.",
-            extra={"incident_id": None},
+            extra=_with_contract_details(
+                action_name="quarantine_host_flag",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"incident_id": None},
+            ),
         )
 
     existing_flag = context.session.scalar(
@@ -568,6 +789,11 @@ def _execute_quarantine_flag(context: AdapterContext, *, settings: Settings) -> 
             summary=f"Host {context.target_value} quarantine state saved but host tag write failed.",
             message=tag_write_error,
             extra={
+                **_with_contract_details(
+                    action_name="quarantine_host_flag",
+                    preconditions=preconditions,
+                    mode_requirements=mode_requirements,
+                ),
                 "quarantine_flagged": True,
                 "host_tag_written": False,
                 "host_tag_path": settings.automated_response_host_tag_path,
@@ -582,18 +808,31 @@ def _execute_quarantine_flag(context: AdapterContext, *, settings: Settings) -> 
             if not settings.automated_response_enable_host_tag_write
             else "Containment flag persisted and safe host tag written."
         ),
-        extra={
-            "quarantine_flagged": True,
-            "containment_state": "active",
-            "host_tag_written": settings.automated_response_enable_host_tag_write,
-            "host_tag_path": settings.automated_response_host_tag_path
-            if settings.automated_response_enable_host_tag_write
-            else None,
-        },
+        extra=_with_contract_details(
+            action_name="quarantine_host_flag",
+            preconditions=preconditions,
+            mode_requirements=mode_requirements,
+            extra={
+                "quarantine_flagged": True,
+                "containment_state": "active",
+                "host_tag_written": settings.automated_response_enable_host_tag_write,
+                "host_tag_path": settings.automated_response_host_tag_path
+                if settings.automated_response_enable_host_tag_write
+                else None,
+            },
+        ),
     )
 
 
 def _execute_manual_review(context: AdapterContext, *, settings: Settings) -> AdapterExecutionResult:
+    preconditions = [
+        "Execution payload must include a valid incident.id.",
+    ]
+    mode_requirements = [
+        "Policy mode must be live for non-simulated execution.",
+        "AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED=true.",
+        "AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true.",
+    ]
     guarded = _lab_live_guard(context, settings=settings, action_name="create_manual_review")
     if guarded is not None:
         return guarded
@@ -603,7 +842,12 @@ def _execute_manual_review(context: AdapterContext, *, settings: Settings) -> Ad
         return _failed_result(
             summary="Manual review workflow failed due to missing incident context.",
             message="A valid incident ID was not present in the execution payload.",
-            extra={"incident_id": None},
+            extra=_with_contract_details(
+                action_name="create_manual_review",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={"incident_id": None},
+            ),
         )
 
     _create_incident_audit(
@@ -615,16 +859,32 @@ def _execute_manual_review(context: AdapterContext, *, settings: Settings) -> Ad
             "summary": "Built-in manual review workflow request recorded.",
         },
     )
-    _append_json_line(
-        settings.automated_response_ledger_path,
-        {
-            "timestamp": datetime.now(UTC).isoformat(),
-            "action": "create_manual_review",
-            "incident_id": str(incident_id),
-            "policy_name": context.policy_name,
-            "mode": "live",
-        },
-    )
+    try:
+        _append_json_line(
+            settings.automated_response_ledger_path,
+            {
+                "timestamp": datetime.now(UTC).isoformat(),
+                "action": "create_manual_review",
+                "incident_id": str(incident_id),
+                "policy_name": context.policy_name,
+                "mode": "live",
+            },
+        )
+    except OSError as exc:
+        return _warning_result(
+            summary="Manual review audit was recorded, but ledger write failed.",
+            message=str(exc),
+            extra=_with_contract_details(
+                action_name="create_manual_review",
+                preconditions=preconditions,
+                mode_requirements=mode_requirements,
+                extra={
+                    "manual_review_recorded": True,
+                    "manual_review_ledger_written": False,
+                    "incident_id": str(incident_id),
+                },
+            ),
+        )
     return _completed_result(
         context,
         summary="Manual review workflow opened.",
@@ -632,7 +892,16 @@ def _execute_manual_review(context: AdapterContext, *, settings: Settings) -> Ad
             "AegisCore recorded a built-in manual review action and persisted "
             "incident audit evidence."
         ),
-        extra={"manual_review_recorded": True, "incident_id": str(incident_id)},
+        extra=_with_contract_details(
+            action_name="create_manual_review",
+            preconditions=preconditions,
+            mode_requirements=mode_requirements,
+            extra={
+                "manual_review_recorded": True,
+                "manual_review_ledger_written": True,
+                "incident_id": str(incident_id),
+            },
+        ),
     )
 
 

@@ -155,7 +155,7 @@ The frontend Reports page uses those real endpoints for summary cards, distribut
 - add Suricata authenticated forwarding mode in addition to `file_tail`
 - expand browser coverage for analyst-role restriction and terminal/edge workflow assertions
 - add replay handling for ingestion failures
-- deepen safe live-response adapters for supported action types
+- broaden repeatable lab validation coverage for intentionally gated destructive adapter paths
 - continue incremental frontend code splitting if the dashboard grows
 - extend reporting only where it remains practical for SME operations
 

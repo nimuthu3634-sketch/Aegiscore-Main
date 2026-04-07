@@ -104,6 +104,7 @@ def test_block_ip_live_ledger_completes(monkeypatch) -> None:
     )
     assert result.status == ResponseStatus.COMPLETED
     assert result.details["backend"] == "ledger"
+    assert result.details["adapter_contract"]["action"] == "block_ip"
 
 
 def test_disable_user_live_rejects_unsafe_username() -> None:
@@ -116,6 +117,22 @@ def test_disable_user_live_rejects_unsafe_username() -> None:
     assert "safe Linux username" in result.message
 
 
+def test_block_ip_live_ledger_write_failure_marks_failed(monkeypatch) -> None:
+    session = FakeSession()
+
+    def _raise_ledger_error(path, payload):  # noqa: ANN001
+        raise OSError("ledger unavailable")
+
+    monkeypatch.setattr(adapters, "_append_json_line", _raise_ledger_error)
+    result = execute_adapter(
+        _context(session, action=ResponseActionType.BLOCK_IP, target="203.0.113.10"),
+        settings=_settings(),
+    )
+    assert result.status == ResponseStatus.FAILED
+    assert "ledger unavailable" in result.message
+    assert result.details["backend"] == "ledger"
+
+
 def test_quarantine_host_flag_persists_containment_state(monkeypatch) -> None:
     session = FakeSession()
     monkeypatch.setattr(adapters, "_append_json_line", lambda path, payload: None)
@@ -125,6 +142,23 @@ def test_quarantine_host_flag_persists_containment_state(monkeypatch) -> None:
     )
     assert result.status == ResponseStatus.COMPLETED
     assert any(isinstance(item, ContainmentFlag) for item in session.added)
+
+
+def test_manual_review_ledger_failure_returns_warning_with_audit(monkeypatch) -> None:
+    session = FakeSession()
+
+    def _raise_ledger_error(path, payload):  # noqa: ANN001
+        raise OSError("manual review ledger blocked")
+
+    monkeypatch.setattr(adapters, "_append_json_line", _raise_ledger_error)
+    result = execute_adapter(
+        _context(session, action=ResponseActionType.CREATE_MANUAL_REVIEW, target="manual-review"),
+        settings=_settings(),
+    )
+    assert result.status == ResponseStatus.WARNING
+    assert "ledger blocked" in result.message
+    assert result.details["manual_review_recorded"] is True
+    assert result.details["manual_review_ledger_written"] is False
 
 
 def test_notify_admin_live_reports_failure_from_notification_channel(monkeypatch) -> None:
@@ -142,3 +176,23 @@ def test_notify_admin_live_reports_failure_from_notification_channel(monkeypatch
     )
     assert result.status == ResponseStatus.FAILED
     assert "smtp down" in result.message
+
+
+def test_notify_admin_live_partial_delivery_returns_warning(monkeypatch) -> None:
+    session = FakeSession()
+    monkeypatch.setattr(
+        adapters,
+        "send_admin_notification",
+        lambda session, incident, trigger_value, response_action=None: [
+            SimpleNamespace(status="sent", error_message=None),
+            SimpleNamespace(status="failed", error_message="smtp down"),
+        ],
+    )
+    result = execute_adapter(
+        _context(session, action=ResponseActionType.NOTIFY_ADMIN, target="AegisCore administrators"),
+        settings=_settings(),
+    )
+    assert result.status == ResponseStatus.WARNING
+    assert result.details["attempted"] == 2
+    assert result.details["delivered"] == 1
+    assert result.details["failed"] == 1
