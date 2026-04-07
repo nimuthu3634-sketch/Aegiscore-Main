@@ -11,10 +11,12 @@ COPY apps/api/alembic.ini ./alembic.ini
 COPY apps/api/alembic ./alembic
 COPY apps/api/app ./app
 COPY apps/api/tests ./tests
+COPY infra/docker/api-entrypoint.sh /usr/local/bin/api-entrypoint.sh
 
 RUN pip install --upgrade pip && pip install .[dev]
+RUN chmod +x /usr/local/bin/api-entrypoint.sh
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+ENTRYPOINT ["api-entrypoint.sh"]
 

@@ -12,6 +12,9 @@ AegisCore is currently positioned as a serious SME-focused SOC platform prototyp
 - database migrations apply cleanly
 - local seed command succeeds
 - `/health` returns healthy API and database status
+- `/health/live` returns API liveness
+- `/health/ready` reports `ready` with database `up`
+- `docker compose ps` shows healthy status for `postgres`, `api`, `web`, and `nginx`
 
 ### Security And Access
 
@@ -26,6 +29,15 @@ AegisCore is currently positioned as a serious SME-focused SOC platform prototyp
 - scoring metadata is visible in alert and incident detail
 - policy-driven responses appear in response history
 - reports include the validated activity
+- connector status endpoints remain reachable after API restart
+
+### Recovery And Continuity
+
+- restarting `api` does not require manual data recovery when `postgres_data` volume is intact
+- readiness transitions back to `ready` after restart
+- migration command remains idempotent (`alembic upgrade head`)
+- local backup command for PostgreSQL has been run at least once and restore steps are documented
+- docker service logs are bounded locally via `json-file` rotation settings
 
 ### Validation Commands
 
@@ -56,10 +68,9 @@ py -3 scripts/validate_attack_scenarios.py
 
 ## Known Limitations
 
-- validation uses real backend ingestion endpoints with fixtures instead of live Wazuh or Suricata polling
+- validation still relies heavily on fixtures despite live connector support
 - Playwright covers core route and scenario visibility, not every write workflow
 - the frontend is operational but still benefits from additional route-level code splitting over time
-- response adapters beyond safe local or internal actions still depend on operator-supplied scripts
 - no scheduled reporting or email-delivery workflow exists
 
 ## Future Work

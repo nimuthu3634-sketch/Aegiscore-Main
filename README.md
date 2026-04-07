@@ -40,7 +40,10 @@ docker compose exec api python -m app.db.seed
 
 - `http://localhost` through NGINX
 - `http://localhost/api/health` through NGINX
+- `http://localhost/api/health/live` through NGINX
+- `http://localhost/api/health/ready` through NGINX
 - `http://localhost:8000/health` direct API
+- `http://localhost:8000/health/ready` direct API
 - `http://localhost:5173` direct frontend dev server
 
 Default local credentials:
@@ -126,6 +129,12 @@ Current ingestion endpoints:
 - `POST /integrations/suricata/events` (`admin` only)
 - `GET /integrations/wazuh/connector/status`
 - `GET /integrations/suricata/connector/status`
+
+Operational health endpoints:
+
+- `GET /health` (API + DB health summary)
+- `GET /health/live` (process liveness)
+- `GET /health/ready` (readiness with DB + connector dependency statuses)
 
 ## Safety Notes
 

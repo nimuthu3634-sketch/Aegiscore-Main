@@ -16,7 +16,10 @@ Primary local URLs:
 
 - `http://localhost`
 - `http://localhost/api/health`
+- `http://localhost/api/health/live`
+- `http://localhost/api/health/ready`
 - `http://localhost:8000/health`
+- `http://localhost:8000/health/ready`
 
 ## Safe Default Posture
 
@@ -57,6 +60,74 @@ Scenario validation:
 ```powershell
 py -3 scripts/validate_attack_scenarios.py
 ```
+
+## Operational Health Checks
+
+- `GET /health`: API and DB high-level health.
+- `GET /health/live`: liveness endpoint that confirms the API process is serving.
+- `GET /health/ready`: readiness endpoint with DB status and connector dependency states.
+- Connector states can also be inspected at:
+  - `GET /integrations/wazuh/connector/status`
+  - `GET /integrations/suricata/connector/status`
+
+## Restart And Recovery Flow
+
+If the stack restarts or a service crashes:
+
+1. Restart services:
+
+```powershell
+docker compose up -d
+```
+
+2. Confirm API readiness:
+
+```powershell
+curl http://localhost:8000/health/ready
+```
+
+3. If API is not ready, inspect logs:
+
+```powershell
+docker compose logs --tail 200 api
+docker compose logs --tail 200 postgres
+```
+
+4. Re-apply migrations if needed:
+
+```powershell
+docker compose exec api alembic upgrade head
+```
+
+5. Re-seed only when user/fixture baseline is intentionally reset:
+
+```powershell
+docker compose exec api python -m app.db.seed
+```
+
+Continuity note: connector checkpoints and integration state are persisted in PostgreSQL; with a persistent `postgres_data` volume, ingestion resumes from stored state after restart.
+
+## PostgreSQL Backup And Restore (Local/Lab)
+
+Create backup:
+
+```powershell
+docker compose exec -T postgres pg_dump -U ${env:POSTGRES_USER} -d ${env:POSTGRES_DB} > aegiscore-backup.sql
+```
+
+Restore backup:
+
+```powershell
+Get-Content .\aegiscore-backup.sql | docker compose exec -T postgres psql -U ${env:POSTGRES_USER} -d ${env:POSTGRES_DB}
+```
+
+For JSON/CSV workflow continuity exports, use report export endpoints from the UI or `/reports/*/export`.
+
+## Log Retention Notes (Local)
+
+- Docker Compose services are configured with `json-file` log rotation (`max-size=10m`, `max-file=3`) to prevent unbounded local log growth.
+- Use `docker compose logs --tail 200 <service>` for quick diagnostics.
+- For deeper troubleshooting, capture a timestamped log snapshot before restarting services.
 
 ## Ingestion Operations
 
@@ -118,6 +189,5 @@ Use CSV or JSON exports for local review and audit trails. There is no PDF or sc
 
 ## Known Limits
 
-- There is no live Wazuh or Suricata polling loop yet.
 - The worker is still a shell for future replay or background execution use.
 - This platform is intentionally single-tenant and should not be treated as a multi-customer SaaS control plane.

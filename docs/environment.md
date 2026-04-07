@@ -78,6 +78,8 @@
 - `SMTP_USE_TLS`: enable SMTPS (`SMTP_SSL`) mode
 - `SMTP_USE_STARTTLS`: enable STARTTLS negotiation for plain SMTP connections
 - `SMTP_TIMEOUT_SECONDS`: SMTP connection timeout in seconds
+- `DB_CONNECT_MAX_ATTEMPTS`: API container startup attempts before failing when database is unavailable
+- `DB_CONNECT_BACKOFF_SECONDS`: delay between API database-connect retry attempts during startup
 
 ## App-Specific Files
 
@@ -112,3 +114,10 @@
 - Duplicate events are de-duplicated by `source + external_id` and safely return the existing normalized alert.
 - Connector state and last sync telemetry are available at `GET /integrations/wazuh/connector/status`.
 - Suricata connector state and last sync telemetry are available at `GET /integrations/suricata/connector/status`.
+
+## Health And Readiness Notes
+
+- `GET /health`: high-level API + database status.
+- `GET /health/live`: process liveness signal.
+- `GET /health/ready`: readiness with dependency details (database and connector status).
+- Docker Compose uses service healthchecks and `depends_on` health conditions to improve local startup ordering.
