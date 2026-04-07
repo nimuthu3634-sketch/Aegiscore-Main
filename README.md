@@ -38,12 +38,12 @@ If you are reviewing AegisCore for final academic submission, use this quick flo
 
 ## Product Positioning
 
-AegisCore v1 is complete for its intended SME/lab scope and intentionally excludes enterprise SaaS complexity.
+AegisCore is the final scoped v1 product for single-tenant SME/lab deployment. It is not an enterprise commercial SOC platform.
 
-- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for single-tenant SME/lab SOC operation. It is not an enterprise cloud control plane, multi-tenant SaaS product, or full enterprise SOAR suite.
+- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for single-tenant SME/lab SOC operation. It is not an enterprise commercial SOC platform.
 - **Product status (fully implemented for scoped v1)**: centralized SOC dashboard, four-detection ingestion/normalization, risk scoring, incident and response recording, basic automated response, authenticated access (`admin`/`analyst`), and operational reporting.
-- **Live Wazuh integration (partially implemented / limited mode)**: live polling connector with auth modes, retries, checkpointing, dedupe, and status endpoints is implemented; compatibility is currently limited to common Wazuh response envelopes and may require profile tuning for other manager variants.
-- **Live Suricata integration (partially implemented / limited mode)**: live connector is implemented for `file_tail` polling of `eve.json` with inode/offset checkpointing, malformed-line handling, retries, dedupe, and status endpoints; authenticated forwarding mode is not implemented yet.
+- **Live Wazuh integration (partially implemented / limited mode)**: authenticated live polling is implemented with retries, pagination/checkpointing, dedupe, and status visibility; compatibility is focused on common Wazuh lab envelope variants.
+- **Live Suricata integration (partially implemented / limited mode)**: live ingestion is implemented in `file_tail` mode for `eve.json` with inode/offset checkpointing, malformed-line handling, retries, dedupe, and status visibility; authenticated forwarding mode is not implemented yet.
 - **Validation posture (fixture-backed deterministic baseline)**: repeatable acceptance validation relies primarily on fixture-backed ingestion and browser/API tests; live connector checks are supported as optional VM/lab verification.
 
 ## Repository Tour

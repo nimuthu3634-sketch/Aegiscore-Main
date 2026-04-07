@@ -2,15 +2,15 @@
 
 ## 1. System Overview
 
-AegisCore is a final scoped v1 single-tenant SOC product for SME/lab deployment. It centralizes security event review, alert prioritization, incident investigation, basic automated response, and operational reporting. It is intentionally not positioned as an enterprise cloud/SaaS deployment model.
+AegisCore is the final scoped v1 product for single-tenant SME/lab deployment. It centralizes security event review, alert prioritization, incident investigation, basic automated response, and operational reporting. It is not an enterprise commercial SOC platform.
 
 ### Product Positioning
 
-- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for single-tenant SME/lab SOC workflows (ingestion, scoring, incidents, responses, reporting, and authenticated access). It is not an enterprise multi-tenant SaaS platform and does not claim enterprise orchestration, paging, or SOAR breadth.
+- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for single-tenant SME/lab SOC workflows (ingestion, scoring, incidents, responses, reporting, and authenticated access). It is not an enterprise commercial SOC platform.
 - **Fully implemented for scoped v1**: centralized SOC dashboard, four-detection ingestion/normalization, risk scoring, incident and response recording, basic automated response, authenticated access, and reporting/export.
 - **Partially implemented / limited mode (live connectors)**:
-  - Wazuh: live polling connector is implemented with auth, retries, pagination, checkpointing, dedupe, and status visibility; compatibility is limited to common upstream envelope variants.
-  - Suricata: live connector is implemented for `file_tail` mode on `eve.json` with checkpointing and retry/error handling; authenticated forwarding mode is not yet implemented.
+  - Wazuh: authenticated live polling is implemented with retries, pagination/checkpointing, dedupe, and status visibility; compatibility is focused on common Wazuh lab envelope variants.
+  - Suricata: live ingestion is implemented in `file_tail` mode on `eve.json` with checkpointing and retry/error handling; authenticated forwarding mode is not yet implemented.
 - **Fixture-backed validation baseline**: deterministic regression validation is still primarily fixture-backed, with optional live VM/lab verification.
 
 The implemented platform covers the full backend-owned workflow for a narrow and deliberate scope:

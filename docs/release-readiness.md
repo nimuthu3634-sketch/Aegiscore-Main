@@ -6,14 +6,14 @@ This repository state is the final submission candidate freeze for scoped v1 aca
 
 ## Intended Readiness Level
 
-AegisCore is positioned as a final scoped v1 single-tenant SOC product for SME/lab deployment. It is not presented as an enterprise production cloud service.
+AegisCore is positioned as the final scoped v1 product for single-tenant SME/lab deployment. It is not an enterprise commercial SOC platform.
 
 ## Product Positioning
 
-- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for local/lab SME operation. It includes real backend-owned SOC workflows for the four supported detections and intentionally excludes enterprise cloud, multi-tenant, and broad SOAR orchestration claims.
+- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for local/lab SME operation. It includes real backend-owned SOC workflows for the four supported detections and is not an enterprise commercial SOC platform.
 - **Fully implemented for scoped v1**: dashboard, four-detection ingestion/normalization, risk scoring, incident/response workflows, basic automated response, and reporting/export.
 - **Partially implemented / limited mode (live connectors)**:
-  - Wazuh live polling is implemented with auth, retries, pagination, checkpointing, dedupe, and status visibility; upstream compatibility is currently limited to common envelope variants.
+  - Wazuh authenticated live polling is implemented with retries, pagination/checkpointing, dedupe, and status visibility; compatibility is focused on common Wazuh lab envelope variants.
   - Suricata live ingestion is implemented in `file_tail` mode for `eve.json` with checkpointing and retry/error behavior; authenticated forwarding mode is not implemented yet.
 - **Fixture-backed validation baseline**: release validation is deterministic and primarily fixture-backed, with optional live connector checks in VM/lab environments.
 

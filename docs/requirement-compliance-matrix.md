@@ -2,14 +2,14 @@
 
 This matrix maps the proposal requirement set to the current implementation and validation posture of AegisCore.
 
-Scope note: AegisCore remains intentionally single-tenant and SME/lab-focused. This matrix does not claim enterprise SOC/SOAR breadth.
+Scope note: AegisCore remains intentionally single-tenant and SME/lab-focused. It is not an enterprise commercial SOC platform.
 
 Release-candidate note: this matrix reflects the final scoped v1 release-candidate posture, not an enterprise production-cloud claim.
 
 | Requirement | Implementation status | Code/docs evidence | Remaining limitation (if any) |
 | --- | --- | --- | --- |
-| Gather and monitor logs from monitored machines | Implemented (lab-ready) | `apps/api/app/services/integrations/wazuh_connector.py`; `apps/api/app/services/ingestion/service.py`; `docs/setup/wazuh-live-integration.md` | Wazuh endpoint envelope/auth compatibility is tuned for common lab shapes (`list`, `data.affected_items`, `data.items`) and may require profile extension for other manager variants. |
-| Monitor network traffic | Implemented (lab-ready) | `apps/api/app/services/integrations/suricata_connector.py`; `apps/api/app/services/integrations/checkpoints.py`; `docs/setup/suricata-live-integration.md` | Current live mode is `file_tail` for `eve.json`; authenticated forwarding mode is not yet implemented. |
+| Gather and monitor logs from monitored machines | Implemented (lab-ready) | `apps/api/app/services/integrations/wazuh_connector.py`; `apps/api/app/services/ingestion/service.py`; `docs/setup/wazuh-live-integration.md` | Wazuh authenticated live polling is implemented with retries, pagination/checkpointing, dedupe, and status visibility; compatibility is focused on common Wazuh lab envelope variants. |
+| Monitor network traffic | Implemented (lab-ready) | `apps/api/app/services/integrations/suricata_connector.py`; `apps/api/app/services/integrations/checkpoints.py`; `docs/setup/suricata-live-integration.md` | Live mode is `file_tail` for `eve.json` with checkpointing and retry/error behavior; authenticated forwarding mode is not yet implemented. |
 | Detect only the four in-scope threats | Implemented and enforced | `apps/api/app/models/enums.py` (`DetectionType`); `apps/api/app/services/ingestion/parsers.py` (unsupported detection rejection); `AGENTS.md`; `README.md` | No gap for current scope; additional detections are intentionally out of scope. |
 | Centralized dashboard | Implemented | `apps/web/src/pages/DashboardPage.tsx`; `apps/web/src/components/layout/AppShell.tsx`; `apps/api/app/api/routes/dashboard.py`; `README.md` | Dashboard remains intentionally compact and local-scope, not enterprise BI. |
 | AI risk scoring | Implemented (baseline default + optional ML) | `apps/api/app/services/scoring/baseline.py`; `apps/api/app/services/scoring/ml.py`; `ai/training/train_risk_model.py`; `docs/scoring.md` | ML path depends on local model artifact availability; baseline fallback is used when model artifacts are absent. |
