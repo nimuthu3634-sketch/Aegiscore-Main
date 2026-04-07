@@ -15,7 +15,7 @@ AegisCore v1 is complete for its intended SME/lab scope and intentionally exclud
 
 - **Product status (fully implemented for scoped v1)**: centralized SOC dashboard, four-detection ingestion/normalization, risk scoring, incident and response recording, basic automated response, authenticated access (`admin`/`analyst`), and operational reporting.
 - **Live Wazuh integration (partially implemented / limited mode)**: live polling connector with auth modes, retries, checkpointing, dedupe, and status endpoints is implemented; compatibility is currently limited to common Wazuh response envelopes and may require profile tuning for other manager variants.
-- **Live Suricata integration (partially implemented / limited mode)**: live connector is implemented for `file_tail` polling of `eve.json` with inode/offset checkpointing, malformed-line handling, dedupe, and status endpoints; authenticated forwarding mode is not implemented yet.
+- **Live Suricata integration (partially implemented / limited mode)**: live connector is implemented for `file_tail` polling of `eve.json` with inode/offset checkpointing, malformed-line handling, retries, dedupe, and status endpoints; authenticated forwarding mode is not implemented yet.
 - **Validation posture (fixture-backed deterministic baseline)**: repeatable acceptance validation relies primarily on fixture-backed ingestion and browser/API tests; live connector checks are supported as optional VM/lab verification.
 
 ## Monorepo Layout
@@ -138,6 +138,8 @@ Current ingestion endpoints:
 - `POST /integrations/suricata/events` (`admin` only)
 - `GET /integrations/wazuh/connector/status`
 - `GET /integrations/suricata/connector/status`
+
+Operational note: in normal VM/lab use, enable both live connectors and treat manual ingestion routes as test/demo tools.
 
 Operational health endpoints:
 

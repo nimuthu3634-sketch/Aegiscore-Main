@@ -203,18 +203,47 @@ class WazuhAPIClient:
         return {**base_headers, "Authorization": f"Bearer {self._resolve_bearer_token()}"}
 
     def fetch_events(self, *, checkpoint: dict[str, Any]) -> list[dict[str, Any]]:
-        params = {"limit": str(max(1, self.settings.wazuh_page_size))}
+        page_size = max(1, self.settings.wazuh_page_size)
+        max_pages = max(1, self.settings.wazuh_max_pages_per_cycle)
+        params_base = {"limit": str(page_size)}
         last_timestamp = checkpoint.get("last_timestamp")
         if isinstance(last_timestamp, str) and last_timestamp:
-            params[self.settings.wazuh_since_param] = last_timestamp
+            params_base[self.settings.wazuh_since_param] = last_timestamp
 
-        response_payload = self._request_json(
-            method="GET",
-            path=self.settings.wazuh_alerts_path,
-            headers=self._auth_headers(),
-            params=params,
-        )
-        return _extract_event_list(response_payload)
+        events: list[dict[str, Any]] = []
+        for page_index in range(max_pages):
+            params = {
+                **params_base,
+                self.settings.wazuh_offset_param: str(page_index * page_size),
+            }
+
+            try:
+                response_payload = self._request_json(
+                    method="GET",
+                    path=self.settings.wazuh_alerts_path,
+                    headers=self._auth_headers(),
+                    params=params,
+                )
+            except RuntimeError:
+                if self.settings.wazuh_auth_mode.lower() != "token":
+                    raise
+                # Token mode can fail after token expiry. Clear cache and retry this page once.
+                self._cached_token = None
+                self._cached_token_at = 0.0
+                response_payload = self._request_json(
+                    method="GET",
+                    path=self.settings.wazuh_alerts_path,
+                    headers=self._auth_headers(),
+                    params=params,
+                )
+
+            page_events = _extract_event_list(response_payload)
+            if not page_events:
+                break
+            events.extend(page_events)
+            if len(page_events) < page_size:
+                break
+        return events
 
 
 def _default_metrics(existing: dict[str, Any] | None = None) -> dict[str, int]:

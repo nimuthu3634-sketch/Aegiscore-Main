@@ -35,6 +35,7 @@ Set these in API env/compose settings:
 - `SURICATA_MAX_EVENTS_PER_CYCLE=250`
 - `SURICATA_RETRY_ATTEMPTS=2`
 - `SURICATA_RETRY_BACKOFF_SECONDS=1`
+- `SURICATA_FAIL_WHEN_SOURCE_MISSING=true`
 
 Also ensure general ingestion/scoring env vars are configured per your deployment.
 
@@ -76,6 +77,9 @@ Key fields:
 
 ## Operational Notes
 
+- For normal VM/lab operation, keep `SURICATA_CONNECTOR_ENABLED=true` so live file-tail polling is the primary ingestion path.
+- Keep `POST /integrations/suricata/events` for test/demo fixture injection rather than everyday operations.
+- When `SURICATA_FAIL_WHEN_SOURCE_MISSING=true`, connector status reports errors if the `eve.json` source path is unavailable.
 - Duplicate protection remains enforced by `source + external_id` in ingestion.
 - Raw source payloads are preserved in `raw_alerts`.
 - Malformed `eve.json` lines are logged into `ingestion_failures` with line/offset metadata.

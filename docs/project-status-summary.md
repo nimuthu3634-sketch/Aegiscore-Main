@@ -8,8 +8,8 @@ AegisCore is a final scoped v1 single-tenant SOC product for SME/lab deployment.
 
 - **Fully implemented for scoped v1**: centralized SOC dashboard, four-detection ingestion/normalization, risk scoring, incident and response recording, basic automated response, authenticated access, and reporting/export.
 - **Partially implemented / limited mode (live connectors)**:
-  - Wazuh: live polling connector is implemented with auth, retries, checkpointing, dedupe, and status visibility; compatibility is limited to common upstream envelope variants.
-  - Suricata: live connector is implemented for `file_tail` mode on `eve.json`; authenticated forwarding mode is not yet implemented.
+  - Wazuh: live polling connector is implemented with auth, retries, pagination, checkpointing, dedupe, and status visibility; compatibility is limited to common upstream envelope variants.
+  - Suricata: live connector is implemented for `file_tail` mode on `eve.json` with checkpointing and retry/error handling; authenticated forwarding mode is not yet implemented.
 - **Fixture-backed validation baseline**: deterministic regression validation is still primarily fixture-backed, with optional live VM/lab verification.
 
 The implemented platform covers the full backend-owned workflow for a narrow and deliberate scope:
@@ -215,6 +215,7 @@ Requirement traceability for proposal review is documented in [requirement-compl
 
 - the frontend currently assumes backend ownership of all integrations and scoring contracts
 - the four supported detections are the project boundary and should remain explicit in any review discussion
+- normal VM/lab operations should run connector-driven ingestion; manual ingestion endpoints are kept for test/demo tooling
 - dev auth bootstrap is opt-in and should usually remain disabled for realistic testing
 - local validation commands are stable and should be rerun before demos or submission packaging
 

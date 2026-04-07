@@ -8,8 +8,8 @@ AegisCore is positioned as a final scoped v1 single-tenant SOC product for SME/l
 
 - **Fully implemented for scoped v1**: dashboard, four-detection ingestion/normalization, risk scoring, incident/response workflows, basic automated response, and reporting/export.
 - **Partially implemented / limited mode (live connectors)**:
-  - Wazuh live polling is implemented with auth, retries, checkpointing, dedupe, and status visibility; upstream compatibility is currently limited to common envelope variants.
-  - Suricata live ingestion is implemented in `file_tail` mode for `eve.json`; authenticated forwarding mode is not implemented yet.
+  - Wazuh live polling is implemented with auth, retries, pagination, checkpointing, dedupe, and status visibility; upstream compatibility is currently limited to common envelope variants.
+  - Suricata live ingestion is implemented in `file_tail` mode for `eve.json` with checkpointing and retry/error behavior; authenticated forwarding mode is not implemented yet.
 - **Fixture-backed validation baseline**: release validation is deterministic and primarily fixture-backed, with optional live connector checks in VM/lab environments.
 
 ## Local Release Checklist
@@ -32,12 +32,13 @@ AegisCore is positioned as a final scoped v1 single-tenant SOC product for SME/l
 
 ### Data Flow
 
-- supported Wazuh or Suricata fixtures ingest successfully
+- live Wazuh and Suricata connector status endpoints are healthy for configured lab sources
 - normalized alerts appear in the list and detail UI
 - scoring metadata is visible in alert and incident detail
 - policy-driven responses appear in response history
 - reports include the validated activity
 - connector status endpoints remain reachable after API restart
+- fixture ingestion remains available for deterministic test/demo workflows
 
 ### Recovery And Continuity
 

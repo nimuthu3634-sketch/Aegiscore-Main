@@ -40,6 +40,8 @@ Set these in your API env file or compose overrides:
 - `WAZUH_VERIFY_TLS` (`true` recommended)
 - `WAZUH_CA_FILE` (optional path for custom CA)
 - `WAZUH_PAGE_SIZE` (default `200`)
+- `WAZUH_MAX_PAGES_PER_CYCLE` (default `5`)
+- `WAZUH_OFFSET_PARAM` (default `offset`)
 - `WAZUH_SINCE_PARAM` (default `since`)
 - `WAZUH_TIMESTAMP_FIELD` (default `timestamp`)
 
@@ -86,7 +88,10 @@ Generate a controlled VM-lab event (for example brute force or FIM), then confir
 
 ## Operational Notes
 
+- For normal VM/lab operation, keep `WAZUH_CONNECTOR_ENABLED=true` so live polling is the primary ingestion path.
+- Keep `POST /integrations/wazuh/events` for test/demo fixture injection rather than everyday operations.
 - Checkpointing stores the last timestamp and recent external IDs to reduce duplicate processing between polling cycles.
+- Connector polling uses page-size plus offset pagination and is bounded by `WAZUH_MAX_PAGES_PER_CYCLE` per cycle.
 - Duplicate protection remains enforced at ingestion by `source + external_id`.
 - Raw payload snapshots are preserved in `raw_alerts` and parse failures in `ingestion_failures`.
 - For single-tenant SME operation, run one API instance with the connector enabled to avoid redundant polling across multiple connector workers.

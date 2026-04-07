@@ -25,7 +25,7 @@ Primary local URLs:
 
 - Keep `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=false` during local work.
 - Keep `VITE_ENABLE_DEV_AUTH_BOOTSTRAP=false` unless you intentionally need automatic browser auth for a temporary local workflow.
-- Use fixture-backed ingestion first before pointing AegisCore at any real security infrastructure.
+- For normal VM/lab operation, enable live connectors (`WAZUH_CONNECTOR_ENABLED=true`, `SURICATA_CONNECTOR_ENABLED=true`) and treat manual fixture posting as test/demo-only.
 - Rotate seeded demo passwords through `DEV_SEED_ADMIN_PASSWORD` and `DEV_SEED_ANALYST_PASSWORD` when sharing lab environments.
 
 ## Role Responsibilities
@@ -131,10 +131,20 @@ For JSON/CSV workflow continuity exports, use report export endpoints from the U
 
 ## Ingestion Operations
 
-Supported ingestion routes:
+Primary operational ingestion path:
+
+- Wazuh live connector polling (`WAZUH_CONNECTOR_ENABLED=true`)
+- Suricata live connector file-tail ingestion (`SURICATA_CONNECTOR_ENABLED=true`)
+
+Manual ingestion routes (test/demo tool):
 
 - `POST /integrations/wazuh/events`
 - `POST /integrations/suricata/events`
+
+Connector verification routes:
+
+- `GET /integrations/wazuh/connector/status`
+- `GET /integrations/suricata/connector/status`
 
 Supported detections only:
 

@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.api.routes import health as health_routes
 from app.services import health as health_service
 
 
@@ -29,7 +30,7 @@ def test_health_live_route_reports_liveness() -> None:
 
 def test_health_ready_route_reports_readiness(monkeypatch) -> None:
     monkeypatch.setattr(
-        health_service,
+        health_routes,
         "get_readiness_payload",
         lambda: health_service.ReadinessResponse(
             status="ready",

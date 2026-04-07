@@ -27,6 +27,8 @@
 - `WAZUH_VERIFY_TLS`: whether TLS certificates are validated for Wazuh HTTPS
 - `WAZUH_CA_FILE`: optional CA bundle path for custom/internal PKI validation
 - `WAZUH_PAGE_SIZE`: page size requested from the live Wazuh alerts endpoint
+- `WAZUH_MAX_PAGES_PER_CYCLE`: maximum Wazuh pages fetched per poll cycle
+- `WAZUH_OFFSET_PARAM`: query parameter used for paged Wazuh offset fetches
 - `WAZUH_SINCE_PARAM`: query parameter name used to pass the checkpoint timestamp
 - `WAZUH_TIMESTAMP_FIELD`: timestamp field extracted from fetched Wazuh events
 - `SURICATA_SOURCE`: identifier for the Suricata source
@@ -37,6 +39,7 @@
 - `SURICATA_MAX_EVENTS_PER_CYCLE`: max new lines/events consumed per poll cycle
 - `SURICATA_RETRY_ATTEMPTS`: retry attempts for transient Suricata connector runtime errors
 - `SURICATA_RETRY_BACKOFF_SECONDS`: linear retry backoff for Suricata connector runtime errors
+- `SURICATA_FAIL_WHEN_SOURCE_MISSING`: whether connector cycles fail when `SURICATA_EVE_FILE_PATH` is unavailable
 - `INGESTION_ALLOW_ASSET_AUTOCREATE`: whether ingestion may create a new asset record when a payload includes a host IP or hostname that does not exist yet
 - `INGESTION_DEFAULT_ASSET_CRITICALITY`: default criticality applied to auto-created assets when the source payload does not provide one
 - `VITE_API_BASE_URL`: frontend API base URL, defaulting to `/api`
@@ -106,7 +109,8 @@
 
 ## Ingestion Notes
 
-- Fixture-friendly backend ingestion routes are available at `POST /integrations/wazuh/events` and `POST /integrations/suricata/events`.
+- Primary lab ingestion path is connector-driven (`WAZUH_CONNECTOR_ENABLED=true` and `SURICATA_CONNECTOR_ENABLED=true`) so events flow continuously from upstream sources.
+- Fixture-friendly backend ingestion routes remain available at `POST /integrations/wazuh/events` and `POST /integrations/suricata/events` for test/demo workflows.
 - Live Wazuh polling can be enabled with `WAZUH_CONNECTOR_ENABLED=true`; it continuously fetches events, applies checkpointing, and pushes each event through the same normalization/scoring/incident/response pipeline used by manual ingestion.
 - Live Suricata polling can be enabled with `SURICATA_CONNECTOR_ENABLED=true`; it tails `eve.json` incrementally via stored file offsets and sends events through the same ingestion/scoring/response path.
 - Successful source events are normalized into the existing alert schema and continue through scoring, incident linkage, and automated-response evaluation.

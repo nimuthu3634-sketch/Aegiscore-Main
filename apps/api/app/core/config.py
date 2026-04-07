@@ -52,6 +52,11 @@ class Settings(BaseSettings):
     wazuh_verify_tls: bool = Field(default=True, alias="WAZUH_VERIFY_TLS")
     wazuh_ca_file: str | None = Field(default=None, alias="WAZUH_CA_FILE")
     wazuh_page_size: int = Field(default=200, alias="WAZUH_PAGE_SIZE")
+    wazuh_max_pages_per_cycle: int = Field(
+        default=5,
+        alias="WAZUH_MAX_PAGES_PER_CYCLE",
+    )
+    wazuh_offset_param: str = Field(default="offset", alias="WAZUH_OFFSET_PARAM")
     wazuh_since_param: str = Field(default="since", alias="WAZUH_SINCE_PARAM")
     wazuh_timestamp_field: str = Field(
         default="timestamp",
@@ -85,6 +90,10 @@ class Settings(BaseSettings):
     suricata_retry_backoff_seconds: float = Field(
         default=1.0,
         alias="SURICATA_RETRY_BACKOFF_SECONDS",
+    )
+    suricata_fail_when_source_missing: bool = Field(
+        default=True,
+        alias="SURICATA_FAIL_WHEN_SOURCE_MISSING",
     )
     ingestion_allow_asset_autocreate: bool = Field(
         default=True,

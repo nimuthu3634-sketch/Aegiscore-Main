@@ -44,6 +44,8 @@ def _test_settings(**overrides):
     defaults = dict(
         wazuh_timestamp_field="timestamp",
         wazuh_page_size=200,
+        wazuh_max_pages_per_cycle=5,
+        wazuh_offset_param="offset",
         wazuh_since_param="since",
         wazuh_connector_enabled=True,
         wazuh_base_url="https://wazuh.local:55000",
@@ -64,7 +66,7 @@ def _test_settings(**overrides):
 
 
 def test_wazuh_api_client_fetches_alert_items_with_checkpoint_param(monkeypatch) -> None:
-    client = wazuh_connector.WazuhAPIClient(_test_settings())
+    client = wazuh_connector.WazuhAPIClient(_test_settings(wazuh_page_size=2))
     captured: dict[str, object] = {}
 
     monkeypatch.setattr(client, "_auth_headers", lambda: {"Authorization": "Bearer token-1"})
@@ -72,20 +74,30 @@ def test_wazuh_api_client_fetches_alert_items_with_checkpoint_param(monkeypatch)
     def fake_request_json(*, method, path, headers, params):
         captured["method"] = method
         captured["path"] = path
-        captured["params"] = params
-        return {"data": {"affected_items": [{"id": "evt-1"}, {"id": "evt-2"}]}}
+        captured.setdefault("params_history", []).append(params)
+        if params["offset"] == "0":
+            return {"data": {"affected_items": [{"id": "evt-1"}, {"id": "evt-2"}]}}
+        return {"data": {"affected_items": [{"id": "evt-3"}]}}
 
     monkeypatch.setattr(client, "_request_json", fake_request_json)
 
     events = client.fetch_events(checkpoint={"last_timestamp": "2026-04-06T12:00:00+00:00"})
 
-    assert [event["id"] for event in events] == ["evt-1", "evt-2"]
+    assert [event["id"] for event in events] == ["evt-1", "evt-2", "evt-3"]
     assert captured["method"] == "GET"
     assert captured["path"] == "/alerts"
-    assert captured["params"] == {
-        "limit": "200",
-        "since": "2026-04-06T12:00:00+00:00",
-    }
+    assert captured["params_history"] == [
+        {
+            "limit": "2",
+            "since": "2026-04-06T12:00:00+00:00",
+            "offset": "0",
+        },
+        {
+            "limit": "2",
+            "since": "2026-04-06T12:00:00+00:00",
+            "offset": "2",
+        },
+    ]
 
 
 def test_run_wazuh_poll_cycle_reuses_ingestion_pipeline(monkeypatch) -> None:
@@ -239,3 +251,32 @@ def test_get_wazuh_connector_status_returns_persisted_state(monkeypatch) -> None
     assert result.last_checkpoint_timestamp == "2026-04-06T12:15:00+00:00"
     assert result.checkpoint_external_ids == ["evt-2001", "evt-2002"]
     assert result.metrics["total_ingested"] == 80
+
+
+def test_wazuh_api_client_retries_page_after_token_refresh(monkeypatch) -> None:
+    client = wazuh_connector.WazuhAPIClient(
+        _test_settings(
+            wazuh_auth_mode="token",
+            wazuh_username="admin",
+            wazuh_password="secret",
+            wazuh_page_size=200,
+        )
+    )
+    call_count = {"count": 0}
+
+    def fake_request_json(*, method, path, headers, params):
+        call_count["count"] += 1
+        if call_count["count"] == 1:
+            raise RuntimeError("Wazuh API request failed (401) for /alerts: expired token")
+        return {"data": {"affected_items": [{"id": "evt-9"}]}}
+
+    monkeypatch.setattr(client, "_request_json", fake_request_json)
+    monkeypatch.setattr(
+        client,
+        "_auth_headers",
+        lambda: {"Authorization": "Bearer refreshed"},
+    )
+
+    events = client.fetch_events(checkpoint={})
+    assert [event["id"] for event in events] == ["evt-9"]
+    assert call_count["count"] == 2

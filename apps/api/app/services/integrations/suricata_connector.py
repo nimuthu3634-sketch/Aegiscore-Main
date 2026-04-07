@@ -79,7 +79,7 @@ def _read_new_eve_lines(
     max_events_per_cycle: int,
 ) -> tuple[list[tuple[int, int, str]], int, int | None]:
     if not source_path.exists():
-        return [], checkpoint_offset, checkpoint_inode
+        raise FileNotFoundError(f"Suricata eve file not found: {source_path}")
 
     current_inode = current_file_inode(source_path)
     start_offset = checkpoint_offset
@@ -126,6 +126,15 @@ def run_suricata_poll_cycle(session: Session) -> dict[str, int]:
                 max_events_per_cycle=max(1, settings.suricata_max_events_per_cycle),
             )
             break
+        except FileNotFoundError:
+            if not settings.suricata_fail_when_source_missing:
+                lines = []
+                final_offset = offset
+                current_inode = inode
+                break
+            if attempt >= settings.suricata_retry_attempts:
+                raise
+            time.sleep(settings.suricata_retry_backoff_seconds * (attempt + 1))
         except OSError:
             if attempt >= settings.suricata_retry_attempts:
                 raise

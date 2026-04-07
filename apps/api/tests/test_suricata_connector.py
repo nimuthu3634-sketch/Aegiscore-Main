@@ -47,6 +47,7 @@ def _test_settings(**overrides):
         suricata_max_events_per_cycle=250,
         suricata_retry_attempts=2,
         suricata_retry_backoff_seconds=1.0,
+        suricata_fail_when_source_missing=True,
     )
     defaults.update(overrides)
     return SimpleNamespace(**defaults)
@@ -228,3 +229,34 @@ def test_get_suricata_connector_status_returns_checkpoint_and_metrics(monkeypatc
     assert result.checkpoint_offset == 4096
     assert result.checkpoint_inode == 77512
     assert result.metrics["total_ingested"] == 82
+
+
+def test_run_suricata_poll_cycle_raises_when_source_missing(monkeypatch, tmp_path) -> None:
+    session = FakeSession()
+    missing_path = tmp_path / "missing-eve.json"
+    monkeypatch.setattr(
+        suricata_connector,
+        "get_settings",
+        lambda: _test_settings(
+            suricata_eve_file_path=str(missing_path),
+            suricata_retry_attempts=0,
+            suricata_fail_when_source_missing=True,
+        ),
+    )
+    monkeypatch.setattr(
+        suricata_connector,
+        "mark_connector_running",
+        lambda session, connector: SimpleNamespace(checkpoint={"offset": 0}, metrics={}),
+    )
+    monkeypatch.setattr(
+        suricata_connector,
+        "mark_connector_success",
+        lambda session, connector, checkpoint, metrics: None,
+    )
+
+    try:
+        suricata_connector.run_suricata_poll_cycle(session)
+    except FileNotFoundError as exc:
+        assert "missing-eve.json" in str(exc)
+    else:  # pragma: no cover - defensive assertion
+        raise AssertionError("Expected FileNotFoundError for missing eve.json source")
