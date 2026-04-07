@@ -54,6 +54,14 @@ AegisCore is a single-tenant SOC platform for SMEs. It centralizes alert review,
 - Alert-to-incident linking supports either creating a new incident or attaching the alert to an existing incident.
 - Every mutation writes audit history, and incident detail timelines are built from those persisted events plus first-class note and response records.
 
+## Auth And Roles
+
+- Authentication is JWT-based and required for all non-health API routes.
+- Roles are intentionally limited to `admin` and `analyst`.
+- `admin` can mutate response policies and submit manual ingestion events.
+- `analyst` can execute investigation workflows and read operational/reporting surfaces, but cannot mutate policy state or submit manual ingestion events.
+- The role model is explicit and scoped for single-tenant SME operation; there is no enterprise RBAC matrix, tenant hierarchy, or custom role builder.
+
 ## Scoring And Response Model
 
 - Supported detection scope remains limited to `brute_force`, `file_integrity_violation`, `port_scan`, and `unauthorized_user_creation`.
@@ -80,6 +88,5 @@ AegisCore is a single-tenant SOC platform for SMEs. It centralizes alert review,
 
 ## Known Limitations
 
-- Live Wazuh and Suricata connector auth or polling is still future work.
 - Browser tests validate the core read path well, but not every write flow yet.
 - Some asset enrichment remains backend-derived rather than source-owned because the project stays intentionally SME-scoped.

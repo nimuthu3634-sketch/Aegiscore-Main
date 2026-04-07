@@ -48,6 +48,11 @@ Default local credentials:
 - `admin / AegisCore123!`
 - `analyst / AegisCore123!`
 
+For local demos only, override seeded passwords in `.env` before sharing environments:
+
+- `DEV_SEED_ADMIN_PASSWORD`
+- `DEV_SEED_ANALYST_PASSWORD`
+
 ## Local Validation Commands
 
 Backend:
@@ -85,6 +90,13 @@ The browser login boundary is explicit by default, even in development.
 
 ## Backend Workflow Surface
 
+Role model is intentionally minimal and single-tenant:
+
+- `admin`: full API access, including policy mutation and manual ingestion endpoints
+- `analyst`: investigation and reporting access across alerts, incidents, responses, assets, dashboard, and reports
+
+This is authenticated role-based access for SME prototype scope, not enterprise RBAC.
+
 Current live workflow endpoints:
 
 - `POST /alerts/{id}/acknowledge`
@@ -97,7 +109,7 @@ Current live workflow endpoints:
 Current policy and response endpoints:
 
 - `GET /policies`
-- `PATCH /policies/{id}`
+- `PATCH /policies/{id}` (`admin` only)
 - `GET /responses`
 
 Current reporting endpoints:
@@ -110,8 +122,8 @@ Current reporting endpoints:
 
 Current ingestion endpoints:
 
-- `POST /integrations/wazuh/events`
-- `POST /integrations/suricata/events`
+- `POST /integrations/wazuh/events` (`admin` only)
+- `POST /integrations/suricata/events` (`admin` only)
 - `GET /integrations/wazuh/connector/status`
 - `GET /integrations/suricata/connector/status`
 

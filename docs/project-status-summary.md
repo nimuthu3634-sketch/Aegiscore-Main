@@ -30,6 +30,9 @@ The implemented platform covers the full backend-owned workflow for a narrow and
 ### Backend
 
 - JWT authentication with `admin` and `analyst` roles
+- explicit route-level role protection for sensitive actions:
+  - `admin` required for response policy mutation
+  - `admin` required for manual ingestion submission
 - modular FastAPI service layer with SQLAlchemy, Alembic, and PostgreSQL
 - persisted models for users, assets, raw alerts, normalized alerts, incidents, risk scores, response policies, response actions, analyst notes, and audit logs
 - live read and write endpoints for alert and incident workflows
@@ -46,6 +49,7 @@ The implemented platform covers the full backend-owned workflow for a narrow and
 - policy-driven response evaluation after scoring
 - dry-run and live execution modes
 - support for `block_ip`, `disable_user`, `quarantine_host_flag`, `create_manual_review`, and `notify_admin`
+- first-party built-in lab adapters with explicit safety gates
 - auditable response history and policy state
 
 ### Reporting
@@ -100,7 +104,7 @@ Validation uses the real backend ingestion and workflow APIs, but relies on fixt
 
 At the current validated state:
 
-- backend test suite: `69` passing tests
+- backend test suite: `85` passing tests
 - frontend lint: passing
 - frontend production build: passing
 - Playwright suite: `7` passing browser tests
@@ -130,12 +134,12 @@ The frontend Reports page uses those real endpoints for summary cards, distribut
 
 ## 8. Known Limitations
 
-- live Wazuh and Suricata polling or webhook auth is not implemented yet
-- validation uses real ingestion endpoints with fixtures instead of continuously connected upstream tools
+- role model is intentionally simple (`admin` + `analyst`) and does not provide enterprise RBAC custom role authoring
+- validation still relies heavily on fixture-backed scenarios even though live connectors and adapters are implemented
 - Playwright covers core read workflows and scenario visibility, but not every write workflow
-- destructive live response behavior still depends on operator-supplied scripts and explicit safety enablement
+- destructive live response behavior remains safety-gated and disabled by default
 - the worker service is still a future-facing shell rather than a mature asynchronous execution subsystem
-- scheduled reporting, PDF export, and email delivery are not implemented
+- scheduled reporting and PDF export are not implemented
 
 ## 9. Future Improvements
 

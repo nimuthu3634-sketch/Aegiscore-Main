@@ -16,6 +16,7 @@ type AppShellProps = {
   pageDescription: string;
   healthTone: HealthTone;
   healthLabel: string;
+  sessionLabel: string;
   searchValue: string;
   onSearchChange: ChangeEventHandler<HTMLInputElement>;
   children: ReactNode;
@@ -29,6 +30,7 @@ export function AppShell({
   pageDescription,
   healthTone,
   healthLabel,
+  sessionLabel,
   searchValue,
   onSearchChange,
   children
@@ -64,6 +66,7 @@ export function AppShell({
             pageDescription={pageDescription}
             healthTone={healthTone}
             healthLabel={healthLabel}
+            sessionLabel={sessionLabel}
             searchValue={searchValue}
             onSearchChange={onSearchChange}
             onMenuClick={() => setSidebarOpen(true)}

@@ -23,6 +23,18 @@ Primary local URLs:
 - Keep `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=false` during local work.
 - Keep `VITE_ENABLE_DEV_AUTH_BOOTSTRAP=false` unless you intentionally need automatic browser auth for a temporary local workflow.
 - Use fixture-backed ingestion first before pointing AegisCore at any real security infrastructure.
+- Rotate seeded demo passwords through `DEV_SEED_ADMIN_PASSWORD` and `DEV_SEED_ANALYST_PASSWORD` when sharing lab environments.
+
+## Role Responsibilities
+
+- `admin`:
+  - can update response policy enabled state (`PATCH /policies/{id}`)
+  - can submit manual ingestion events (`POST /integrations/wazuh/events`, `POST /integrations/suricata/events`)
+  - can perform all analyst investigation and reporting actions
+- `analyst`:
+  - can investigate alerts/incidents, add notes, transition incidents, review responses, and use reports
+  - cannot update response policy state
+  - cannot submit manual ingestion events
 
 ## Local Validation Commands
 

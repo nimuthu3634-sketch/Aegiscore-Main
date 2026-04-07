@@ -1,6 +1,7 @@
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -15,6 +16,7 @@ from app.models.enums import (
     DetectionType,
     IncidentPriority,
     IncidentStatus,
+    RoleName,
 )
 from app.schemas.common import (
     AlertSummaryResponse,
@@ -33,7 +35,10 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures" / "ingestion"
 
 
 def _override_dependencies() -> None:
-    app.dependency_overrides[deps.get_current_user] = lambda: object()
+    app.dependency_overrides[deps.get_current_user] = lambda: SimpleNamespace(
+        username="admin",
+        role=SimpleNamespace(name=RoleName.ADMIN),
+    )
     app.dependency_overrides[get_db_session] = lambda: None
 
 
@@ -224,3 +229,21 @@ def test_suricata_connector_status_route_returns_connector_health(monkeypatch) -
     assert response.status_code == 200
     assert response.json()["connector"] == "suricata_live_connector"
     assert response.json()["mode"] == "file_tail"
+
+
+def test_ingestion_routes_reject_analyst_role() -> None:
+    payload = _fixture_payload("wazuh_brute_force.json")
+    app.dependency_overrides[deps.get_current_user] = lambda: SimpleNamespace(
+        username="analyst",
+        role=SimpleNamespace(name=RoleName.ANALYST),
+    )
+    app.dependency_overrides[get_db_session] = lambda: None
+
+    try:
+        client = TestClient(app)
+        response = client.post("/integrations/wazuh/events", json=payload)
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 403
+    assert "Insufficient role permissions" in response.json()["detail"]

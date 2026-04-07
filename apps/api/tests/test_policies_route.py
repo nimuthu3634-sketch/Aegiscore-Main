@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from types import SimpleNamespace
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -10,6 +11,7 @@ from app.db.session import get_db_session
 from app.main import app
 from app.models.enums import (
     DetectionType,
+    RoleName,
     ResponseActionType,
     ResponseMode,
     ResponsePolicyTarget,
@@ -22,7 +24,10 @@ from app.schemas.policies import (
 
 
 def _override_dependencies() -> None:
-    app.dependency_overrides[deps.get_current_user] = lambda: object()
+    app.dependency_overrides[deps.get_current_user] = lambda: SimpleNamespace(
+        username="admin",
+        role=SimpleNamespace(name=RoleName.ADMIN),
+    )
     app.dependency_overrides[get_db_session] = lambda: None
 
 
@@ -110,3 +115,21 @@ def test_policies_route_returns_not_found(monkeypatch) -> None:
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Policy not found"}
+
+
+def test_policies_patch_route_rejects_analyst_role(monkeypatch) -> None:
+    policy = _sample_policy()
+    app.dependency_overrides[deps.get_current_user] = lambda: SimpleNamespace(
+        username="analyst",
+        role=SimpleNamespace(name=RoleName.ANALYST),
+    )
+    app.dependency_overrides[get_db_session] = lambda: None
+
+    try:
+        client = TestClient(app)
+        response = client.patch(f"/policies/{policy.id}", json={"enabled": False})
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 403
+    assert "Insufficient role permissions" in response.json()["detail"]

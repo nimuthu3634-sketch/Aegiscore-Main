@@ -11,6 +11,7 @@ type TopNavigationProps = {
   pageDescription: string;
   healthTone: HealthTone;
   healthLabel: string;
+  sessionLabel: string;
   searchValue: string;
   onSearchChange: ChangeEventHandler<HTMLInputElement>;
   onMenuClick: () => void;
@@ -27,6 +28,7 @@ export function TopNavigation({
   pageDescription,
   healthTone,
   healthLabel,
+  sessionLabel,
   searchValue,
   onSearchChange,
   onMenuClick
@@ -67,7 +69,7 @@ export function TopNavigation({
             className="border-border-subtle bg-surface-subtle/80"
             leadingIcon={<Icon name="shield" className="h-4 w-4" />}
           >
-            Analyst session
+            {sessionLabel}
           </Button>
         </div>
       </div>

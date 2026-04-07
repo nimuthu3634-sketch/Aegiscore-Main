@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter
 
-from app.api.deps import CurrentUser, DbSession
+from app.api.deps import AdminUser, CurrentUser, DbSession
 from app.schemas.policies import (
     ResponsePolicyListResponse,
     ResponsePolicyUpdateRequest,
@@ -22,7 +22,7 @@ def read_policies(_: CurrentUser, db: DbSession) -> ResponsePolicyListResponse:
 def update_policy_route(
     policy_id: UUID,
     payload: ResponsePolicyUpdateRequest,
-    _: CurrentUser,
+    _: AdminUser,
     db: DbSession,
 ) -> ResponsePolicyUpdateResponse:
     return update_policy_enabled(db, policy_id, enabled=payload.enabled)

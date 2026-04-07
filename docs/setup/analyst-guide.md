@@ -13,6 +13,8 @@ Default local users:
 - `admin / AegisCore123!`
 - `analyst / AegisCore123!`
 
+Role expectation for this guide: analyst-level workflow. If you sign in as `admin`, the same analyst surfaces are available plus policy/ingestion administration capabilities.
+
 ## Overview Dashboard
 
 Use the overview screen to answer four quick questions:
@@ -45,8 +47,14 @@ The Incidents page groups linked alerts into an investigation record.
 
 - Assets: review monitored endpoints, agent posture, recent alerts, and open-incident exposure
 - Responses: review dry-run or live actions, execution status, and policy context
-- Rules / Policies: review enabled detection-specific response policies and toggle them safely
+- Rules / Policies: review enabled detection-specific response policies (toggle requires `admin`)
 - Reports: review daily or weekly operational summaries and export alert, incident, or response datasets
+
+## Role Guardrails
+
+- Analysts can triage and investigate, but cannot change response policy enabled state.
+- Analysts can view connector status but cannot post manual ingestion events.
+- If a restricted action is attempted with an analyst session, the API returns `403` with an explicit permission error.
 
 ## Supported Detection Scope
 

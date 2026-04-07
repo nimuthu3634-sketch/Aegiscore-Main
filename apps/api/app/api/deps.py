@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import decode_access_token
 from app.db.session import get_db_session
+from app.models.enums import RoleName
 from app.models.user import User
 from app.repositories.users import UsersRepository
 
@@ -42,3 +43,22 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def require_roles(*allowed_roles: RoleName):
+    def _role_dependency(current_user: CurrentUser) -> User:
+        if current_user.role.name not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient role permissions for this action.",
+            )
+        return current_user
+
+    return _role_dependency
+
+
+AdminUser = Annotated[User, Depends(require_roles(RoleName.ADMIN))]
+OperatorUser = Annotated[
+    User,
+    Depends(require_roles(RoleName.ADMIN, RoleName.ANALYST)),
+]

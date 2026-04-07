@@ -20,6 +20,7 @@ import { RulesPage } from "./pages/RulesPage";
 import {
   AUTH_REQUIRED_EVENT,
   fetchHealthResponse,
+  getStoredSessionRole,
   hasStoredAccessToken,
   isDevAuthBootstrapEnabled,
   type HealthResponse
@@ -48,6 +49,13 @@ export default function App() {
   const isLoginRoute = location.pathname === "/login";
   const hasSession = hasStoredAccessToken();
   const allowDevBootstrap = isDevAuthBootstrapEnabled();
+  const sessionRole = getStoredSessionRole();
+  const sessionLabel =
+    sessionRole === "admin"
+      ? "Admin session"
+      : sessionRole === "analyst"
+        ? "Analyst session"
+        : "Authenticated session";
 
   useEffect(() => {
     if (isLoginRoute) {
@@ -142,6 +150,7 @@ export default function App() {
       pageDescription={pageContent.description}
       healthTone={healthTone}
       healthLabel={healthLabel}
+      sessionLabel={sessionLabel}
       searchValue={globalSearch}
       onSearchChange={(event) => setGlobalSearch(event.target.value)}
     >
