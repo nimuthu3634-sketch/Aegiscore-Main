@@ -22,7 +22,11 @@ from app.schemas.common import (
     IncidentReferenceResponse,
     RawAlertSummaryResponse,
 )
-from app.schemas.ingestion import IngestionResultResponse
+from app.schemas.ingestion import (
+    IngestionResultResponse,
+    SuricataConnectorStatusResponse,
+    WazuhConnectorStatusResponse,
+)
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "ingestion"
@@ -148,3 +152,75 @@ def test_suricata_ingestion_route_returns_validation_error(monkeypatch) -> None:
 
     assert response.status_code == 422
     assert "supported AegisCore detection scope" in response.json()["detail"]
+
+
+def test_wazuh_connector_status_route_returns_connector_health(monkeypatch) -> None:
+    _override_dependencies()
+    monkeypatch.setattr(
+        ingestion_route,
+        "get_wazuh_connector_status",
+        lambda db: WazuhConnectorStatusResponse(
+            connector="wazuh_live_connector",
+            enabled=True,
+            status="healthy",
+            last_success_at=datetime(2026, 4, 6, 12, 30, tzinfo=UTC),
+            last_error_at=None,
+            last_error_message=None,
+            last_checkpoint_timestamp="2026-04-06T12:29:00+00:00",
+            checkpoint_external_ids=["evt-1", "evt-2"],
+            metrics={
+                "poll_count": 5,
+                "total_fetched": 80,
+                "total_ingested": 73,
+                "total_duplicates": 6,
+                "total_failed": 1,
+            },
+        ),
+    )
+
+    try:
+        client = TestClient(app)
+        response = client.get("/integrations/wazuh/connector/status")
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 200
+    assert response.json()["connector"] == "wazuh_live_connector"
+    assert response.json()["status"] == "healthy"
+
+
+def test_suricata_connector_status_route_returns_connector_health(monkeypatch) -> None:
+    _override_dependencies()
+    monkeypatch.setattr(
+        ingestion_route,
+        "get_suricata_connector_status",
+        lambda db: SuricataConnectorStatusResponse(
+            connector="suricata_live_connector",
+            enabled=True,
+            mode="file_tail",
+            source_path="/var/log/suricata/eve.json",
+            status="healthy",
+            last_success_at=datetime(2026, 4, 6, 12, 30, tzinfo=UTC),
+            last_error_at=None,
+            last_error_message=None,
+            checkpoint_offset=9124,
+            checkpoint_inode=77512,
+            metrics={
+                "poll_count": 6,
+                "total_fetched": 140,
+                "total_ingested": 130,
+                "total_duplicates": 7,
+                "total_failed": 3,
+            },
+        ),
+    )
+
+    try:
+        client = TestClient(app)
+        response = client.get("/integrations/suricata/connector/status")
+    finally:
+        _clear_overrides()
+
+    assert response.status_code == 200
+    assert response.json()["connector"] == "suricata_live_connector"
+    assert response.json()["mode"] == "file_tail"

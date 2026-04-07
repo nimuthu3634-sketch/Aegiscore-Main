@@ -12,6 +12,7 @@ from app.models.base import Base
 from app.models.enums import IncidentPriority, IncidentStatus, enum_values
 
 if TYPE_CHECKING:
+    from app.models.notification_event import NotificationEvent
     from app.models.normalized_alert import NormalizedAlert
     from app.models.response_action import ResponseAction
     from app.models.user import User
@@ -71,3 +72,6 @@ class Incident(Base):
     )
     assigned_user: Mapped["User | None"] = relationship(back_populates="assigned_incidents")
     response_actions: Mapped[list["ResponseAction"]] = relationship(back_populates="incident")
+    notification_events: Mapped[list["NotificationEvent"]] = relationship(
+        back_populates="incident"
+    )

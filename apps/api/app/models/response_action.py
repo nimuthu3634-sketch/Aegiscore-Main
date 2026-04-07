@@ -13,6 +13,7 @@ from app.models.enums import ResponseMode, ResponseStatus, enum_values
 
 if TYPE_CHECKING:
     from app.models.incident import Incident
+    from app.models.notification_event import NotificationEvent
     from app.models.normalized_alert import NormalizedAlert
     from app.models.response_policy import ResponsePolicy
     from app.models.user import User
@@ -82,3 +83,6 @@ class ResponseAction(Base):
     )
     policy: Mapped["ResponsePolicy | None"] = relationship(back_populates="response_actions")
     requested_by: Mapped["User | None"] = relationship(back_populates="requested_response_actions")
+    notification_events: Mapped[list["NotificationEvent"]] = relationship(
+        back_populates="response_action"
+    )

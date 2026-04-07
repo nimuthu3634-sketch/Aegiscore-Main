@@ -102,6 +102,19 @@ function mapIncidentDetailResponse(
       relatedResponses: toRelatedResponses(payload.response_history),
       correlationExplanation: payload.grouped_evidence.summary,
       groupedEvidence: payload.grouped_evidence.evidence_items,
+      notifications: payload.notifications.map((event) => ({
+        id: event.id,
+        channel: event.channel,
+        deliveryMode: event.delivery_mode,
+        triggerType: event.trigger_type,
+        triggerValue: event.trigger_value,
+        recipient: event.recipient,
+        subject: event.subject,
+        status: event.status,
+        createdAt: formatUtcDateTime(event.created_at),
+        sentAt: formatUtcDateTime(event.sent_at),
+        errorMessage: event.error_message
+      })),
       priorityExplanation: {
         label: payload.priority_explanation.label,
         summary: payload.priority_explanation.summary,

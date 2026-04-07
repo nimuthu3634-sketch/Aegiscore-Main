@@ -357,6 +357,55 @@ export function IncidentDetailPage() {
             <ActivityTimeline items={incident.timeline} />
           </EvidencePanel>
 
+          <EvidencePanel
+            eyebrow="Notifications"
+            title="Administrator notifications"
+            description="Notification attempts generated for this incident from risk, state, or response triggers."
+          >
+            {incident.notifications.length ? (
+              <div className="space-y-3">
+                {incident.notifications.map((event) => (
+                  <div
+                    key={event.id}
+                    className="rounded-panel border border-border-subtle bg-surface-subtle/65 p-4"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="type-mono-sm">{event.subject}</p>
+                      <Badge
+                        tone={
+                          event.status === "sent"
+                            ? "success"
+                            : event.status === "failed"
+                              ? "danger"
+                              : "outline"
+                        }
+                      >
+                        {event.status}
+                      </Badge>
+                    </div>
+                    <p className="mt-2 type-body-sm">
+                      {event.channel} ({event.deliveryMode}) to {event.recipient}
+                    </p>
+                    <p className="mt-1 type-body-sm">
+                      trigger: {event.triggerType} [{event.triggerValue}]
+                    </p>
+                    <p className="mt-1 type-body-sm">created: {event.createdAt}</p>
+                    <p className="mt-1 type-body-sm">sent: {event.sentAt}</p>
+                    {event.errorMessage ? (
+                      <p className="mt-2 text-body-sm text-status-danger">{event.errorMessage}</p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-panel border border-dashed border-border-subtle bg-surface-base/30 p-4">
+                <p className="type-body-sm">
+                  No notification attempts have been recorded for this incident yet.
+                </p>
+              </div>
+            )}
+          </EvidencePanel>
+
           <ScoreExplanationCard
             label={incident.priorityExplanation.label}
             summary={incident.priorityExplanation.summary}

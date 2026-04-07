@@ -22,6 +22,20 @@ export type IncidentPriorityExplanation = {
   scoringMethods: string[];
 };
 
+export type IncidentNotificationItem = {
+  id: string;
+  channel: string;
+  deliveryMode: string;
+  triggerType: string;
+  triggerValue: string;
+  recipient: string;
+  subject: string;
+  status: string;
+  createdAt: string;
+  sentAt: string;
+  errorMessage: string | null;
+};
+
 export type IncidentDetailRecord = {
   id: string;
   title: string;
@@ -45,6 +59,7 @@ export type IncidentDetailRecord = {
   groupedEvidence: string[];
   priorityExplanation: IncidentPriorityExplanation;
   availableActions?: string[];
+  notifications: IncidentNotificationItem[];
 };
 
 export type IncidentDetailResponse = {
@@ -129,6 +144,19 @@ export type IncidentDetailApiResponse = {
         name: string;
       };
     } | null;
+  }>;
+  notifications: Array<{
+    id: string;
+    channel: string;
+    delivery_mode: string;
+    trigger_type: string;
+    trigger_value: string;
+    recipient: string;
+    subject: string;
+    status: string;
+    error_message: string | null;
+    created_at: string;
+    sent_at: string | null;
   }>;
   analyst_notes: Array<{
     id: string;

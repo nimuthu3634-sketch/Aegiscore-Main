@@ -26,7 +26,66 @@ class Settings(BaseSettings):
         default="http://wazuh-manager:55000",
         alias="WAZUH_BASE_URL",
     )
+    wazuh_username: str | None = Field(default=None, alias="WAZUH_USERNAME")
+    wazuh_password: str | None = Field(default=None, alias="WAZUH_PASSWORD")
+    wazuh_bearer_token: str | None = Field(default=None, alias="WAZUH_BEARER_TOKEN")
+    wazuh_auth_mode: str = Field(default="basic", alias="WAZUH_AUTH_MODE")
+    wazuh_auth_endpoint: str = Field(
+        default="/security/user/authenticate",
+        alias="WAZUH_AUTH_ENDPOINT",
+    )
+    wazuh_alerts_path: str = Field(default="/alerts", alias="WAZUH_ALERTS_PATH")
+    wazuh_connector_enabled: bool = Field(
+        default=False,
+        alias="WAZUH_CONNECTOR_ENABLED",
+    )
+    wazuh_poll_interval_seconds: int = Field(
+        default=30,
+        alias="WAZUH_POLL_INTERVAL_SECONDS",
+    )
+    wazuh_timeout_seconds: float = Field(default=10.0, alias="WAZUH_TIMEOUT_SECONDS")
+    wazuh_retry_attempts: int = Field(default=2, alias="WAZUH_RETRY_ATTEMPTS")
+    wazuh_retry_backoff_seconds: float = Field(
+        default=1.0,
+        alias="WAZUH_RETRY_BACKOFF_SECONDS",
+    )
+    wazuh_verify_tls: bool = Field(default=True, alias="WAZUH_VERIFY_TLS")
+    wazuh_ca_file: str | None = Field(default=None, alias="WAZUH_CA_FILE")
+    wazuh_page_size: int = Field(default=200, alias="WAZUH_PAGE_SIZE")
+    wazuh_since_param: str = Field(default="since", alias="WAZUH_SINCE_PARAM")
+    wazuh_timestamp_field: str = Field(
+        default="timestamp",
+        alias="WAZUH_TIMESTAMP_FIELD",
+    )
     suricata_source: str = Field(default="suricata", alias="SURICATA_SOURCE")
+    suricata_connector_enabled: bool = Field(
+        default=False,
+        alias="SURICATA_CONNECTOR_ENABLED",
+    )
+    suricata_connector_mode: str = Field(
+        default="file_tail",
+        alias="SURICATA_CONNECTOR_MODE",
+    )
+    suricata_eve_file_path: str = Field(
+        default="/var/log/suricata/eve.json",
+        alias="SURICATA_EVE_FILE_PATH",
+    )
+    suricata_poll_interval_seconds: int = Field(
+        default=15,
+        alias="SURICATA_POLL_INTERVAL_SECONDS",
+    )
+    suricata_max_events_per_cycle: int = Field(
+        default=250,
+        alias="SURICATA_MAX_EVENTS_PER_CYCLE",
+    )
+    suricata_retry_attempts: int = Field(
+        default=2,
+        alias="SURICATA_RETRY_ATTEMPTS",
+    )
+    suricata_retry_backoff_seconds: float = Field(
+        default=1.0,
+        alias="SURICATA_RETRY_BACKOFF_SECONDS",
+    )
     ingestion_allow_asset_autocreate: bool = Field(
         default=True,
         alias="INGESTION_ALLOW_ASSET_AUTOCREATE",
@@ -96,6 +155,35 @@ class Settings(BaseSettings):
         default=None,
         alias="RESPONSE_ADAPTER_NOTIFY_ADMIN_SCRIPT",
     )
+    notifications_enabled: bool = Field(default=False, alias="NOTIFICATIONS_ENABLED")
+    notifications_mode: str = Field(default="log", alias="NOTIFICATIONS_MODE")
+    notifications_risk_threshold: int = Field(
+        default=85,
+        alias="NOTIFICATIONS_RISK_THRESHOLD",
+    )
+    notifications_incident_states: str = Field(
+        default="triaged,investigating,contained",
+        alias="NOTIFICATIONS_INCIDENT_STATES",
+    )
+    notifications_response_statuses: str = Field(
+        default="warning,failed",
+        alias="NOTIFICATIONS_RESPONSE_STATUSES",
+    )
+    notifications_admin_recipients: str = Field(
+        default="admin@aegiscore.local",
+        alias="NOTIFICATIONS_ADMIN_RECIPIENTS",
+    )
+    notifications_sender: str = Field(
+        default="aegiscore@localhost",
+        alias="NOTIFICATIONS_SENDER",
+    )
+    smtp_host: str = Field(default="localhost", alias="SMTP_HOST")
+    smtp_port: int = Field(default=1025, alias="SMTP_PORT")
+    smtp_username: str | None = Field(default=None, alias="SMTP_USERNAME")
+    smtp_password: str | None = Field(default=None, alias="SMTP_PASSWORD")
+    smtp_use_tls: bool = Field(default=False, alias="SMTP_USE_TLS")
+    smtp_use_starttls: bool = Field(default=False, alias="SMTP_USE_STARTTLS")
+    smtp_timeout_seconds: float = Field(default=10.0, alias="SMTP_TIMEOUT_SECONDS")
 
     model_config = SettingsConfigDict(
         env_file=".env",

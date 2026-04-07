@@ -73,6 +73,20 @@ def _settings(**overrides: object) -> SimpleNamespace:
         "response_adapter_quarantine_host_flag_script": None,
         "response_adapter_create_manual_review_script": None,
         "response_adapter_notify_admin_script": None,
+        "notifications_enabled": False,
+        "notifications_mode": "log",
+        "notifications_risk_threshold": 85,
+        "notifications_incident_states": "triaged,investigating,contained",
+        "notifications_response_statuses": "warning,failed",
+        "notifications_admin_recipients": "admin@aegiscore.local",
+        "notifications_sender": "aegiscore@localhost",
+        "smtp_host": "localhost",
+        "smtp_port": 1025,
+        "smtp_username": None,
+        "smtp_password": None,
+        "smtp_use_tls": False,
+        "smtp_use_starttls": False,
+        "smtp_timeout_seconds": 10.0,
     }
     defaults.update(overrides)
     return SimpleNamespace(**defaults)

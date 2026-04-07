@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.models.asset import Asset
 from app.models.enums import IncidentStatus
 from app.models.incident import Incident
+from app.models.notification_event import NotificationEvent
 from app.models.normalized_alert import NormalizedAlert
 from app.models.response_action import ResponseAction
 from app.models.user import User
@@ -140,6 +141,9 @@ class IncidentsRepository:
                 selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.requested_by)
                 .selectinload(User.role),
+                selectinload(Incident.notification_events).selectinload(
+                    NotificationEvent.response_action
+                ),
             )
             .where(Incident.id == incident_id)
         )
@@ -167,6 +171,9 @@ class IncidentsRepository:
                 selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.requested_by)
                 .selectinload(User.role),
+                selectinload(Incident.notification_events).selectinload(
+                    NotificationEvent.response_action
+                ),
             )
             .where(Incident.id == incident_id)
         )

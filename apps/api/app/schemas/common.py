@@ -158,6 +158,20 @@ class ActivityEntryResponse(APIModel):
     details: dict[str, Any]
 
 
+class NotificationEventResponse(APIModel):
+    id: UUID
+    channel: str
+    delivery_mode: str
+    trigger_type: str
+    trigger_value: str
+    recipient: str
+    subject: str
+    status: str
+    error_message: str | None
+    created_at: datetime
+    sent_at: datetime | None
+
+
 class AlertSummaryResponse(APIModel):
     id: UUID
     source: str

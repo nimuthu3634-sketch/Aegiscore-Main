@@ -22,6 +22,7 @@ from app.schemas.common import (
     ActivityEntryResponse,
     AnalystNoteResponse,
     AssetSummaryResponse,
+    NotificationEventResponse,
     ResponseActionDetailResponse,
     RoleResponse,
     UserBriefResponse,
@@ -110,6 +111,21 @@ def _sample_incident_detail() -> IncidentDetailResponse:
                 created_at=datetime.now(UTC),
                 executed_at=None,
                 requested_by=analyst,
+            )
+        ],
+        notifications=[
+            NotificationEventResponse(
+                id=uuid4(),
+                channel="email",
+                delivery_mode="log",
+                trigger_type="risk_threshold",
+                trigger_value="score=88",
+                recipient="admin@aegiscore.local",
+                subject="[AegisCore] Incident high - File integrity drift",
+                status="sent",
+                error_message=None,
+                created_at=datetime.now(UTC),
+                sent_at=datetime.now(UTC),
             )
         ],
         analyst_notes=[

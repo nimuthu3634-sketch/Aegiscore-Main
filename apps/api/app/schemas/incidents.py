@@ -10,6 +10,7 @@ from app.schemas.common import (
     ActivityEntryResponse,
     AnalystNoteResponse,
     AssetSummaryResponse,
+    NotificationEventResponse,
     ResponseActionDetailResponse,
     UserBriefResponse,
 )
@@ -68,6 +69,7 @@ class IncidentDetailResponse(APIModel):
     linked_alerts: list[IncidentLinkedAlertResponse]
     grouped_evidence: IncidentGroupedEvidenceResponse
     response_history: list[ResponseActionDetailResponse]
+    notifications: list[NotificationEventResponse]
     analyst_notes: list[AnalystNoteResponse]
     timeline: list[ActivityEntryResponse]
     priority_explanation: IncidentPriorityExplanationResponse

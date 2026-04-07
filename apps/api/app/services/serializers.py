@@ -6,6 +6,7 @@ from app.models.asset import Asset
 from app.models.audit_log import AuditLog
 from app.models.enums import ResponseMode, ResponseStatus
 from app.models.incident import Incident
+from app.models.notification_event import NotificationEvent
 from app.models.normalized_alert import NormalizedAlert
 from app.models.raw_alert import RawAlert
 from app.models.response_action import ResponseAction
@@ -26,6 +27,7 @@ from app.schemas.common import (
     AuditLogResponse,
     IncidentReferenceResponse,
     IncidentSummaryResponse,
+    NotificationEventResponse,
     RawAlertSummaryResponse,
     ResponseActionDetailResponse,
     ResponseActionReferenceResponse,
@@ -629,6 +631,24 @@ def to_activity_entry_response(audit_log: AuditLog) -> ActivityEntryResponse:
     )
 
 
+def to_notification_event_response(
+    event: NotificationEvent,
+) -> NotificationEventResponse:
+    return NotificationEventResponse(
+        id=event.id,
+        channel=event.channel,
+        delivery_mode=event.delivery_mode,
+        trigger_type=event.trigger_type,
+        trigger_value=event.trigger_value,
+        recipient=event.recipient,
+        subject=event.subject,
+        status=event.status,
+        error_message=event.error_message,
+        created_at=event.created_at,
+        sent_at=event.sent_at,
+    )
+
+
 def _build_alert_score_explanation(
     alert: NormalizedAlert,
     priority_label: AlertSeverityLabel | None,
@@ -873,6 +893,14 @@ def to_incident_detail_response(
             for action in sorted(
                 incident.response_actions,
                 key=lambda action: action.created_at,
+                reverse=True,
+            )
+        ],
+        notifications=[
+            to_notification_event_response(event)
+            for event in sorted(
+                incident.notification_events,
+                key=lambda event: event.created_at,
                 reverse=True,
             )
         ],

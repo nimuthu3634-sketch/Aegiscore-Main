@@ -21,6 +21,10 @@ from app.repositories.incidents import IncidentsRepository
 from app.repositories.policies import PoliciesRepository
 from app.repositories.responses import ResponsesRepository
 from app.services.response_automation.adapters import AdapterContext, execute_adapter
+from app.services.notifications.service import (
+    notify_for_high_risk_incident,
+    notify_for_response_result,
+)
 from app.services.scoring.baseline import priority_from_score
 from app.services.scoring.features import (
     extract_destination_ip,
@@ -304,6 +308,11 @@ def _execute_response_action(
             "message": final_result.message,
         },
     )
+    notify_for_response_result(
+        session,
+        incident=response_action.incident,
+        response_action=response_action,
+    )
     return response_action
 
 
@@ -372,6 +381,11 @@ def evaluate_alert_policies(
                 reason=reason,
             )
         )
+    notify_for_high_risk_incident(
+        session,
+        incident=incident,
+        risk_score=alert.risk_score.score,
+    )
     refresh_incident_priority(incident)
     return responses
 

@@ -57,7 +57,8 @@ def _sample_actor() -> User:
 
 
 def _sample_alert_fixture() -> tuple[NormalizedAlert, NormalizedAlert]:
-    now = datetime.now(UTC)
+    # Keep fixture timestamps deterministic and within report query windows.
+    now = datetime(2026, 4, 5, 12, 0, tzinfo=UTC)
     asset = Asset(
         id=uuid4(),
         hostname="acct-db-01",

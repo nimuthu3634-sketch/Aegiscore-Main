@@ -112,6 +112,8 @@ Current ingestion endpoints:
 
 - `POST /integrations/wazuh/events`
 - `POST /integrations/suricata/events`
+- `GET /integrations/wazuh/connector/status`
+- `GET /integrations/suricata/connector/status`
 
 ## Safety Notes
 
@@ -128,19 +130,24 @@ Current ingestion endpoints:
 - [Scoring](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/scoring.md)
 - [Operator Guide](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/operator-guide.md)
 - [Analyst Guide](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/analyst-guide.md)
+- [Wazuh Live Integration](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/wazuh-live-integration.md)
+- [Suricata Live Integration](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/suricata-live-integration.md)
+- [Notifications Setup](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/setup/notifications.md)
 - [End-to-End Validation](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/testing/end-to-end-validation.md)
 - [Playwright Coverage](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/testing/playwright-coverage.md)
 - [Release Readiness](/Users/nimus/OneDrive/Documents/GitHub/Aegiscore-Main/docs/release-readiness.md)
 
 ## Known Limitations
 
-- Live Wazuh and Suricata polling or webhook auth is not implemented yet; current validation uses the real ingestion endpoints with fixture-backed payloads.
+- Live Suricata connector currently supports `file_tail` mode for `eve.json` and does not yet include webhook-forward auth mode.
+- Live Wazuh polling depends on the lab endpoint/auth shape and currently expects a list response or a `data.affected_items`/`data.items` envelope.
 - Playwright covers core read workflows and scenario visibility, but not every mutation path.
 - The frontend is operational and validated, but still large enough to benefit from additional route-level code splitting over time.
 
 ## Future Work
 
-- add live connector polling or webhook integration for Wazuh and Suricata
+- add authenticated forwarding mode support for Suricata live connector
+- improve Wazuh connector compatibility profiles for additional Wazuh endpoint query/filter patterns
 - expand browser coverage for notes, transitions, and policy mutation flows
 - move selected heavy frontend routes to dynamic imports if bundle size becomes a sustained local problem
 - add background replay handling for ingestion failures and deeper adapter integrations for live response actions
