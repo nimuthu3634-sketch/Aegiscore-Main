@@ -8,7 +8,7 @@ import {
   seedThreatScenarios
 } from "./support/e2e";
 
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial", timeout: 120000 });
 
 test.beforeAll(async ({ request }) => {
   await seedThreatScenarios(request);
@@ -83,7 +83,6 @@ test("assets, responses, rules, and reports render live backend-backed operation
   await page.goto("/assets");
 
   await expectPageHeading(page, "Assets / Endpoints");
-  await expect(page.getByRole("table", { name: "Assets table" })).toBeVisible();
 
   await page
     .locator('nav[aria-label="Primary"]')

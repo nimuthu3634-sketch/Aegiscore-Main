@@ -65,6 +65,7 @@ export function AnalystNotesPanel({
         <div className="space-y-3 rounded-panel border border-border-subtle bg-surface-base/40 p-4">
           <Textarea
             label={composerLabel}
+            data-testid="analyst-notes-input"
             placeholder="Capture investigation context, escalation notes, or follow-up tasks."
             value={draft}
             onChange={(event) => onDraftChange(event.target.value)}
@@ -80,6 +81,7 @@ export function AnalystNotesPanel({
             <Button
               variant="secondary"
               size="sm"
+              data-testid="analyst-notes-save-btn"
               onClick={onSave}
               disabled={isSaving || saveDisabled}
             >

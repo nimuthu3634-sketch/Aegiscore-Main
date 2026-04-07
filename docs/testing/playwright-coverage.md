@@ -38,13 +38,20 @@ The Playwright suite now covers:
 - overview dashboard
 - alerts list
 - alert detail
+- alert acknowledge
+- alert close
+- alert link to existing incident
+- alert analyst note save
 - incidents list
 - incident detail
+- incident state transition
 - assets
 - responses
 - rules and policies
+- policy enable/disable toggles
 - reports
 - export trigger coverage for alerts
+- export trigger coverage for incidents
 - one happy-path validation for each supported detection:
   - `brute_force`
   - `file_integrity_violation`
@@ -55,6 +62,7 @@ The Playwright suite now covers:
 
 - `apps/web/tests/core-workflows.spec.ts`
 - `apps/web/tests/scenario-coverage.spec.ts`
+- `apps/web/tests/write-workflows.spec.ts`
 - `apps/web/tests/support/e2e.ts`
 
 ## Runbook
@@ -65,16 +73,16 @@ Start the backend stack first so the frontend dev server can proxy `/api` calls 
 npm run test:web:e2e
 ```
 
-The latest successful run completed with `7 passed`.
+The latest successful run completed with `9 passed`.
 
 ## Remaining Gaps
 
-- The suite does not yet exercise every mutation path such as analyst notes, alert close, incident transitions, or policy toggles.
-- Reports export coverage validates the browser download trigger, not full file-content parsing in the browser layer.
+- Reports export coverage validates browser download triggers, not full file-content parsing in browser assertions.
+- Negative-path role tests for analyst-restricted mutations are still handled in backend API tests, not browser tests.
 - Coverage is intentionally practical and SME-oriented; it is not a pixel-test suite and it avoids brittle styling assertions.
 
 ## Future Coverage Work
 
-- add browser coverage for alert acknowledge or close flows
-- add browser coverage for incident transitions and note persistence
-- add policy-toggle mutation coverage once those flows are stable enough for resilient browser assertions
+- add analyst-role browser flows that assert restricted controls are hidden or blocked for protected actions
+- add incident false-positive transition browser coverage with explicit precondition seeding
+- add targeted export file-content validation in API-layer tests for generated CSV/JSON payload integrity

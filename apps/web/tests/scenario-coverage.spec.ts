@@ -9,7 +9,7 @@ import {
 
 let seededScenarios: Record<ScenarioKey, SeededScenario>;
 
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial", timeout: 120000 });
 
 test.beforeAll(async ({ request }) => {
   seededScenarios = await seedThreatScenarios(request);

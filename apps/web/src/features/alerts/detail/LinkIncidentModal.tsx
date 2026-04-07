@@ -59,6 +59,7 @@ function IncidentCandidateList({
           <button
             key={incident.id}
             type="button"
+            data-testid={`link-incident-candidate-${incident.id}`}
             className={cn(
               "w-full border-b border-border-subtle px-4 py-4 text-left transition last:border-b-0 hover:bg-surface-accentSoft/35",
               isSelected &&
@@ -356,6 +357,7 @@ export function LinkIncidentModal({
             <Button
               variant="primary"
               size="sm"
+              data-testid="link-incident-confirm-btn"
               onClick={handleConfirm}
               disabled={confirmDisabled}
             >
@@ -376,6 +378,7 @@ export function LinkIncidentModal({
           <Button
             size="sm"
             variant={mode === "existing" ? "primary" : "ghost"}
+            data-testid="link-incident-mode-existing-btn"
             onClick={() => handleModeChange("existing")}
           >
             Existing incident
@@ -383,6 +386,7 @@ export function LinkIncidentModal({
           <Button
             size="sm"
             variant={mode === "new" ? "primary" : "ghost"}
+            data-testid="link-incident-mode-new-btn"
             onClick={() => handleModeChange("new")}
           >
             Create new
@@ -394,6 +398,7 @@ export function LinkIncidentModal({
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <SearchInput
+                  data-testid="link-incident-search-input"
                   value={search}
                   onChange={(event) => {
                     setSearch(event.target.value);

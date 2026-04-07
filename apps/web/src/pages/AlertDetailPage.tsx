@@ -106,7 +106,7 @@ export function AlertDetailPage() {
   }
 
   const { alert, fetchedAt } = data;
-  const canAcknowledge = ["new", "triaged"].includes(alert.status);
+  const canAcknowledge = !["investigating", "resolved"].includes(alert.status);
   const canLinkIncident = !alert.linkedIncidentId && alert.status !== "resolved";
   const canClose = alert.status !== "resolved";
 
@@ -337,6 +337,7 @@ export function AlertDetailPage() {
                 <Button
                   variant="secondary"
                   size="sm"
+                  data-testid="alert-acknowledge-btn"
                   onClick={() =>
                     handleWorkflowAction("acknowledge", () =>
                       acknowledgeAlertDetail(alert.id)
@@ -349,6 +350,7 @@ export function AlertDetailPage() {
                 <Button
                   variant="secondary"
                   size="sm"
+                  data-testid="alert-link-incident-btn"
                   onClick={() => {
                     setWorkflowError(null);
                     setWorkflowMessage(null);
@@ -361,6 +363,7 @@ export function AlertDetailPage() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  data-testid="alert-close-btn"
                   onClick={() =>
                     handleWorkflowAction("close", () => closeAlertDetail(alert.id))
                   }

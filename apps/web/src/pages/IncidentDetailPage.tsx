@@ -443,6 +443,7 @@ export function IncidentDetailPage() {
                 <Button
                   variant={actionVariants.triage}
                   size="sm"
+                  data-testid="incident-transition-triage-btn"
                   onClick={() => handleTransition("triage")}
                   disabled={
                     pendingAction !== null ||
@@ -454,6 +455,7 @@ export function IncidentDetailPage() {
                 <Button
                   variant={actionVariants.investigate}
                   size="sm"
+                  data-testid="incident-transition-investigate-btn"
                   onClick={() => handleTransition("investigate")}
                   disabled={
                     pendingAction !== null ||
@@ -465,6 +467,7 @@ export function IncidentDetailPage() {
                 <Button
                   variant={actionVariants.contain}
                   size="sm"
+                  data-testid="incident-transition-contain-btn"
                   onClick={() => handleTransition("contain")}
                   disabled={
                     pendingAction !== null ||
@@ -476,6 +479,7 @@ export function IncidentDetailPage() {
                 <Button
                   variant={actionVariants.resolve}
                   size="sm"
+                  data-testid="incident-transition-resolve-btn"
                   onClick={() => handleTransition("resolve")}
                   disabled={
                     pendingAction !== null ||
@@ -489,6 +493,7 @@ export function IncidentDetailPage() {
                 variant={actionVariants.falsePositive}
                 size="sm"
                 fullWidth
+                data-testid="incident-transition-mark-false-positive-btn"
                 onClick={() => handleTransition("mark_false_positive")}
                 disabled={
                   pendingAction !== null ||

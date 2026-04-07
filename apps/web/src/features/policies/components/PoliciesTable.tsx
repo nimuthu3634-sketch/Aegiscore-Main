@@ -86,6 +86,7 @@ export function PoliciesTable({
         <Button
           variant={row.enabled ? "ghost" : "secondary"}
           size="sm"
+          data-testid={`policy-toggle-${row.id}`}
           onClick={() => onToggle(row)}
           disabled={pendingPolicyId === row.id}
         >
