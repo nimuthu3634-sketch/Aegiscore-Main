@@ -72,17 +72,22 @@ Fallback:
 - `docs/setup/analyst-guide.md`
 - `docs/setup/operator-runbook.md`
 
-## 5) Freeze Result Record (2026-04-07)
+## 5) Freeze Result Record (2026-04-07, Post-Remediation Re-Run)
 
-- backend tests: blocked in this shell (Docker client pipe unavailable)
+- backend tests: passed (`98 passed`, `1 warning`) via `docker compose run --rm --no-deps --entrypoint pytest api`
 - frontend lint: passed
 - frontend build: passed
-- Playwright: blocker (`/auth/login` proxy socket-hang-up during suite startup)
-- attack scenario validation: blocker (`brute_force` daily report match check failed)
+- Playwright: passed (`13 passed`)
+- attack scenario validation: passed (all four scenarios)
+
+Blockers remediated in this freeze cycle:
+
+- Playwright startup/login instability (`/auth/login` proxy socket-hang-up)
+- scenario-validation daily-report mismatch for `brute_force`
 
 ## 6) Submission Decision Gate
 
 Mark one before handoff:
 
-- [ ] **Submission-ready**: all verification checks pass, or only non-blocker lab constraints remain and are documented.
-- [x] **Conditionally ready pending blocker re-check**: at least one blocker remains and must be revalidated before final submission packaging.
+- [x] **Submission-ready**: all verification checks pass, or only non-blocker lab constraints remain and are documented.
+- [ ] **Conditionally ready pending blocker re-check**: at least one blocker remains and must be revalidated before final submission packaging.

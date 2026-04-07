@@ -104,15 +104,15 @@ py -3 scripts/validate_attack_scenarios.py
 
 ## Latest Freeze Verification Snapshot
 
-Execution date: 2026-04-07 (local freeze pass).
+Execution date: 2026-04-07 (post-blocker remediation re-run).
 
 | Check | Command | Result | Notes |
 | --- | --- | --- | --- |
-| Backend tests | `docker compose run --rm --no-deps api pytest` | Blocked in this shell | Docker client could not connect to `dockerDesktopLinuxEngine` pipe during freeze run. |
+| Backend tests | `docker compose run --rm --no-deps --entrypoint pytest api` | Passed | `98 passed`, `1 warning`. |
 | Frontend lint | `npm run lint:web` | Passed | No lint errors. |
 | Frontend build | `npm run build:web` | Passed | Production bundle built successfully with Vite. |
-| Playwright | `npm run test:web:e2e` | Failed (blocker) | Test login bootstrap failed with `/auth/login` proxy socket-hang-up; first 3 specs failed before suite continuation. |
-| Attack scenario validation | `py -3 scripts/validate_attack_scenarios.py` | Failed (blocker) | Reproduced failure: `brute_force: daily report did not include any matching alerts.` |
+| Playwright | `npm run test:web:e2e` | Passed | `13 passed`. |
+| Attack scenario validation | `py -3 scripts/validate_attack_scenarios.py` | Passed | All four supported scenarios validated end-to-end. |
 
 Freeze route-surface smoke checks (authenticated API) returned `200` for:
 
@@ -132,3 +132,8 @@ Auth behavior was confirmed during freeze:
 
 - `/api/auth/login` returned a valid JWT for seeded admin credentials.
 - connector status routes require auth and returned `401` when called without token (expected).
+
+Blocker remediation summary:
+
+- **Playwright `/auth/login` socket-hang-up**: resolved by stabilizing backend incident/report serialization for orphan incident records and hardening Playwright session/test assumptions (`session_role` storage and resilient write-workflow branching).
+- **`brute_force` daily report mismatch in scenario validator**: resolved by making validator query daily reports using the ingested alert's actual date window and auto-enabling scoped policies before validation.
