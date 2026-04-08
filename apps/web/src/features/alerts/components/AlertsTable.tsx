@@ -3,6 +3,7 @@ import { Badge } from "../../../components/ui/Badge";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
 import { SeverityChip } from "../../../components/ui/SeverityChip";
 import { StatusChip } from "../../../components/ui/StatusChip";
+import { formatTokenLabel } from "../../../lib/formatters";
 import type { AlertRecord } from "../types";
 
 type AlertsTableProps = {
@@ -29,7 +30,7 @@ const columns: TableColumn<AlertRecord>[] = [
     cell: (row) => (
       <div className="space-y-1">
         <div className="text-body-sm font-medium text-content-primary">
-          {row.detectionType}
+          {formatTokenLabel(row.detectionType)}
         </div>
         <div className="type-mono-sm">{row.username}</div>
       </div>

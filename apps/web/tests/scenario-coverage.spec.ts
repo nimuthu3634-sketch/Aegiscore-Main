@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { formatTokenLabel } from "../src/lib/formatters";
 import {
   attachAuthenticatedSession,
   expectPageHeading,
@@ -6,6 +7,14 @@ import {
   type ScenarioKey,
   type SeededScenario
 } from "./support/e2e";
+
+/** Policy action type labels as rendered on Response History (matches `formatTokenLabel` on API snake_case). */
+const scenarioResponseActionLabel: Record<ScenarioKey, string> = {
+  brute_force: formatTokenLabel("block_ip"),
+  file_integrity_violation: formatTokenLabel("create_manual_review"),
+  port_scan: formatTokenLabel("notify_admin"),
+  unauthorized_user_creation: formatTokenLabel("notify_admin")
+};
 
 let seededScenarios: Record<ScenarioKey, SeededScenario>;
 
@@ -30,9 +39,24 @@ for (const scenarioKey of scenarioKeys) {
     const scenario = seededScenarios[scenarioKey];
 
     await attachAuthenticatedSession(page, request);
+
+    await page.goto("/overview");
+    await expectPageHeading(page, "Overview Dashboard");
+    await expect(
+      page.getByText(
+        `${formatTokenLabel(scenario.detectionType)}: `,
+        { exact: false }
+      )
+    ).toBeVisible();
+
+    await page.goto("/alerts");
+    await expectPageHeading(page, "Alerts");
+    await page.getByLabel("Filter alerts by detection type").selectOption(scenario.detectionType);
+    await expect(page.getByText(formatTokenLabel(scenario.detectionType)).first()).toBeVisible();
+
     await page.goto(`/alerts/${scenario.alertId}`);
 
-    await expectPageHeading(page, scenario.detectionType);
+    await expectPageHeading(page, formatTokenLabel(scenario.detectionType));
     await expect(page.getByText("Scoring method")).toBeVisible();
     await expect(page.getByText("Top drivers")).toBeVisible();
     await expect(
@@ -46,6 +70,16 @@ for (const scenarioKey of scenarioKeys) {
     ).toBeVisible();
 
     if (scenario.incidentId) {
+      await page.goto("/incidents");
+      await expectPageHeading(page, "Incidents Queue");
+      await page
+        .getByLabel("Filter incidents by detection type")
+        .selectOption(scenario.detectionType);
+      await expect(
+        page.getByRole("table", { name: "Incidents queue table" })
+      ).toBeVisible();
+      await expect(page.getByText(formatTokenLabel(scenario.detectionType)).first()).toBeVisible();
+
       await page.goto(`/incidents/${scenario.incidentId}`);
       await expect(
         page.getByRole("heading", { name: "Linked alerts" })
@@ -57,6 +91,15 @@ for (const scenarioKey of scenarioKeys) {
         page.getByRole("table", { name: "Linked alerts table" })
       ).toBeVisible();
     }
+
+    await page.goto("/responses");
+    await expectPageHeading(page, "Response History");
+    await expect(
+      page.getByRole("table", { name: "Response history table" })
+    ).toBeVisible();
+    await expect(
+      page.getByText(scenarioResponseActionLabel[scenarioKey]).first()
+    ).toBeVisible();
 
     await page.goto("/reports");
     await page.getByLabel("Filter reports by detection type").selectOption(

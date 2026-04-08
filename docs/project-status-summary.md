@@ -2,16 +2,17 @@
 
 ## 1. System Overview
 
-AegisCore is the final scoped v1 product for single-tenant SME/lab deployment. It centralizes security event review, alert prioritization, incident investigation, basic automated response, and operational reporting. It is not an enterprise commercial SOC platform.
+AegisCore is the **final scoped v1 product** for this project: **single-tenant**, **SME/lab** SOC operation. It is **not an enterprise commercial SOC platform**. It centralizes security event review (logs and network traffic), alert prioritization with **ML-capable scoring** (baseline default; optional trainable model), incident investigation, basic automated response, and operational reporting.
+
+**Approved scope** matches the four supported detections only: `brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`. **Out of scope**: ransomware/phishing/APT/zero-day product claims, large-scale enterprise deployment, and full commercial-grade SOC breadth.
 
 ### Product Positioning
 
-- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for single-tenant SME/lab SOC workflows (ingestion, scoring, incidents, responses, reporting, and authenticated access). It is not an enterprise commercial SOC platform.
-- **Fully implemented for scoped v1**: centralized SOC dashboard, four-detection ingestion/normalization, risk scoring, incident and response recording, basic automated response, authenticated access, and reporting/export.
-- **Partially implemented / limited mode (live connectors)**:
-  - Wazuh: authenticated live polling is implemented with retries, pagination/checkpointing, dedupe, and status visibility; compatibility is focused on common Wazuh lab envelope variants.
-  - Suricata: live ingestion is implemented in `file_tail` mode on `eve.json` with checkpointing and retry/error handling; authenticated forwarding mode is not yet implemented.
-- **Fixture-backed validation baseline**: deterministic regression validation is still primarily fixture-backed, with optional live VM/lab verification.
+- **Final scoped v1**: complete backend-owned workflow for the four detections—ingestion, normalization, scoring, incidents, responses, reporting, authenticated access—not a prototype-only UI.
+- **Live connectors (lab-bounded)**:
+  - Wazuh: authenticated live polling with retries, pagination/checkpointing, dedupe, and status (common lab envelopes).
+  - Suricata: `file_tail` on `eve.json` with checkpointing and retries; authenticated forwarding not implemented.
+- **Validation**: deterministic regression is primarily fixture- and test-backed; **VM/lab validation with simulated attacks** is supported via documented replay and `scripts/validate_attack_scenarios.py`.
 
 The implemented platform covers the full backend-owned workflow for a narrow and deliberate scope:
 
@@ -228,7 +229,7 @@ Requirement traceability for proposal review is documented in [requirement-compl
 
 ### Honest Project Position
 
-AegisCore is a final scoped v1 product for SME/lab review and operation. It demonstrates an end-to-end SOC workflow with real backend logic and real frontend integration, with clearly documented limits around connector compatibility breadth, deeper edge-path browser coverage, and production-style hardening.
+AegisCore is the **final scoped v1 product** for this project—**single-tenant**, **SME/lab**—and **not an enterprise commercial SOC platform**. It delivers a complete ingest-to-report pipeline for the four approved detections, with honest limits on connector variants, browser edge coverage, and production hardening.
 
 ## 13. Viva Quick Defense
 

@@ -3,6 +3,7 @@ import { Badge } from "../../../components/ui/Badge";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
 import { IncidentStateBadge } from "../../../components/ui/IncidentStateBadge";
 import { PriorityChip } from "../../../components/ui/PriorityChip";
+import { formatTokenLabel } from "../../../lib/formatters";
 import type { IncidentRecord } from "../types";
 
 type IncidentsTableProps = {
@@ -24,7 +25,9 @@ const columns: TableColumn<IncidentRecord>[] = [
     cell: (row) => (
       <div className="space-y-1">
         <div className="text-body-sm font-medium text-content-primary">{row.title}</div>
-        <div className="text-body-sm text-content-muted">{row.detectionType}</div>
+        <div className="text-body-sm text-content-muted">
+          {formatTokenLabel(row.detectionType)}
+        </div>
       </div>
     )
   },

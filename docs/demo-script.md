@@ -2,7 +2,7 @@
 
 ## Demo Goal
 
-Present AegisCore as a final scoped v1 single-tenant SME/lab SOC product, with honest boundaries and a real end-to-end workflow for only these detections:
+Present AegisCore as the **final scoped v1 product** for this project (**single-tenant**, **SME/lab**; **not** an enterprise commercial SOC), with honest boundaries and a real end-to-end workflow for **only** these detections:
 
 - `brute_force`
 - `file_integrity_violation`

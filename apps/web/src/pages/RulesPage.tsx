@@ -14,6 +14,7 @@ import { updatePolicyEnabled, usePolicies } from "../features/policies/service";
 import type { PolicyMode, PolicyRecord, PolicyTarget } from "../features/policies/types";
 import { getStoredSessionRole } from "../lib/api";
 import { formatTokenLabel } from "../lib/formatters";
+import { supportedDetectionSelectOptions } from "../lib/supportedDetections";
 import { pageBlueprints } from "../lib/theme/tokens";
 
 type EnabledFilter = "" | "enabled" | "disabled";
@@ -67,16 +68,7 @@ export function RulesPage() {
     });
   }, [detectionType, enabled, mode, policies, search, target]);
 
-  const detectionOptions = useMemo(
-    () =>
-      [...new Set(policies.map((policy) => policy.detectionType))]
-        .sort((left, right) => left.localeCompare(right))
-        .map((value) => ({
-          value,
-          label: formatTokenLabel(value)
-        })),
-    [policies]
-  );
+  const detectionOptions = supportedDetectionSelectOptions();
 
   const summary = useMemo(
     () => ({

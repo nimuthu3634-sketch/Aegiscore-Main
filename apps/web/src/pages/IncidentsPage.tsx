@@ -15,6 +15,7 @@ import { Select } from "../components/ui/Select";
 import { IncidentsTable } from "../features/incidents/components/IncidentsTable";
 import { useIncidentsList } from "../features/incidents/service";
 import type { IncidentStateFilter, IncidentsListQuery, IncidentsSortField } from "../features/incidents/types";
+import { supportedDetectionSelectOptions } from "../lib/supportedDetections";
 import { pageBlueprints } from "../lib/theme/tokens";
 
 export function IncidentsPage() {
@@ -167,15 +168,7 @@ export function IncidentsPage() {
                 setPage(1);
               }}
               placeholder="Detection"
-              options={[
-                { value: "brute_force", label: "brute_force" },
-                { value: "file_integrity_violation", label: "file_integrity_violation" },
-                { value: "port_scan", label: "port_scan" },
-                {
-                  value: "unauthorized_user_creation",
-                  label: "unauthorized_user_creation"
-                }
-              ]}
+              options={supportedDetectionSelectOptions()}
             />
             <Select
               aria-label="Filter incidents by assignee"

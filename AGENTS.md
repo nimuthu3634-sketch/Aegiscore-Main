@@ -2,14 +2,14 @@
 
 ## Mission
 
-AegisCore is a functional AI-integrated SOC platform for small and medium enterprises. It is a single-tenant web application, not a toy demo.
+AegisCore is the **final scoped v1 product** for this project: a **single-tenant** SOC console for **SME/lab** deployment. It monitors **system logs** (Wazuh) and **network traffic** (Suricata), supports only the four approved detections, and provides dashboard, risk scoring, basic automated response, and incident/response recording. It is **not an enterprise commercial SOC platform** and not a toy demo.
 
-Business goal: provide centralized security monitoring, alert prioritization, investigation, and basic automated response for SMEs.
+Business goal: deliver a defensible, testable end-to-end SOC workflow within that scope—not full commercial-grade or large-scale enterprise features.
 
 ## Required Workflow
 
 - Use `/plan` first for every major step in this repository.
-- Treat this project as a real product for SME security teams, not as a demo or sandbox app.
+- Treat this project as the final scoped v1 product for SME/lab security teams, not as a throwaway demo or sandbox app.
 - After each milestone, run validations for the changed areas and fix failures before moving on.
 - After each step, summarize the changed files.
 - Update docs continuously as behavior, architecture, setup, or env vars change.

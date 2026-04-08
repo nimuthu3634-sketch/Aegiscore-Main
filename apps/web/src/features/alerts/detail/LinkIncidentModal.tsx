@@ -18,6 +18,7 @@ import { PriorityChip } from "../../../components/ui/PriorityChip";
 import { SearchInput } from "../../../components/ui/SearchInput";
 import { Textarea } from "../../../components/ui/Textarea";
 import { cn } from "../../../lib/cn";
+import { formatTokenLabel } from "../../../lib/formatters";
 import { useIncidentsList } from "../../incidents/service";
 import type { IncidentRecord, IncidentsListQuery } from "../../incidents/types";
 import { linkAlertToIncident } from "./service";
@@ -161,7 +162,7 @@ function IncidentPreviewCard({ incident }: IncidentPreviewCardProps) {
           </div>
           <div className="space-y-1">
             <p className="type-label-sm">Detection</p>
-            <p className="type-mono-sm">{incident.detectionType}</p>
+            <p className="type-body-sm">{formatTokenLabel(incident.detectionType)}</p>
           </div>
           <div className="space-y-1">
             <p className="type-label-sm">Last updated</p>

@@ -2,7 +2,7 @@
 
 ## Product Direction
 
-AegisCore is a single-tenant SOC platform for SMEs. It centralizes alert review, incident investigation, explainable prioritization, safe automated response, and practical reporting without introducing enterprise multi-tenant complexity.
+AegisCore is the **final scoped v1 product** for this project: a **single-tenant** SOC for **SME/lab** deployment. It centralizes alert review (from **system logs** and **network traffic**), incident investigation, explainable risk scoring, safe automated response, and practical reporting. It is **not an enterprise commercial SOC platform** and does not target large-scale or multi-tenant deployment. Threat scope is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** only.
 
 ## Runtime Boundaries
 

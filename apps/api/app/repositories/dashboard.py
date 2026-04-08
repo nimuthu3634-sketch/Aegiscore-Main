@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.enums import IncidentStatus, ResponseStatus
+from app.repositories.dashboard_detection_counts import complete_alerts_by_detection_counts
 from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
 from app.models.response_action import ResponseAction
@@ -58,15 +59,10 @@ class DashboardRepository:
             select(
                 NormalizedAlert.detection_type,
                 func.count(NormalizedAlert.id),
-            )
-            .group_by(NormalizedAlert.detection_type)
-            .order_by(func.count(NormalizedAlert.id).desc())
+            ).group_by(NormalizedAlert.detection_type)
         )
 
-        alerts_by_detection = [
-            (str(detection_type.value), count)
-            for detection_type, count in grouped.all()
-        ]
+        alerts_by_detection = complete_alerts_by_detection_counts(list(grouped.all()))
 
         return DashboardMetrics(
             asset_count=asset_count,

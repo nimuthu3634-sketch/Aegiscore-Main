@@ -4,9 +4,9 @@
 
 ## Product stance
 
-- Single-tenant SME/lab SOC console, not an enterprise commercial platform.
-- Scope is fixed to the four supported detections (`brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`).
-- Live Wazuh and Suricata connectors are implemented for lab use with documented limits; deterministic acceptance still relies primarily on fixture-backed APIs and browser tests.
+- **Final scoped v1 product** for this project: **single-tenant**, **SME/lab**; **not an enterprise commercial SOC platform**.
+- Threat scope is **only** the four supported detections: `brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`. Not in scope: ransomware/phishing/APT/zero-day products, large-scale enterprise claims, or full commercial SOC parity.
+- Live Wazuh and Suricata connectors are implemented for lab use with documented limits; deterministic acceptance still relies primarily on fixture-backed APIs and browser tests; VM/lab simulated-attack validation is documented separately.
 
 ## Verification record pointer
 

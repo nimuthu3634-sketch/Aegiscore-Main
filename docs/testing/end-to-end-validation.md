@@ -1,6 +1,6 @@
 # AegisCore End-to-End Validation
 
-This validation scope is intentionally limited to the four supported AegisCore detections:
+This document supports validation of the **final scoped v1** product (**single-tenant**, **SME/lab**; **not** an enterprise commercial SOC). Scope is intentionally limited to the four supported detections:
 
 - `brute_force`
 - `file_integrity_violation`
@@ -60,7 +60,8 @@ Daily report totals reflect **all** alerts in the daily window for that API data
 
 ## Validation Notes
 
-- The ingestion pipeline now preserves raw payloads and rejects unsupported detections explicitly.
+- The dashboard summary’s `alerts_by_detection` list always includes **all four** supported detection types (count `0` when none are ingested), so lab UIs treat every approved scenario symmetrically.
+- The ingestion pipeline preserves raw payloads and rejects unsupported detections explicitly.
 - Asset resolution was hardened during this validation cycle to safely reuse an existing asset when a duplicate hostname create race occurs.
 - `port_scan` now validates cleanly end to end because incident-scoped automated-response policies can create the minimal incident context they require after scoring.
 - The validation intentionally does not cover unsupported detections or enterprise SOAR behaviors.

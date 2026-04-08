@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This guide is for the person running AegisCore locally in an SME or lab environment. It focuses on safe startup, validation, and operator-facing safety controls rather than enterprise deployment patterns.
+This guide is for operators running **AegisCore**, the **final scoped v1 product** for this project (**single-tenant**, **SME/lab**; **not** an enterprise commercial SOC). It covers safe startup, validation (including **simulated-attack** replay), and safety controls—not large-scale enterprise deployment.
 
 For a concise command-first operating sequence, use the [Operator Runbook](operator-runbook.md).
 

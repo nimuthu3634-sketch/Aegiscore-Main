@@ -1,5 +1,7 @@
 # Playwright Coverage
 
+Browser tests support the **final scoped v1** product (**single-tenant**, **SME/lab**): they validate the real console against the four supported detections and core workflows—not enterprise SOC breadth.
+
 ## Root Cause
 
 The earlier Playwright gap was not a missing test directory. The real root causes were:
@@ -63,7 +65,11 @@ The Playwright suite now covers:
 - administrator notification panels on incident detail and on alerts linked to an incident (`incident-notifications-panel`, `alert-notifications-panel`, plus either `notification-event-row` or `notification-empty-state`)
 - responses list table or filtered-empty state; optional `response-row-notification-summary` when the API includes delivery copy on list rows
 - related-response notification delivery subsection when the API returns `related_notifications` (`response-linked-notification-deliveries`, `response-notification-delivery-item`)
-- one happy-path validation for each supported detection:
+- one happy-path validation for each supported detection (`scenario-coverage.spec.ts`), including:
+  - overview dashboard detection badges (all four types always listed from the API with counts)
+  - alerts queue filtered by detection type
+  - incidents queue filtered by detection type when the scenario produced a linked incident
+  - response history table showing the scenario’s expected policy action label (`block_ip`, `create_manual_review`, or `notify_admin`, rendered with `formatTokenLabel`)
   - `brute_force`
   - `file_integrity_violation`
   - `port_scan`

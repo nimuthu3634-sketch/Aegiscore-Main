@@ -1,6 +1,6 @@
 # Final Submission Checklist
 
-This checklist is the final handoff gate for AegisCore scoped v1 submission.
+This checklist is the final handoff gate for AegisCore as the **final scoped v1 product** for this project: **single-tenant**, **SME/lab**, **not an enterprise commercial SOC platform**, with threat scope limited to the four supported detections only.
 
 ## 1) Pre-Submission Checks
 
@@ -56,6 +56,7 @@ Fallback:
 
 ## 3) Known Limitations (Must Be Stated Honestly)
 
+- threat detection is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** only; ransomware, phishing, APT, zero-day, and large-scale enterprise SOC claims are out of scope.
 - Suricata live ingestion is limited to `file_tail` (`eve.json`) mode.
 - Wazuh live compatibility is tuned for common lab envelope variants.
 - deterministic acceptance validation is fixture-backed by default.

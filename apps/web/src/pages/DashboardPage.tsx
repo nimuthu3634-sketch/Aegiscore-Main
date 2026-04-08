@@ -27,6 +27,7 @@ import { QuickLinksPanel } from "../features/dashboard/components/QuickLinksPane
 import { RecentResponsesPanel } from "../features/dashboard/components/RecentResponsesPanel";
 import { TopAffectedAssetsPanel } from "../features/dashboard/components/TopAffectedAssetsPanel";
 import { useDashboardOverview } from "../features/dashboard/service";
+import { formatTokenLabel } from "../lib/formatters";
 import { pageBlueprints } from "../lib/theme/tokens";
 
 const metricFormatter = new Intl.NumberFormat("en-US");
@@ -206,7 +207,7 @@ export function DashboardPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   {data.alertsByDetection.map((item) => (
                     <Badge key={item.detectionType} tone="outline">
-                      {item.detectionType}: {item.total}
+                      {formatTokenLabel(item.detectionType)}: {item.total}
                     </Badge>
                   ))}
                 </div>

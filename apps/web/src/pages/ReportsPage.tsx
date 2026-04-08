@@ -36,6 +36,7 @@ import type {
   ReportsQuery
 } from "../features/reports/types";
 import { formatTokenLabel } from "../lib/formatters";
+import { supportedDetectionSelectOptions } from "../lib/supportedDetections";
 import { pageBlueprints } from "../lib/theme/tokens";
 
 const metricFormatter = new Intl.NumberFormat("en-US");
@@ -57,15 +58,7 @@ const tooltipItemStyle = {
   padding: 0
 };
 
-const detectionOptions = [
-  "brute_force",
-  "file_integrity_violation",
-  "port_scan",
-  "unauthorized_user_creation"
-].map((value) => ({
-  value,
-  label: formatTokenLabel(value)
-}));
+const detectionOptions = supportedDetectionSelectOptions();
 
 type SourceFilter = "" | "wazuh" | "suricata";
 

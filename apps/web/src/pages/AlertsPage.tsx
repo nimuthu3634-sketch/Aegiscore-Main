@@ -15,6 +15,7 @@ import { Select } from "../components/ui/Select";
 import { AlertsTable } from "../features/alerts/components/AlertsTable";
 import { useAlertsList } from "../features/alerts/service";
 import type { AlertsDateRange, AlertsListQuery, AlertsSortField } from "../features/alerts/types";
+import { supportedDetectionSelectOptions } from "../lib/supportedDetections";
 import { pageBlueprints } from "../lib/theme/tokens";
 
 export function AlertsPage() {
@@ -190,15 +191,7 @@ export function AlertsPage() {
                 setPage(1);
               }}
               placeholder="Detection"
-              options={[
-                { value: "brute_force", label: "brute_force" },
-                { value: "file_integrity_violation", label: "file_integrity_violation" },
-                { value: "port_scan", label: "port_scan" },
-                {
-                  value: "unauthorized_user_creation",
-                  label: "unauthorized_user_creation"
-                }
-              ]}
+              options={supportedDetectionSelectOptions()}
             />
             <Select
               aria-label="Filter alerts by source type"

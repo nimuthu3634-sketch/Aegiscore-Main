@@ -8,6 +8,7 @@ import { RawPayloadViewer } from "../components/data-display/RawPayloadViewer";
 import { RelatedResponsesPanel } from "../components/data-display/RelatedResponsesPanel";
 import { ScoreExplanationCard } from "../components/data-display/ScoreExplanationCard";
 import { EmptyState } from "../components/feedback/EmptyState";
+import { formatTokenLabel } from "../lib/formatters";
 import { ErrorState } from "../components/feedback/ErrorState";
 import { LoadingCard, LoadingTable } from "../components/feedback/LoadingState";
 import { Badge } from "../components/ui/Badge";
@@ -192,7 +193,7 @@ export function AlertDetailPage() {
         <LinkIncidentModal
           open={isLinkModalOpen}
           alertId={alert.id}
-          alertTitle={alert.title ?? alert.detectionType}
+          alertTitle={alert.title ?? formatTokenLabel(alert.detectionType)}
           alertSummary={alert.normalizedSummary}
           onClose={() => setIsLinkModalOpen(false)}
           onSuccess={(message) => {
@@ -213,7 +214,7 @@ export function AlertDetailPage() {
 
       <DetailHeader
         eyebrow="Alert investigation"
-        title={alert.detectionType}
+        title={formatTokenLabel(alert.detectionType)}
         description={alert.normalizedSummary}
         badges={
           <>

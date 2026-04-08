@@ -8,16 +8,13 @@ See also [release-candidate-note.md](release-candidate-note.md).
 
 ## Intended Readiness Level
 
-AegisCore is positioned as the final scoped v1 product for single-tenant SME/lab deployment. It is not an enterprise commercial SOC platform.
+AegisCore is the **final scoped v1 product** for this project: **single-tenant**, **SME/lab**. It is **not an enterprise commercial SOC platform**. Threat coverage is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** (see `README.md` for explicit out-of-scope items).
 
 ## Product Positioning
 
-- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for local/lab SME operation. It includes real backend-owned SOC workflows for the four supported detections and is not an enterprise commercial SOC platform.
-- **Fully implemented for scoped v1**: dashboard, four-detection ingestion/normalization, risk scoring, incident/response workflows, basic automated response, and reporting/export.
-- **Partially implemented / limited mode (live connectors)**:
-  - Wazuh authenticated live polling is implemented with retries, pagination/checkpointing, dedupe, and status visibility; compatibility is focused on common Wazuh lab envelope variants.
-  - Suricata live ingestion is implemented in `file_tail` mode for `eve.json` with checkpointing and retry/error behavior; authenticated forwarding mode is not implemented yet.
-- **Fixture-backed validation baseline**: release validation is deterministic and primarily fixture-backed, with optional live connector checks in VM/lab environments.
+- **Release readiness**: real backend-owned SOC workflows for those four detections only—dashboard, ingestion/normalization, **ML-capable risk scoring** (baseline + optional model), incidents, responses, reporting/export.
+- **Live connectors (lab-bounded)**: Wazuh polling and Suricata `file_tail` as documented; not universal vendor coverage or enterprise SOAR.
+- **Validation**: deterministic release checks are fixture- and browser/API-test-backed; **VM/lab simulated-attack validation** is documented and repeatable (`scripts/validate_attack_scenarios.py`, operator guides).
 
 ## Local Release Checklist
 

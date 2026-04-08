@@ -2,7 +2,7 @@
 
 ## 1-Minute Positioning
 
-AegisCore is a final scoped v1, single-tenant SOC product for SME/lab deployment. It ingests Wazuh and Suricata events, normalizes them into a shared schema, scores risk, groups incidents, applies policy-driven automated response, and exposes investigation/reporting workflows in a React console. It is intentionally limited to four detections and does not claim enterprise SaaS/SOAR breadth.
+AegisCore is the **final scoped v1 product** for this project: **single-tenant**, **SME/lab**, **not an enterprise commercial SOC platform**. It monitors **logs** (Wazuh) and **network traffic** (Suricata), detects only **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`**, provides a **centralized dashboard**, **ML-capable risk scores** (baseline + optional model), **basic automated response**, and full **incident/response recording**, validated in VM/lab with **simulated attacks**. It does not claim ransomware/phishing/APT/zero-day coverage or large-scale enterprise SOC features.
 
 ## Concise Viva Defense
 
@@ -36,7 +36,7 @@ The core SOC pipeline is fully implemented and demonstrable within declared scop
 ## Likely Examiner Questions (Top 10)
 
 1. **Why do you call this a product and not just a prototype?**  
-   It has a complete backend-owned SOC workflow, persistent models, role enforcement, operational docs, and repeatable validation. Scope is narrow, but the implemented flow is real and end-to-end.
+   It is positioned as the **final scoped v1 product** for this project: persistent data model, real APIs, role enforcement, operational docs, and repeatable validation—including VM/lab simulated-attack scenarios. The boundary is narrow (four detections, SME/lab), but the pipeline is implemented end-to-end, not a mock-up.
 
 2. **Why only four detections?**  
    The project intentionally enforces a bounded threat scope (`brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`) to stay defensible, testable, and aligned with stated requirements.

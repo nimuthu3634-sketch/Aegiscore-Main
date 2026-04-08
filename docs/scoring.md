@@ -2,7 +2,7 @@
 
 ## Purpose
 
-AegisCore risk scoring is a prioritization layer that runs after approved detections are created.
+Within the **final scoped v1** product boundary (four supported detections only; SME/lab, single-tenant), AegisCore risk scoring is a prioritization layer that runs after those detections are created.
 It does not replace the detector. The scoring runtime converts normalized alert context into a
 0-100 risk score, a priority label, and an explanation payload that the API exposes to the
 dashboard, list pages, and detail views.

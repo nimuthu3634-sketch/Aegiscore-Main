@@ -1,5 +1,6 @@
 import type { Severity, StatusTone } from "../../lib/theme/tokens";
 import { Badge } from "../ui/Badge";
+import { formatTokenLabel } from "../../lib/formatters";
 import { DataTable, type TableColumn } from "./DataTable";
 import { SeverityChip } from "../ui/SeverityChip";
 import { StatusChip } from "../ui/StatusChip";
@@ -39,7 +40,7 @@ const columns: TableColumn<LinkedAlertRow>[] = [
     cell: (row) => (
       <div className="space-y-1">
         <div className="text-body-sm font-medium text-content-primary">
-          {row.detectionType}
+          {formatTokenLabel(row.detectionType)}
         </div>
         <Badge tone="outline">{row.sourceType}</Badge>
       </div>

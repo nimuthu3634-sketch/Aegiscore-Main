@@ -1,13 +1,15 @@
 # AegisCore
 
-AegisCore is a final scoped v1 SOC product for single-tenant SME/lab deployment. It ingests Wazuh and Suricata events, normalizes them into a shared alert model, scores risk, groups incidents, records analyst workflow, evaluates safe automated-response policies, and exposes the resulting data through a backend-owned web console.
+AegisCore is the **final scoped v1 product** for this project: a **single-tenant** SOC for **SME/lab** deployment. It is **not an enterprise commercial SOC platform**. It ingests Wazuh (logs) and Suricata (network) events, normalizes them into a shared alert model, assigns **ML-capable risk scores** (deterministic baseline by default; optional scikit-learn model when enabled), groups incidents, records analyst workflow, evaluates safe automated-response policies, and exposes the result through a backend-owned web console.
 
-This repository is intentionally scoped to four supported detections only:
+**Supported detections only** (no others are in scope):
 
 - `brute_force`
 - `file_integrity_violation`
 - `port_scan`
 - `unauthorized_user_creation`
+
+**Explicitly out of scope** for this project: ransomware-specific pipelines, phishing campaigns, APT hunting, zero-day detection claims, multi-tenant SaaS, and other full commercial-grade SOC features beyond the bounded workflow above.
 
 ## Start Here (Examiner Flow)
 
@@ -39,14 +41,12 @@ If you are reviewing AegisCore for final academic submission, use this quick flo
 
 ## Product Positioning
 
-AegisCore is the final scoped v1 product for single-tenant SME/lab deployment. It is not an enterprise commercial SOC platform.
+**Unified stance:** AegisCore is the **final scoped v1 product** for this project—**single-tenant**, **SME/lab**—and **not an enterprise commercial SOC platform**. Validation includes VM/lab runs with **simulated attacks** against the four supported scenarios (fixtures and documented replay paths).
 
-- **Release Candidate Positioning**: AegisCore is the final scoped v1 release candidate for single-tenant SME/lab SOC operation. It is not an enterprise commercial SOC platform.
-- **Product status (fully implemented for scoped v1)**: centralized SOC dashboard, four-detection ingestion/normalization, risk scoring, incident and response recording, basic automated response, authenticated access (`admin`/`analyst`), and operational reporting.
-- **Live Wazuh integration (partially implemented / limited mode)**: authenticated live polling is implemented with retries, pagination/checkpointing, dedupe, and status visibility; compatibility is focused on common Wazuh lab envelope variants.
-- **Live Suricata integration (partially implemented / limited mode)**: live ingestion is implemented in `file_tail` mode for `eve.json` with inode/offset checkpointing, malformed-line handling, retries, dedupe, and status visibility; authenticated forwarding mode is not implemented yet.
-- **Operational ingestion default (VM/lab)**: when connector flags are enabled (`WAZUH_CONNECTOR_ENABLED=true`, `SURICATA_CONNECTOR_ENABLED=true`), live connector ingestion is the normal operating path; manual ingestion routes are retained only for explicit test/demo fallback.
-- **Validation posture (fixture-backed deterministic baseline)**: repeatable acceptance validation relies primarily on fixture-backed ingestion and browser/API tests; live connector checks are supported as optional VM/lab verification.
+- **Implemented for scoped v1**: centralized dashboard; log and network ingestion for the four detections only; risk scoring (baseline + optional trainable model); incident and response recording; basic automated response; JWT roles (`admin` / `analyst`); reporting and export.
+- **Live connectors (lab-bounded)**: Wazuh authenticated polling is implemented with retries, pagination/checkpointing, dedupe, and status visibility (common lab envelope variants). Suricata live ingestion is **`file_tail` on `eve.json`** with checkpointing, retries, dedupe, and status visibility; authenticated forwarding mode is not implemented.
+- **Operational default (VM/lab)**: with `WAZUH_CONNECTOR_ENABLED=true` and `SURICATA_CONNECTOR_ENABLED=true`, live connectors are the normal path; manual ingestion remains for deterministic test/demo fallback.
+- **Validation**: repeatable proof is fixture- and test-driven; live connector verification is optional in a configured lab.
 
 ## Repository Tour
 
