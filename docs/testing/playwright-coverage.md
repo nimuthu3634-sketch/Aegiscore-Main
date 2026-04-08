@@ -58,31 +58,64 @@ The Playwright suite now covers:
 - reports
 - export trigger coverage for alerts
 - export trigger coverage for incidents
+- not-found empty states for unknown alert and incident detail routes (`detail-record-not-found`)
+- client-side validation feedback for empty analyst note saves (`analyst-notes-feedback`)
+- administrator notification panels on incident detail and on alerts linked to an incident (`incident-notifications-panel`, `alert-notifications-panel`, plus either `notification-event-row` or `notification-empty-state`)
+- responses list table or filtered-empty state; optional `response-row-notification-summary` when the API includes delivery copy on list rows
+- related-response notification delivery subsection when the API returns `related_notifications` (`response-linked-notification-deliveries`, `response-notification-delivery-item`)
 - one happy-path validation for each supported detection:
   - `brute_force`
   - `file_integrity_violation`
   - `port_scan`
   - `unauthorized_user_creation`
 
+## Stable `data-testid` hooks (browser tests)
+
+| Hook | Purpose |
+|------|---------|
+| `detail-record-not-found` | Alert/incident detail routes when the record is missing |
+| `incident-notifications-panel` / `alert-notifications-panel` | Administrator notification sections on detail pages |
+| `alert-notification-link-required` | Alert not linked to an incident (notifications scoped to incidents) |
+| `notification-event-row` / `notification-empty-state` | Notification history rows or empty copy inside those panels |
+| `alert-workflow-feedback` | Acknowledge/close/link workflow success or error message on alert detail |
+| `analyst-notes-feedback` | Analyst note save validation or success copy |
+| `response-linked-notification-deliveries` / `response-notification-delivery-item` | Nested delivery list on related response cards |
+| `response-row-notification-summary` | Optional delivery summary line in the responses list table |
+
 ## Test Files
 
 - `apps/web/tests/core-workflows.spec.ts`
 - `apps/web/tests/scenario-coverage.spec.ts`
 - `apps/web/tests/write-workflows.spec.ts`
+- `apps/web/tests/notification-and-negative-paths.spec.ts`
 - `apps/web/tests/support/e2e.ts`
 
 ## Runbook
 
-Start the backend stack first so the frontend dev server can proxy `/api` calls correctly, then run:
+Playwright starts the Vite dev server and proxies `/api` to **`http://127.0.0.1:8000`**. Start the API (for example `docker compose up -d api`), apply migrations if needed, and seed users so login succeeds:
 
 ```powershell
+docker compose exec api python -m app.db.seed
 npm run test:web:e2e
 ```
 
-The latest successful run completed with `11 passed` and `2 skipped` (incident-dependent transition/policy-export branches are skipped when no incident candidate is available in the seeded run).
+### Latest recorded run (release candidate, 2026-04-08)
+
+- **16 passed**, **0 skipped** against a Compose-backed API with a seeded database.
+
+### Conditional skips (honest branch coverage)
+
+In **other** environments (empty DB, missing incidents, or no alerts linked to incidents), the following may skip or narrow assertions:
+
+- `notification-and-negative-paths.spec.ts` — combined notification/responses test skips when no incident exists or no alert has an incident link.
+- `write-workflows.spec.ts` — incident transition, policy toggle, export, and invalid-transition tests skip when no non-terminal incident candidate exists after seeding.
+
+These branches are **data-dependent**, not flaky styling tests; a healthy seeded lab run should execute them (as in the latest RC pass).
 
 ## Remaining Gaps
 
+- There is no dedicated response **detail** route in the UI; notification delivery lines on the responses **list** are asserted only when the backend populates `notificationSummary` on list rows.
+- Linked-alert **Related responses** notification sublists (`response-linked-notification-deliveries`) are not separately asserted in Playwright when no execution in the fixture set includes `related_notifications`.
 - Reports export coverage validates browser download triggers, not full file-content parsing in browser assertions.
 - Browser coverage validates one analyst forbidden mutation path (`PATCH /policies/{id}`), but does not yet exhaustively cover every role-protected endpoint negative path.
 - Incident transition negative coverage validates one deterministic invalid-action rejection path, not every invalid-state/action permutation.

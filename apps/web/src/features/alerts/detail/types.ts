@@ -2,6 +2,7 @@ import type { AnalystNote } from "../../../components/data-display/AnalystNotesP
 import type { RelatedResponseItem } from "../../../components/data-display/RelatedResponsesPanel";
 import type { KeyValueItem } from "../../../components/data-display/KeyValueGrid";
 import type { Severity, StatusTone } from "../../../lib/theme/tokens";
+import type { IncidentNotificationItem } from "../../incidents/detail/types";
 
 export type AlertScoreExplanation = {
   score: number | null;
@@ -48,6 +49,8 @@ export type AlertDetailRecord = {
   rawPayload: Record<string, unknown>;
   scoreExplanation: AlertScoreExplanation | null;
   relatedResponses: RelatedResponseItem[];
+  /** Administrator notification attempts for the linked incident (risk, state, response, notify_admin). */
+  notifications: IncidentNotificationItem[];
   notes: AnalystNote[];
   auditHistory?: AlertAuditHistoryItem[];
 };
@@ -146,6 +149,32 @@ export type AlertDetailApiResponse = {
         name: string;
       };
     } | null;
+    related_notifications?: Array<{
+      id: string;
+      channel: string;
+      delivery_mode: string;
+      trigger_type: string;
+      trigger_value: string;
+      recipient: string;
+      subject: string;
+      status: string;
+      error_message: string | null;
+      created_at: string;
+      sent_at: string | null;
+    }>;
+  }>;
+  notifications: Array<{
+    id: string;
+    channel: string;
+    delivery_mode: string;
+    trigger_type: string;
+    trigger_value: string;
+    recipient: string;
+    subject: string;
+    status: string;
+    error_message: string | null;
+    created_at: string;
+    sent_at: string | null;
   }>;
   analyst_notes: Array<{
     id: string;

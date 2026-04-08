@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from pydantic import Field
+
 from app.models.enums import (
     AlertStatus,
     AssetCriticality,
@@ -42,6 +44,20 @@ class UserBriefResponse(APIModel):
     username: str
     full_name: str | None
     role: RoleResponse
+
+
+class NotificationEventResponse(APIModel):
+    id: UUID
+    channel: str
+    delivery_mode: str
+    trigger_type: str
+    trigger_value: str
+    recipient: str
+    subject: str
+    status: str
+    error_message: str | None
+    created_at: datetime
+    sent_at: datetime | None
 
 
 class AssetSummaryResponse(APIModel):
@@ -138,6 +154,7 @@ class ResponseActionDetailResponse(APIModel):
     created_at: datetime
     executed_at: datetime | None
     requested_by: UserBriefResponse | None
+    related_notifications: list[NotificationEventResponse] = Field(default_factory=list)
 
 
 class AnalystNoteResponse(APIModel):
@@ -156,20 +173,6 @@ class ActivityEntryResponse(APIModel):
     description: str | None
     actor: UserBriefResponse | None
     details: dict[str, Any]
-
-
-class NotificationEventResponse(APIModel):
-    id: UUID
-    channel: str
-    delivery_mode: str
-    trigger_type: str
-    trigger_value: str
-    recipient: str
-    subject: str
-    status: str
-    error_message: str | None
-    created_at: datetime
-    sent_at: datetime | None
 
 
 class AlertSummaryResponse(APIModel):
@@ -248,6 +251,7 @@ class ResponseActionSummaryResponse(APIModel):
     executed_at: datetime | None
     requested_by: UserBriefResponse | None
     incident: IncidentReferenceResponse
+    related_notifications: list[NotificationEventResponse] = Field(default_factory=list)
 
 
 class ResponseActionListResponse(APIModel):

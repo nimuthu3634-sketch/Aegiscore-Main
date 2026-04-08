@@ -21,16 +21,17 @@ If you are reviewing AegisCore for final academic submission, use this quick flo
    - `docker compose exec api alembic upgrade head`
    - `docker compose exec api python -m app.db.seed`
 3. Validate core behavior:
-   - `docker compose run --rm --no-deps api pytest`
+   - `docker compose run --rm --entrypoint pytest api`
    - `npm run lint:web`
    - `npm run build:web`
-   - `npm run test:web:e2e`
-   - `py -3 scripts/validate_attack_scenarios.py`
+   - start the API and seed users, then `npm run test:web:e2e` (dev server proxies `/api` to `http://127.0.0.1:8000`)
+   - `py -3 scripts/validate_attack_scenarios.py` (expects the same API on port 8000 by default)
 4. Review handoff docs:
    - architecture: [docs/architecture.md](docs/architecture.md)
    - project status: [docs/project-status-summary.md](docs/project-status-summary.md)
    - requirement evidence: [docs/requirement-compliance-matrix.md](docs/requirement-compliance-matrix.md)
    - release checklist: [docs/release-readiness.md](docs/release-readiness.md)
+   - release candidate note: [docs/release-candidate-note.md](docs/release-candidate-note.md)
    - demo walkthrough: [docs/demo-script.md](docs/demo-script.md)
    - operator and analyst guides:
      - [docs/setup/operator-guide.md](docs/setup/operator-guide.md)
@@ -44,6 +45,7 @@ AegisCore is the final scoped v1 product for single-tenant SME/lab deployment. I
 - **Product status (fully implemented for scoped v1)**: centralized SOC dashboard, four-detection ingestion/normalization, risk scoring, incident and response recording, basic automated response, authenticated access (`admin`/`analyst`), and operational reporting.
 - **Live Wazuh integration (partially implemented / limited mode)**: authenticated live polling is implemented with retries, pagination/checkpointing, dedupe, and status visibility; compatibility is focused on common Wazuh lab envelope variants.
 - **Live Suricata integration (partially implemented / limited mode)**: live ingestion is implemented in `file_tail` mode for `eve.json` with inode/offset checkpointing, malformed-line handling, retries, dedupe, and status visibility; authenticated forwarding mode is not implemented yet.
+- **Operational ingestion default (VM/lab)**: when connector flags are enabled (`WAZUH_CONNECTOR_ENABLED=true`, `SURICATA_CONNECTOR_ENABLED=true`), live connector ingestion is the normal operating path; manual ingestion routes are retained only for explicit test/demo fallback.
 - **Validation posture (fixture-backed deterministic baseline)**: repeatable acceptance validation relies primarily on fixture-backed ingestion and browser/API tests; live connector checks are supported as optional VM/lab verification.
 
 ## Repository Tour
@@ -63,6 +65,7 @@ AegisCore is the final scoped v1 product for single-tenant SME/lab deployment. I
 - [Demo Script](docs/demo-script.md)
 - [Requirement Compliance Matrix](docs/requirement-compliance-matrix.md)
 - [Release Readiness](docs/release-readiness.md)
+- [Release Candidate Note](docs/release-candidate-note.md)
 - [Operator Guide](docs/setup/operator-guide.md)
 - [Analyst Guide](docs/setup/analyst-guide.md)
 - [Operator Runbook](docs/setup/operator-runbook.md)
@@ -108,7 +111,7 @@ For local demos only, override seeded passwords in `.env` before sharing environ
 Backend:
 
 ```powershell
-docker compose run --rm --no-deps api pytest
+docker compose run --rm --entrypoint pytest api
 ```
 
 Frontend:
@@ -118,9 +121,10 @@ npm run lint:web
 npm run build:web
 ```
 
-Browser coverage:
+Browser coverage (API must be listening on `127.0.0.1:8000`; seed users if needed):
 
 ```powershell
+docker compose exec api python -m app.db.seed
 npm run test:web:e2e
 ```
 
@@ -170,6 +174,8 @@ Current reporting endpoints:
 - `GET /reports/alerts/export`
 - `GET /reports/incidents/export`
 - `GET /reports/responses/export`
+
+Operator notifications (optional): when `NOTIFICATIONS_ENABLED=true`, the backend can deliver administrator alerts via **`log` mode** (audited, no SMTP) or **`smtp` mode** (real email to lab sinks such as MailHog). Triggers cover high-risk scoring, configured incident states, selected response outcomes, and `notify_admin` policy actions. History is persisted in `notification_events` and shown on incident and linked-alert detail plus response history. Scheduled reporting digests are not part of this subsystem.
 
 Current ingestion endpoints:
 

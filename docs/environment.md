@@ -72,6 +72,7 @@
 - `NOTIFICATIONS_RISK_THRESHOLD`: risk score threshold for high-risk incident notifications
 - `NOTIFICATIONS_INCIDENT_STATES`: comma-separated incident states that allow notifications
 - `NOTIFICATIONS_RESPONSE_STATUSES`: comma-separated response execution statuses that trigger notifications
+- `NOTIFICATIONS_RESPONSE_ACTION_TYPES`: comma-separated `action_type` values that may trigger `response_result` notifications, or `*` for all (default)
 - `NOTIFICATIONS_ADMIN_RECIPIENTS`: comma-separated recipient emails for administrator notifications
 - `NOTIFICATIONS_SENDER`: sender address used in SMTP email mode
 - `SMTP_HOST`: SMTP server hostname for notification email delivery

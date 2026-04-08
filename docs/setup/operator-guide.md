@@ -48,7 +48,7 @@ Primary local URLs:
 Backend tests:
 
 ```powershell
-docker compose run --rm --no-deps api pytest
+docker compose run --rm --entrypoint pytest api
 ```
 
 Frontend validation:

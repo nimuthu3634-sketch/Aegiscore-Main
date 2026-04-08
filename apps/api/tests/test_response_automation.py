@@ -94,6 +94,7 @@ def _settings(**overrides: object) -> SimpleNamespace:
         "notifications_risk_threshold": 85,
         "notifications_incident_states": "triaged,investigating,contained",
         "notifications_response_statuses": "warning,failed",
+        "notifications_response_action_types": "*",
         "notifications_admin_recipients": "admin@aegiscore.local",
         "notifications_sender": "aegiscore@localhost",
         "smtp_host": "localhost",

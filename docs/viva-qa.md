@@ -71,7 +71,7 @@ The core SOC pipeline is fully implemented and demonstrable within declared scop
 docker compose up --build -d
 docker compose exec api alembic upgrade head
 docker compose exec api python -m app.db.seed
-docker compose run --rm --no-deps api pytest
+docker compose run --rm --entrypoint pytest api
 npm run lint:web
 npm run build:web
 npm run test:web:e2e

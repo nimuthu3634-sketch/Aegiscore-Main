@@ -94,20 +94,28 @@ export function mapResponsesListResponse(
   payload: ResponsesListApiResponse
 ): ResponsesListResponse {
   return {
-    items: payload.items.map((response) => ({
-      id: response.id,
-      actionType: response.action_type,
-      policyName: response.policy_name,
-      target: response.target ?? "n/a",
-      mode: response.mode ?? "live",
-      linkedEntity: response.incident.id,
-      linkedEntityTitle: response.incident.title,
-      executionStatus: response.execution_status_label,
-      executedAt: formatUtcDateTime(response.executed_at ?? response.created_at),
-      resultSummary: response.result_summary ?? "No response summary available.",
-      resultMessage: response.result_message,
-      attemptCount: response.attempt_count
-    })),
+    items: payload.items.map((response) => {
+      const rel = response.related_notifications ?? [];
+      const notificationSummary =
+        rel.length > 0
+          ? `${rel.length} delivery attempt(s); latest: ${rel[0].status} (${rel[0].delivery_mode}) → ${rel[0].recipient}`
+          : null;
+      return {
+        id: response.id,
+        actionType: response.action_type,
+        policyName: response.policy_name,
+        target: response.target ?? "n/a",
+        mode: response.mode ?? "live",
+        linkedEntity: response.incident.id,
+        linkedEntityTitle: response.incident.title,
+        executionStatus: response.execution_status_label,
+        executedAt: formatUtcDateTime(response.executed_at ?? response.created_at),
+        resultSummary: response.result_summary ?? "No response summary available.",
+        resultMessage: response.result_message,
+        attemptCount: response.attempt_count,
+        notificationSummary
+      };
+    }),
     total: payload.meta.total,
     generatedAt: new Date().toISOString(),
     meta: mapListQueryMeta(payload.meta)

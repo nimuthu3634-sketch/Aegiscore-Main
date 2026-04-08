@@ -232,6 +232,7 @@ def test_alert_detail_response_includes_observables_and_related_workflow() -> No
     assert response.score_explanation.scoring_method == ScoreMethod.BASELINE_RULES
     assert response.score_explanation.feature_snapshot == {"sensitive_file_flag": 1}
     assert response.analyst_notes[0].content.startswith("Escalated")
+    assert response.notifications == []
 
 
 def test_incident_detail_response_builds_evidence_timeline_and_capabilities() -> None:

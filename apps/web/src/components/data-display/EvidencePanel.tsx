@@ -7,6 +7,7 @@ type EvidencePanelProps = {
   description?: string;
   actions?: ReactNode;
   children: ReactNode;
+  dataTestId?: string;
 };
 
 export function EvidencePanel({
@@ -14,10 +15,11 @@ export function EvidencePanel({
   title,
   description,
   actions,
-  children
+  children,
+  dataTestId
 }: EvidencePanelProps) {
   return (
-    <Card className="h-full">
+    <Card className="h-full" data-testid={dataTestId}>
       <CardHeader>
         <div>
           {eyebrow ? <p className="type-label-md">{eyebrow}</p> : null}

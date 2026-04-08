@@ -11,9 +11,14 @@ AegisCore supports SME-friendly critical-incident notifications from backend-own
 
 Notifications are evaluated for:
 
-- high-risk incidents (`risk_threshold`)
-- incident state transitions (`incident_state`)
-- response execution outcomes (`response_result`)
+- high-risk incidents (`risk_threshold`) after alert policy evaluation when score and incident state match configured filters
+- incident state transitions (`incident_state`) when the new state is in the configured list
+- response execution outcomes (`response_result`) when the final response status is in the configured list (for example `warning`, `failed`)
+- explicit `notify_admin` automated-response actions (trigger type `notify_admin`), which bypass the response-status filter but still require `NOTIFICATIONS_ENABLED=true`
+
+Optional narrowing for `response_result` triggers:
+
+- `NOTIFICATIONS_RESPONSE_ACTION_TYPES`: comma-separated action types (for example `block_ip,notify_admin`) or `*` for all types (default).
 
 Rules are controlled through environment configuration.
 
@@ -26,6 +31,7 @@ Rules are controlled through environment configuration.
 - `NOTIFICATIONS_RISK_THRESHOLD=85`
 - `NOTIFICATIONS_INCIDENT_STATES=triaged,investigating,contained`
 - `NOTIFICATIONS_RESPONSE_STATUSES=warning,failed`
+- `NOTIFICATIONS_RESPONSE_ACTION_TYPES=*` (or a comma-separated subset of response `action_type` values)
 
 For SMTP mode additionally set:
 
@@ -41,11 +47,13 @@ For SMTP mode additionally set:
 3. Trigger a response action that results in `warning` or `failed`.
 4. Verify:
    - entries exist in `notification_events`
-   - incident detail API includes notification history
+   - incident detail API includes notification history (`notifications`)
+   - alert detail API includes the same incident-scoped list (`notifications`) when the alert is linked to an incident
+   - response list/detail payloads include `related_notifications` when a response action generated deliveries
    - audit logs contain `notification.sent` or `notification.failed`
 
 ## Audit and Safety Notes
 
 - Every notification attempt/result is persisted in `notification_events`.
 - Deduplication keys suppress repeated spam for the same trigger/recipient context.
-- Frontend remains source-agnostic; notification history is exposed as incident metadata.
+- Frontend remains source-agnostic; notification history is exposed on incident detail, alert detail (linked incident), response rows (summary + per-action related deliveries), and audit logs.

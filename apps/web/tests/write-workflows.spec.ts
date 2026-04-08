@@ -204,13 +204,15 @@ test("alerts support acknowledge, close, note, and link-to-incident write flows"
   await page.goto(`/alerts/${ackableAlertId!}`);
   await expect(page.getByTestId("alert-acknowledge-btn")).toBeEnabled();
   await page.getByTestId("alert-acknowledge-btn").click();
-  await expect(
-    page.getByText("Alert acknowledged and moved into investigation.")
-  ).toBeVisible();
+  await expect(page.getByTestId("alert-workflow-feedback")).toHaveText(
+    "Alert acknowledged and moved into investigation."
+  );
 
   await expect(page.getByTestId("alert-close-btn")).toBeEnabled();
   await page.getByTestId("alert-close-btn").click();
-  await expect(page.getByText("Alert closed successfully.")).toBeVisible();
+  await expect(page.getByTestId("alert-workflow-feedback")).toHaveText(
+    "Alert closed successfully."
+  );
 
   const noteTargetAlertId = unlinkedAlertId ?? ackableAlertId!;
   await page.goto(`/alerts/${noteTargetAlertId}`);

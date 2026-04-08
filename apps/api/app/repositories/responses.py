@@ -36,6 +36,7 @@ class ResponsesRepository:
             .options(
                 selectinload(ResponseAction.requested_by).selectinload(User.role),
                 selectinload(ResponseAction.policy),
+                selectinload(ResponseAction.notification_events),
                 selectinload(ResponseAction.incident)
                 .selectinload(Incident.primary_alert)
                 .selectinload(NormalizedAlert.asset),

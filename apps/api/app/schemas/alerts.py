@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from pydantic import Field
+
 from app.models.enums import (
     AlertStatus,
     DetectionType,
@@ -14,6 +16,7 @@ from app.schemas.common import (
     ActivityEntryResponse,
     AnalystNoteResponse,
     AssetSummaryResponse,
+    NotificationEventResponse,
     ResponseActionDetailResponse,
     UserBriefResponse,
 )
@@ -75,5 +78,6 @@ class AlertDetailResponse(APIModel):
     raw_payload: dict[str, Any]
     score_explanation: AlertScoreExplanationResponse | None
     related_responses: list[ResponseActionDetailResponse]
+    notifications: list[NotificationEventResponse] = Field(default_factory=list)
     analyst_notes: list[AnalystNoteResponse]
     audit_history: list[ActivityEntryResponse]

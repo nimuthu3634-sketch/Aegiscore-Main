@@ -28,6 +28,8 @@ export type ResponseRecord = {
   resultSummary: string;
   resultMessage: string | null;
   attemptCount: number;
+  /** Short summary of persisted notification deliveries tied to this response (if any). */
+  notificationSummary: string | null;
 };
 
 export type ResponsesListResponse = {
@@ -59,6 +61,13 @@ export type ResponsesListApiResponse = {
     attempt_count: number;
     created_at: string;
     executed_at: string | null;
+    related_notifications?: Array<{
+      id: string;
+      status: string;
+      recipient: string;
+      trigger_type: string;
+      delivery_mode: string;
+    }>;
     incident: {
       id: string;
       title: string;

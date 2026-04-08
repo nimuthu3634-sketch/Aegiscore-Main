@@ -77,6 +77,19 @@ function mapAlertDetailResponse(payload: AlertDetailApiResponse): AlertDetailRes
           }
         : null,
       relatedResponses: toRelatedResponses(payload.related_responses),
+      notifications: (payload.notifications ?? []).map((event) => ({
+        id: event.id,
+        channel: event.channel,
+        deliveryMode: event.delivery_mode,
+        triggerType: event.trigger_type,
+        triggerValue: event.trigger_value,
+        recipient: event.recipient,
+        subject: event.subject,
+        status: event.status,
+        createdAt: formatUtcDateTime(event.created_at),
+        sentAt: formatUtcDateTime(event.sent_at),
+        errorMessage: event.error_message
+      })),
       notes: toAnalystNotes(payload.analyst_notes),
       auditHistory: payload.audit_history.map((entry) => ({
         id: entry.id,

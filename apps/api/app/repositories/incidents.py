@@ -139,6 +139,8 @@ class IncidentsRepository:
                 selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.policy),
                 selectinload(Incident.response_actions)
+                .selectinload(ResponseAction.notification_events),
+                selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.requested_by)
                 .selectinload(User.role),
                 selectinload(Incident.notification_events).selectinload(
@@ -168,6 +170,8 @@ class IncidentsRepository:
                 ).selectinload(ResponseAction.policy),
                 selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.policy),
+                selectinload(Incident.response_actions)
+                .selectinload(ResponseAction.notification_events),
                 selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.requested_by)
                 .selectinload(User.role),

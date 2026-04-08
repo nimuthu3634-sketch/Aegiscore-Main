@@ -111,23 +111,27 @@ Validation uses real backend ingestion/workflow APIs. The default repeatable pro
 
 ## 6. Test Summary
 
-At the current validated state:
+At the current validated state (2026-04-08 release-candidate pass):
 
-- backend test suite: passing in local Docker validation runs
+- backend test suite: **103 passed**, 1 warning (Docker pytest run)
 - frontend lint: passing
 - frontend production build: passing
-- Playwright suite: passed (`13 passed` in the latest freeze validation run)
+- Playwright suite: **16 passed**, 0 skipped (with API on `127.0.0.1:8000` and seeded DB)
 - four-scenario validation script: successful across all supported detections
 
 The validated commands are:
 
 ```powershell
-docker compose run --rm --no-deps api pytest
+docker compose run --rm --entrypoint pytest api
 npm run lint:web
 npm run build:web
+docker compose up -d postgres api
+docker compose exec api python -m app.db.seed
 npm run test:web:e2e
 py -3 scripts/validate_attack_scenarios.py
 ```
+
+**Environment note:** pytest runs in Docker; Playwright and `validate_attack_scenarios.py` require a running, seeded API (published port **8000** for the default dev proxy and script base URL).
 
 ## 7. Reports And Export Summary
 
@@ -148,7 +152,7 @@ The frontend Reports page uses those real endpoints for summary cards, distribut
 - Playwright covers core read workflows and major write workflows plus selected negative paths, but not every negative-path role/edge branch; incident-dependent browser branches can be conditionally skipped when seeded runs do not produce incident candidates
 - destructive live response behavior remains safety-gated and disabled by default
 - the worker service is still a future-facing shell rather than a mature asynchronous execution subsystem
-- scheduled reporting and PDF export are not implemented
+- scheduled reporting and PDF export are not implemented; **SMTP/log operator notifications** for critical incidents and policy-driven outcomes are implemented (`docs/setup/notifications.md`) and are separate from scheduled reporting
 
 ## 9. Future Improvements
 
@@ -212,6 +216,7 @@ Requirement traceability for proposal review is documented in [requirement-compl
 - analyst workflow: [analyst-guide.md](setup/analyst-guide.md)
 - validation: [end-to-end-validation.md](testing/end-to-end-validation.md)
 - browser coverage: [playwright-coverage.md](testing/playwright-coverage.md)
+- release candidate stance: [release-candidate-note.md](release-candidate-note.md)
 
 ### Practical Handoff Points
 

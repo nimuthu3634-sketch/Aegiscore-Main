@@ -4,6 +4,15 @@ import type { ResponseExecutionStatus, ResponseMode } from "../../features/respo
 import { Badge } from "../ui/Badge";
 import { formatTokenLabel } from "../../lib/formatters";
 
+export type ResponseRelatedNotification = {
+  id: string;
+  recipient: string;
+  status: string;
+  triggerType: string;
+  deliveryMode: string;
+  subject: string;
+};
+
 export type RelatedResponseItem = {
   id: string;
   actionType: string;
@@ -16,6 +25,7 @@ export type RelatedResponseItem = {
   resultMessage?: string | null;
   attemptCount?: number;
   requestedBy?: string | null;
+  relatedNotifications?: ResponseRelatedNotification[];
 };
 
 type RelatedResponsesPanelProps = {
@@ -69,6 +79,37 @@ export function RelatedResponsesPanel({
                     </p>
                   ) : null}
                 </div>
+                {response.relatedNotifications && response.relatedNotifications.length ? (
+                  <div
+                    className="mt-3 rounded-panel border border-border-subtle/80 bg-surface-base/40 p-3"
+                    data-testid="response-linked-notification-deliveries"
+                  >
+                    <p className="type-body-sm font-medium text-content-primary">
+                      Linked notification deliveries
+                    </p>
+                    <ul className="mt-2 space-y-2">
+                      {response.relatedNotifications.map((event) => (
+                        <li
+                          key={event.id}
+                          className="type-body-sm text-content-secondary"
+                          data-testid="response-notification-delivery-item"
+                        >
+                          <span className="type-mono-sm">{event.status}</span>
+                          {" · "}
+                          {event.deliveryMode} to {event.recipient}
+                          {" · "}
+                          {event.triggerType}
+                          {event.subject ? (
+                            <>
+                              {" · "}
+                              <span className="text-content-muted">{event.subject}</span>
+                            </>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
             </div>
           ))}

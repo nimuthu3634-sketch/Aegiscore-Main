@@ -224,12 +224,18 @@ def _decide_for_incident_state(*, incident_state: str) -> NotificationDecision:
     return NotificationDecision(True, "incident_state_matched")
 
 
-def _decide_for_response_result(*, response_status: str) -> NotificationDecision:
+def _decide_for_response_result(
+    *, response_status: str, action_type: str
+) -> NotificationDecision:
     settings = get_settings()
     if not settings.notifications_enabled:
         return NotificationDecision(False, "notifications_disabled")
     if response_status.lower() not in _csv_set(settings.notifications_response_statuses):
         return NotificationDecision(False, "response_status_not_notifiable")
+    allowed_actions = _csv_set(settings.notifications_response_action_types)
+    if allowed_actions and "*" not in allowed_actions and "all" not in allowed_actions:
+        if action_type.lower() not in allowed_actions:
+            return NotificationDecision(False, "response_action_type_not_notifiable")
     return NotificationDecision(True, "response_status_matched")
 
 
@@ -320,7 +326,10 @@ def notify_for_response_result(
     incident: Incident,
     response_action: ResponseAction,
 ) -> list[NotificationEvent]:
-    decision = _decide_for_response_result(response_status=response_action.status.value)
+    decision = _decide_for_response_result(
+        response_status=response_action.status.value,
+        action_type=response_action.action_type,
+    )
     if not decision.should_notify:
         return []
     return _notify_many(

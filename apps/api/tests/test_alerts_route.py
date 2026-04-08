@@ -28,6 +28,7 @@ from app.schemas.common import (
     ActivityEntryResponse,
     AnalystNoteResponse,
     AssetSummaryResponse,
+    NotificationEventResponse,
     ResponseActionDetailResponse,
     RoleResponse,
     UserBriefResponse,
@@ -119,6 +120,36 @@ def _sample_alert_detail() -> AlertDetailResponse:
                 created_at=datetime.now(UTC),
                 executed_at=datetime.now(UTC),
                 requested_by=analyst,
+                related_notifications=[
+                    NotificationEventResponse(
+                        id=uuid4(),
+                        channel="email",
+                        delivery_mode="log",
+                        trigger_type="response_result",
+                        trigger_value="disable_user_account:completed",
+                        recipient="admin@aegiscore.local",
+                        subject="[AegisCore] Incident critical - test",
+                        status="sent",
+                        error_message=None,
+                        created_at=datetime.now(UTC),
+                        sent_at=datetime.now(UTC),
+                    )
+                ],
+            )
+        ],
+        notifications=[
+            NotificationEventResponse(
+                id=uuid4(),
+                channel="email",
+                delivery_mode="log",
+                trigger_type="risk_threshold",
+                trigger_value="score=96",
+                recipient="admin@aegiscore.local",
+                subject="[AegisCore] Incident critical - Unauthorized directory account creation",
+                status="sent",
+                error_message=None,
+                created_at=datetime.now(UTC),
+                sent_at=datetime.now(UTC),
             )
         ],
         analyst_notes=[
@@ -159,6 +190,9 @@ def test_alert_detail_route_returns_rich_payload(monkeypatch) -> None:
     assert payload["id"] == str(detail.id)
     assert payload["linked_incident"]["priority"] == "critical"
     assert payload["related_responses"][0]["action_type"] == "disable_user_account"
+    assert payload["related_responses"][0]["related_notifications"][0]["status"] == "sent"
+    assert len(payload["notifications"]) == 1
+    assert payload["notifications"][0]["trigger_type"] == "risk_threshold"
     assert payload["source_rule"]["rule_id"] == "60115"
 
 

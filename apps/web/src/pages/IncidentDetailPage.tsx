@@ -85,6 +85,7 @@ export function IncidentDetailPage() {
           Back to incidents
         </Button>
         <EmptyState
+          dataTestId="detail-record-not-found"
           iconName="incidents"
           title="Incident record was not found"
           description="The requested incident is not available in the current dataset. Return to the queue and choose another investigation."
@@ -358,6 +359,7 @@ export function IncidentDetailPage() {
           </EvidencePanel>
 
           <EvidencePanel
+            dataTestId="incident-notifications-panel"
             eyebrow="Notifications"
             title="Administrator notifications"
             description="Notification attempts generated for this incident from risk, state, or response triggers."
@@ -368,6 +370,7 @@ export function IncidentDetailPage() {
                   <div
                     key={event.id}
                     className="rounded-panel border border-border-subtle bg-surface-subtle/65 p-4"
+                    data-testid="notification-event-row"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="type-mono-sm">{event.subject}</p>
@@ -398,7 +401,10 @@ export function IncidentDetailPage() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-panel border border-dashed border-border-subtle bg-surface-base/30 p-4">
+              <div
+                className="rounded-panel border border-dashed border-border-subtle bg-surface-base/30 p-4"
+                data-testid="notification-empty-state"
+              >
                 <p className="type-body-sm">
                   No notification attempts have been recorded for this incident yet.
                 </p>

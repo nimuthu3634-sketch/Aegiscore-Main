@@ -7,9 +7,11 @@ This checklist is the final handoff gate for AegisCore scoped v1 submission.
 Run and record:
 
 ```powershell
-docker compose run --rm --no-deps api pytest
+docker compose run --rm --entrypoint pytest api
 npm run lint:web
 npm run build:web
+docker compose up -d postgres api
+docker compose exec api python -m app.db.seed
 npm run test:web:e2e
 py -3 scripts/validate_attack_scenarios.py
 ```
@@ -18,8 +20,8 @@ Expected outcome:
 
 - backend tests pass
 - frontend lint/build pass
-- Playwright run is green (or any failure is documented as blocker)
-- scenario validation passes for all four supported detections
+- Playwright run is green with the API reachable at `127.0.0.1:8000` (or any failure is documented as a blocker)
+- scenario validation passes for all four supported detections against the same API
 
 ## 2) Demo-Day Checks
 
@@ -68,26 +70,26 @@ Fallback:
 - `docs/viva-qa.md`
 - `docs/requirement-compliance-matrix.md`
 - `docs/release-readiness.md`
+- `docs/release-candidate-note.md`
 - `docs/setup/operator-guide.md`
 - `docs/setup/analyst-guide.md`
 - `docs/setup/operator-runbook.md`
 
-## 5) Freeze Result Record (2026-04-07, Post-Remediation Re-Run)
+## 5) Freeze Result Record (2026-04-08, Release-Candidate Verification)
 
-- backend tests: passed (`98 passed`, `1 warning`) via `docker compose run --rm --no-deps --entrypoint pytest api`
-- frontend lint: passed
-- frontend build: passed
-- Playwright: passed (`13 passed` in the latest freeze validation run)
-- attack scenario validation: passed (all four scenarios)
+- backend tests: passed — **`103 passed`**, `1 warning` — `docker compose run --rm --entrypoint pytest api`
+- frontend lint: passed — `npm run lint:web`
+- frontend build: passed — `npm run build:web`
+- Playwright: passed — **16 passed**, 0 skipped — `npm run test:web:e2e` with Compose API on `127.0.0.1:8000` and `docker compose exec api python -m app.db.seed`
+- attack scenario validation: passed (all four scenarios) — `py -3 scripts/validate_attack_scenarios.py`
 
-Blockers remediated in this freeze cycle:
-
-- Playwright startup/login instability (`/auth/login` proxy socket-hang-up)
-- scenario-validation daily-report mismatch for `brute_force`
+Prior freeze-cycle blockers (now closed): Playwright `/auth/login` proxy stability; `brute_force` daily-report alignment in the scenario validator.
 
 ## 6) Submission Decision Gate
 
 Mark one before handoff:
 
-- [x] **Submission-ready**: all verification checks pass, or only non-blocker lab constraints remain and are documented.
-- [ ] **Conditionally ready pending blocker re-check**: at least one blocker remains and must be revalidated before final submission packaging.
+- [x] **Release-candidate / submission-ready**: the 2026-04-08 verification sequence completed successfully in the documented environment; remaining limits are documented as scope constraints, not open blockers.
+- [ ] **Not ready**: a verification step failed or the environment does not match the documented prerequisites.
+
+See [release-candidate-note.md](release-candidate-note.md) for the one-line RC stance.

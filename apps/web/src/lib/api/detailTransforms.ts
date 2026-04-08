@@ -29,6 +29,19 @@ type ApiRelatedResponse = {
   created_at: string;
   executed_at: string | null;
   requested_by: ApiUserSummary;
+  related_notifications?: Array<{
+    id: string;
+    channel: string;
+    delivery_mode: string;
+    trigger_type: string;
+    trigger_value: string;
+    recipient: string;
+    subject: string;
+    status: string;
+    error_message: string | null;
+    created_at: string;
+    sent_at: string | null;
+  }>;
 };
 
 type ApiNote = {
@@ -98,7 +111,15 @@ export function toRelatedResponses(
       "No response summary available.",
     resultMessage: response.result_message ?? null,
     attemptCount: response.attempt_count ?? 0,
-    requestedBy: toActorLabel(response.requested_by)
+    requestedBy: toActorLabel(response.requested_by),
+    relatedNotifications: (response.related_notifications ?? []).map((event) => ({
+      id: event.id,
+      recipient: event.recipient,
+      status: event.status,
+      triggerType: event.trigger_type,
+      deliveryMode: event.delivery_mode,
+      subject: event.subject
+    }))
   }));
 }
 

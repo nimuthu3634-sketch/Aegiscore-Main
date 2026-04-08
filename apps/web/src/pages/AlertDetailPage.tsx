@@ -92,6 +92,7 @@ export function AlertDetailPage() {
           Back to alerts
         </Button>
         <EmptyState
+          dataTestId="detail-record-not-found"
           iconName="alerts"
           title="Alert record was not found"
           description="The requested alert is not available in the current dataset. Return to the queue and select another alert."
@@ -261,6 +262,70 @@ export function AlertDetailPage() {
 
           <RelatedResponsesPanel responses={alert.relatedResponses} />
 
+          <EvidencePanel
+            dataTestId="alert-notifications-panel"
+            eyebrow="Notifications"
+            title="Administrator notifications"
+            description="Delivery attempts for the linked incident from risk scoring, state transitions, response outcomes, or notify_admin actions."
+          >
+            {!alert.linkedIncidentId ? (
+              <div
+                className="rounded-panel border border-dashed border-border-subtle bg-surface-base/30 p-4"
+                data-testid="alert-notification-link-required"
+              >
+                <p className="type-body-sm">
+                  Notifications are scoped to incidents. Link this alert to an incident to see
+                  administrator delivery history here.
+                </p>
+              </div>
+            ) : alert.notifications.length ? (
+              <div className="space-y-3">
+                {alert.notifications.map((event) => (
+                  <div
+                    key={event.id}
+                    className="rounded-panel border border-border-subtle bg-surface-subtle/65 p-4"
+                    data-testid="notification-event-row"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="type-mono-sm">{event.subject}</p>
+                      <Badge
+                        tone={
+                          event.status === "sent"
+                            ? "success"
+                            : event.status === "failed"
+                              ? "danger"
+                              : "outline"
+                        }
+                      >
+                        {event.status}
+                      </Badge>
+                    </div>
+                    <p className="mt-2 type-body-sm">
+                      {event.channel} ({event.deliveryMode}) to {event.recipient}
+                    </p>
+                    <p className="mt-1 type-body-sm">
+                      trigger: {event.triggerType} [{event.triggerValue}]
+                    </p>
+                    <p className="mt-1 type-body-sm">created: {event.createdAt}</p>
+                    <p className="mt-1 type-body-sm">sent: {event.sentAt}</p>
+                    {event.errorMessage ? (
+                      <p className="mt-2 text-body-sm text-status-danger">{event.errorMessage}</p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div
+                className="rounded-panel border border-dashed border-border-subtle bg-surface-base/30 p-4"
+                data-testid="notification-empty-state"
+              >
+                <p className="type-body-sm">
+                  No notification attempts have been recorded for this incident yet.
+                </p>
+              </div>
+            )}
+          </EvidencePanel>
+
           <AnalystNotesPanel
             notes={alert.notes}
             composerLabel="Add alert investigation note"
@@ -372,10 +437,17 @@ export function AlertDetailPage() {
                   {pendingAction === "close" ? "Closing..." : "Close"}
                 </Button>
               </div>
-              {workflowError ? (
-                <p className="text-body-sm text-status-danger">{workflowError}</p>
-              ) : workflowMessage ? (
-                <p className="text-body-sm text-status-success">{workflowMessage}</p>
+              {workflowError || workflowMessage ? (
+                <p
+                  data-testid="alert-workflow-feedback"
+                  className={
+                    workflowError
+                      ? "text-body-sm text-status-danger"
+                      : "text-body-sm text-status-success"
+                  }
+                >
+                  {workflowError ?? workflowMessage}
+                </p>
               ) : (
                 <p className="type-body-sm">
                   Acknowledge, incident linkage, and close actions now persist through the

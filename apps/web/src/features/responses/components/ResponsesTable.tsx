@@ -76,6 +76,14 @@ const columns: TableColumn<ResponseRecord>[] = [
         {row.resultMessage && row.resultMessage !== row.resultSummary ? (
           <p className="text-body-sm text-content-muted">{row.resultMessage}</p>
         ) : null}
+        {row.notificationSummary ? (
+          <p
+            className="type-body-sm text-content-muted"
+            data-testid="response-row-notification-summary"
+          >
+            {row.notificationSummary}
+          </p>
+        ) : null}
       </div>
     )
   }

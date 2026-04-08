@@ -100,6 +100,107 @@ def test_wazuh_api_client_fetches_alert_items_with_checkpoint_param(monkeypatch)
     ]
 
 
+def test_run_wazuh_poll_cycle_uses_mocked_live_api_client_path(monkeypatch) -> None:
+    session = FakeSession()
+    payload = _fixture("wazuh_file_integrity_violation.json")
+    payload["id"] = "evt-3001"
+    payload["timestamp"] = "2026-04-06T13:00:00Z"
+    saved: dict[str, object] = {}
+
+    monkeypatch.setattr(
+        wazuh_connector,
+        "get_settings",
+        lambda: _test_settings(
+            wazuh_auth_mode="bearer",
+            wazuh_bearer_token="token-live",
+            wazuh_page_size=1,
+            wazuh_max_pages_per_cycle=3,
+        ),
+    )
+    monkeypatch.setattr(
+        wazuh_connector,
+        "mark_connector_running",
+        lambda session, connector: SimpleNamespace(
+            checkpoint={"last_timestamp": "2026-04-06T12:59:00+00:00", "last_external_ids": []},
+            metrics={},
+        ),
+    )
+    monkeypatch.setattr(
+        wazuh_connector,
+        "mark_connector_success",
+        lambda session, connector, checkpoint, metrics: saved.update(
+            {"checkpoint": checkpoint, "metrics": metrics}
+        ),
+    )
+
+    def fake_request_json(self, *, method, path, headers, params):
+        if params.get("offset") == "0":
+            return {"data": {"affected_items": [payload]}}
+        return {"data": {"affected_items": []}}
+
+    monkeypatch.setattr(wazuh_connector.WazuhAPIClient, "_request_json", fake_request_json)
+
+    created_asset = Asset(
+        id=uuid4(),
+        hostname="fim-host-01",
+        ip_address="10.42.0.44",
+        operating_system="Ubuntu 22.04",
+        criticality=AssetCriticality.HIGH,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    monkeypatch.setattr(
+        "app.services.ingestion.service.AlertsRepository.get_raw_alert_by_source_external_id",
+        lambda self, source, external_id: None,
+    )
+    monkeypatch.setattr(
+        "app.services.ingestion.service._resolve_or_create_asset",
+        lambda ingest_session, parsed_event: (created_asset, []),
+    )
+    monkeypatch.setattr(
+        "app.services.ingestion.service.IngestionFailuresRepository.resolve_failure",
+        lambda self, source, external_id: None,
+    )
+    monkeypatch.setattr(
+        "app.services.ingestion.service.AuditLogsRepository.create",
+        lambda self, audit_log: audit_log,
+    )
+
+    def fake_persist_and_score_alert(fake_session, raw_alert, normalized_alert):
+        raw_alert.id = uuid4()
+        normalized_alert.id = uuid4()
+        raw_alert.normalized_alert = normalized_alert
+        normalized_alert.raw_alert = raw_alert
+        normalized_alert.asset = created_asset
+        normalized_alert.risk_score = RiskScore(
+            id=uuid4(),
+            normalized_alert=normalized_alert,
+            score=83,
+            confidence=0.9,
+            priority_label=IncidentPriority.HIGH,
+            scoring_method=ScoreMethod.BASELINE_RULES,
+            reasoning="Mocked Wazuh live path scoring.",
+            explanation={"summary": "Live connector integration path scored successfully."},
+            feature_snapshot={"source_ip": "203.0.113.24"},
+            calculated_at=datetime.now(UTC),
+        )
+        return normalized_alert
+
+    monkeypatch.setattr(
+        "app.repositories.alerts.persist_and_score_alert",
+        fake_persist_and_score_alert,
+    )
+
+    summary = wazuh_connector.run_wazuh_poll_cycle(session)
+
+    assert summary == {"fetched": 1, "ingested": 1, "duplicates": 0, "failed": 0}
+    assert saved["checkpoint"]["last_timestamp"] == "2026-04-06T13:00:00+00:00"
+    assert saved["checkpoint"]["last_external_ids"] == ["evt-3001"]
+    assert saved["metrics"]["poll_count"] == 1
+    assert saved["metrics"]["total_fetched"] == 1
+    assert saved["metrics"]["total_ingested"] == 1
+
+
 def test_run_wazuh_poll_cycle_reuses_ingestion_pipeline(monkeypatch) -> None:
     session = FakeSession()
     payload = _fixture("wazuh_brute_force.json")

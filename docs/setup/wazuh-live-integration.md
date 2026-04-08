@@ -6,7 +6,7 @@ This guide enables continuous live Wazuh ingestion in AegisCore while preserving
 
 - **Implemented**: live Wazuh polling connector with auth modes (`basic`, `token`, `bearer`), retries, checkpointing, duplicate protection, and connector status visibility.
 - **Limited mode**: compatibility currently targets common Wazuh response envelopes (`list`, `data.affected_items`, `data.items`) and may require tuning for other manager/API variants.
-- **Validation baseline**: fixture-backed ingestion remains the default deterministic validation path; live Wazuh checks are optional VM/lab verification.
+- **Operational default**: live Wazuh polling is the normal VM/lab ingestion path when `WAZUH_CONNECTOR_ENABLED=true`; fixture posting is reserved for explicit test/demo fallback.
 
 ## Scope Guardrails
 
@@ -88,8 +88,8 @@ Generate a controlled VM-lab event (for example brute force or FIM), then confir
 
 ## Operational Notes
 
-- For normal VM/lab operation, keep `WAZUH_CONNECTOR_ENABLED=true` so live polling is the primary ingestion path.
-- Keep `POST /integrations/wazuh/events` for test/demo fixture injection rather than everyday operations.
+- For normal VM/lab operation, keep `WAZUH_CONNECTOR_ENABLED=true` so live polling remains the default ingestion path.
+- Use `POST /integrations/wazuh/events` only as an explicit fallback for deterministic tests or demo recovery when live upstream is unavailable.
 - Checkpointing stores the last timestamp and recent external IDs to reduce duplicate processing between polling cycles.
 - Connector polling uses page-size plus offset pagination and is bounded by `WAZUH_MAX_PAGES_PER_CYCLE` per cycle.
 - Duplicate protection remains enforced at ingestion by `source + external_id`.

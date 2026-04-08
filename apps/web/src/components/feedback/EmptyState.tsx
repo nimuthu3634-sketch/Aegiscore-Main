@@ -8,16 +8,18 @@ type EmptyStateProps = {
   description: string;
   action?: ReactNode;
   iconName?: IconName;
+  dataTestId?: string;
 };
 
 export function EmptyState({
   title,
   description,
   action,
-  iconName = "shield"
+  iconName = "shield",
+  dataTestId
 }: EmptyStateProps) {
   return (
-    <Card className="flex flex-col items-start gap-4 p-panel">
+    <Card className="flex flex-col items-start gap-4 p-panel" data-testid={dataTestId}>
       <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-primary/20 bg-surface-accentSoft text-brand-primary">
         <Icon name={iconName} />
       </span>

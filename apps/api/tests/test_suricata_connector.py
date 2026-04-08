@@ -260,3 +260,43 @@ def test_run_suricata_poll_cycle_raises_when_source_missing(monkeypatch, tmp_pat
         assert "missing-eve.json" in str(exc)
     else:  # pragma: no cover - defensive assertion
         raise AssertionError("Expected FileNotFoundError for missing eve.json source")
+
+
+def test_run_suricata_poll_cycle_handles_missing_source_in_fallback_mode(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    session = FakeSession()
+    missing_path = tmp_path / "missing-eve.json"
+    saved: dict[str, object] = {}
+    monkeypatch.setattr(
+        suricata_connector,
+        "get_settings",
+        lambda: _test_settings(
+            suricata_eve_file_path=str(missing_path),
+            suricata_retry_attempts=0,
+            suricata_fail_when_source_missing=False,
+        ),
+    )
+    monkeypatch.setattr(
+        suricata_connector,
+        "mark_connector_running",
+        lambda session, connector: SimpleNamespace(
+            checkpoint={"offset": 128, "inode": 9001},
+            metrics={},
+        ),
+    )
+    monkeypatch.setattr(
+        suricata_connector,
+        "mark_connector_success",
+        lambda session, connector, checkpoint, metrics: saved.update(
+            {"checkpoint": checkpoint, "metrics": metrics}
+        ),
+    )
+
+    summary = suricata_connector.run_suricata_poll_cycle(session)
+
+    assert summary == {"fetched": 0, "ingested": 0, "duplicates": 0, "failed": 0}
+    assert saved["checkpoint"]["offset"] == 128
+    assert saved["checkpoint"]["inode"] == 9001
+    assert saved["metrics"]["poll_count"] == 1

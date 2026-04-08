@@ -6,7 +6,7 @@ This guide enables continuous Suricata ingestion in AegisCore using `eve.json` t
 
 - **Implemented**: live Suricata connector in `file_tail` mode with inode/offset checkpointing, retries, malformed-line logging, duplicate protection, and connector status visibility.
 - **Limited mode**: authenticated forwarding endpoint mode is not implemented yet.
-- **Validation baseline**: fixture-backed ingestion remains the default deterministic validation path; live Suricata checks are optional VM/lab verification.
+- **Operational default**: live Suricata `file_tail` ingestion is the normal VM/lab path when `SURICATA_CONNECTOR_ENABLED=true`; fixture posting is reserved for explicit test/demo fallback.
 
 ## Scope Guardrails
 
@@ -77,8 +77,8 @@ Key fields:
 
 ## Operational Notes
 
-- For normal VM/lab operation, keep `SURICATA_CONNECTOR_ENABLED=true` so live file-tail polling is the primary ingestion path.
-- Keep `POST /integrations/suricata/events` for test/demo fixture injection rather than everyday operations.
+- For normal VM/lab operation, keep `SURICATA_CONNECTOR_ENABLED=true` so live file-tail polling stays the default ingestion path.
+- Use `POST /integrations/suricata/events` only as an explicit fallback for deterministic tests or demo recovery when live `eve.json` access is unavailable.
 - When `SURICATA_FAIL_WHEN_SOURCE_MISSING=true`, connector status reports errors if the `eve.json` source path is unavailable.
 - Duplicate protection remains enforced by `source + external_id` in ingestion.
 - Raw source payloads are preserved in `raw_alerts`.

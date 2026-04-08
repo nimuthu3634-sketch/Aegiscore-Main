@@ -206,6 +206,10 @@ class Settings(BaseSettings):
         default="warning,failed",
         alias="NOTIFICATIONS_RESPONSE_STATUSES",
     )
+    notifications_response_action_types: str = Field(
+        default="*",
+        alias="NOTIFICATIONS_RESPONSE_ACTION_TYPES",
+    )
     notifications_admin_recipients: str = Field(
         default="admin@aegiscore.local",
         alias="NOTIFICATIONS_ADMIN_RECIPIENTS",

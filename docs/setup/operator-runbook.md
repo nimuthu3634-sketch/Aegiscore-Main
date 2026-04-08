@@ -117,7 +117,7 @@ docker compose exec -T postgres pg_dump -U ${env:POSTGRES_USER} -d ${env:POSTGRE
 Backend + frontend checks:
 
 ```powershell
-docker compose run --rm --no-deps api pytest
+docker compose run --rm --entrypoint pytest api
 npm run lint:web
 npm run build:web
 npm run test:web:e2e

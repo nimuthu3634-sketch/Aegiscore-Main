@@ -73,9 +73,13 @@ export function AnalystNotesPanel({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-h-[1.25rem]">
               {saveError ? (
-                <p className="text-body-sm text-status-danger">{saveError}</p>
+                <p className="text-body-sm text-status-danger" data-testid="analyst-notes-feedback">
+                  {saveError}
+                </p>
               ) : saveSuccess ? (
-                <p className="text-body-sm text-status-success">{saveSuccess}</p>
+                <p className="text-body-sm text-status-success" data-testid="analyst-notes-feedback">
+                  {saveSuccess}
+                </p>
               ) : null}
             </div>
             <Button

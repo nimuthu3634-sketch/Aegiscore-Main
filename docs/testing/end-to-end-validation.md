@@ -22,7 +22,7 @@ The goal of this validation pass is to prove the real application flow works end
 Backend and live-lab validation used these commands:
 
 ```powershell
-docker compose run --rm --no-deps api pytest
+docker compose run --rm --entrypoint pytest api
 py -3 scripts/validate_attack_scenarios.py
 ```
 
@@ -47,14 +47,16 @@ The live-lab validation script uses the real authenticated API, ingests the supp
 
 ## Latest Live Validation Snapshot
 
-The latest successful run of `py -3 scripts/validate_attack_scenarios.py` returned:
+The latest successful run of `py -3 scripts/validate_attack_scenarios.py` (**2026-04-08**, release-candidate verification) returned:
 
 | Scenario | Ingestion | Alert | Incident | Risk | Responses | Daily report alerts |
 | --- | --- | --- | --- | ---: | ---: | ---: |
-| `brute_force` | `ingested` | `bdee1b18-ce8a-4611-8f2f-3b1bf86cb795` | `c967d9ce-ab5d-40e0-885b-7a212095df75` | 100 | 1 | 5 |
-| `file_integrity_violation` | `ingested` | `baf31637-3892-4883-bbc3-1b86f890b357` | `076547e5-1879-4caa-8c0a-2c0a49987fd8` | 89 | 1 | 3 |
-| `port_scan` | `ingested` | `155434c4-2230-467f-8398-68087ed4c5a0` | `ff18b43f-33c0-434e-bc73-3c9da6ad31db` | 96 | 1 | 4 |
-| `unauthorized_user_creation` | `ingested` | `ff13a8d9-fe9f-4749-8b59-36bb623bb482` | `d67ffb1d-2a69-40a2-8561-ebae934b9e05` | 100 | 1 | 3 |
+| `brute_force` | `ingested` | `d7b07955-a0ef-423d-8f2e-74be432c33ff` | `12e79f3c-f5b6-4156-a109-cd0803fb4e99` | 100 | 1 | 152 |
+| `file_integrity_violation` | `ingested` | `70d1c7f9-8b76-424d-a00d-84c971a7134e` | `9134f42e-9a75-4ff9-a079-53fb44724512` | 100 | 1 | 145 |
+| `port_scan` | `ingested` | `ce5dfb1f-9e1f-4d72-9b11-2b07ad489470` | `16f321d9-897e-44da-b389-74c19376b3f2` | 100 | 1 | 145 |
+| `unauthorized_user_creation` | `ingested` | `25d5880f-e8f1-49a7-ac54-3b9cfc479bc2` | `b2916743-dab1-4c35-b5a9-7c91d7501ce1` | 100 | 1 | 144 |
+
+Daily report totals reflect **all** alerts in the daily window for that API database, not only the scenario row; they are useful as a sanity check that the report API returns data, not as a fixed regression count.
 
 ## Validation Notes
 
@@ -66,7 +68,7 @@ The latest successful run of `py -3 scripts/validate_attack_scenarios.py` return
 ## Honest Remaining Gaps
 
 - Live connector support exists for Wazuh and Suricata, but deterministic validation in this document still uses fixture-backed ingestion as the default repeatable proof path.
-- Browser coverage now includes major write workflows (notes, transitions, policy toggles, and alert lifecycle/linking), but does not yet cover every negative-path role restriction or terminal edge case in Playwright.
+- Browser coverage includes major write workflows, selected negative paths, and notification panel surfaces (see [playwright-coverage.md](playwright-coverage.md)); it does not cover every negative-path role restriction or terminal edge case.
 - Daily summary visibility is confirmed for the supported detections, but there is no scheduled or emailed reporting workflow yet.
 
 ## Future Validation Work

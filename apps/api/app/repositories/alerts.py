@@ -216,6 +216,9 @@ class AlertsRepository:
                 selectinload(NormalizedAlert.risk_score),
                 selectinload(NormalizedAlert.response_actions)
                 .selectinload(ResponseAction.policy),
+                selectinload(NormalizedAlert.response_actions).selectinload(
+                    ResponseAction.notification_events
+                ),
                 selectinload(NormalizedAlert.incident)
                 .selectinload(Incident.assigned_user)
                 .selectinload(User.role),
@@ -242,8 +245,14 @@ class AlertsRepository:
                 .selectinload(ResponseAction.policy),
                 selectinload(NormalizedAlert.incident)
                 .selectinload(Incident.response_actions)
+                .selectinload(ResponseAction.notification_events),
+                selectinload(NormalizedAlert.incident)
+                .selectinload(Incident.response_actions)
                 .selectinload(ResponseAction.requested_by)
                 .selectinload(User.role),
+                selectinload(NormalizedAlert.incident).selectinload(
+                    Incident.notification_events
+                ),
             )
             .where(NormalizedAlert.id == alert_id)
         )

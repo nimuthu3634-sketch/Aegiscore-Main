@@ -522,6 +522,18 @@ def to_incident_summary_response(incident: Incident) -> IncidentSummaryResponse:
     )
 
 
+def _notification_events_for_response_action(
+    response_action: ResponseAction,
+    *,
+    limit: int | None = None,
+) -> list[NotificationEvent]:
+    items = list(response_action.notification_events or [])
+    items.sort(key=lambda event: event.created_at, reverse=True)
+    if limit is not None:
+        return items[:limit]
+    return items
+
+
 def to_response_action_reference_response(
     response_action: ResponseAction,
 ) -> ResponseActionReferenceResponse:
@@ -566,6 +578,13 @@ def to_response_action_summary_response(
         if response_action.requested_by
         else None,
         incident=to_incident_reference_response(response_action.incident),
+        related_notifications=[
+            to_notification_event_response(event)
+            for event in _notification_events_for_response_action(
+                response_action,
+                limit=10,
+            )
+        ],
     )
 
 
@@ -611,6 +630,10 @@ def to_response_action_detail_response(
         requested_by=to_user_brief_response(response_action.requested_by)
         if response_action.requested_by
         else None,
+        related_notifications=[
+            to_notification_event_response(event)
+            for event in _notification_events_for_response_action(response_action)
+        ],
     )
 
 
@@ -741,6 +764,16 @@ def to_alert_detail_response(
             to_response_action_detail_response(action)
             for action in _alert_related_responses(alert)
         ],
+        notifications=[
+            to_notification_event_response(event)
+            for event in sorted(
+                alert.incident.notification_events or [],
+                key=lambda item: item.created_at,
+                reverse=True,
+            )
+        ]
+        if alert.incident
+        else [],
         analyst_notes=_build_analyst_notes(analyst_notes),
         audit_history=[
             to_activity_entry_response(audit_log)
