@@ -100,16 +100,14 @@ export const primaryNavigation: NavigationItem[] = [
     label: "Alerts",
     shortLabel: "Alerts",
     icon: "alerts",
-    path: "/alerts",
-    badgeCount: 12
+    path: "/alerts"
   },
   {
     id: "incidents",
     label: "Incidents Queue",
     shortLabel: "Incidents",
     icon: "incidents",
-    path: "/incidents",
-    badgeCount: 4
+    path: "/incidents"
   },
   {
     id: "assets",
@@ -177,43 +175,43 @@ export const pageBlueprints: Record<
     eyebrow: "SOC overview",
     title: "Overview Dashboard",
     description:
-      "Centralized security monitoring, prioritization, and investigation for SME analysts."
+      "At-a-glance posture for the four in-scope threats: volume, risk, incidents, responses, and affected assets—built for a focused SME lab console."
   },
   alerts: {
     eyebrow: "Normalized alerts",
     title: "Alerts",
     description:
-      "High-density triage surface for Wazuh and Suricata events normalized into the AegisCore schema."
+      "Triage normalized Wazuh and Suricata signals (brute force, FIM, port scan, unauthorized user creation). Sort by risk when the queue is busy."
   },
   incidents: {
     eyebrow: "Investigation queue",
     title: "Incidents Queue",
     description:
-      "Open investigations with visible ownership, severity, and response posture."
+      "Grouped investigations with state, priority, and linked alerts—drive each case from triage to resolution."
   },
   assets: {
     eyebrow: "Asset inventory",
     title: "Assets / Endpoints",
     description:
-      "Monitored endpoints, recent exposure, and alert activity tied to operational context."
+      "Endpoints carrying in-scope alert load. Use this to see which hosts need attention alongside incidents."
   },
   responses: {
     eyebrow: "Action history",
     title: "Response History",
     description:
-      "Manual and automated response execution history with auditable outcomes."
+      "What the platform already did: policy-driven dry-run or live actions with outcomes you can audit."
   },
   rules: {
     eyebrow: "Detection scope",
     title: "Rules / Policies",
     description:
-      "Operational policy surfaces for the in-scope detections and safe SME response controls."
+      "Automation rules for the four supported detections only—tune enablement and modes without leaving SME-safe defaults behind."
   },
   reports: {
     eyebrow: "Operational reporting",
     title: "Reports",
     description:
-      "Operational summaries built for SMEs, with alert, incident, asset, and response visibility."
+      "Summaries and exports for the same in-scope activity you see in the queues—ideal for demos and handoffs."
   },
   settings: {
     eyebrow: "Platform configuration",

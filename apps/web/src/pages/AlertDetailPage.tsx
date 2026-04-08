@@ -114,6 +114,11 @@ export function AlertDetailPage() {
 
   const metadataItems: KeyValueItem[] = [
     { label: "Alert ID", value: alert.id, mono: true, emphasized: true },
+    {
+      label: "Detection type",
+      value: formatTokenLabel(alert.detectionType),
+      emphasized: true
+    },
     { label: "Source IP", value: fallbackValue(alert.sourceIp), mono: true },
     { label: "Destination IP", value: fallbackValue(alert.destinationIp), mono: true },
     {
@@ -213,7 +218,7 @@ export function AlertDetailPage() {
       </div>
 
       <DetailHeader
-        eyebrow="Alert investigation"
+        eyebrow="In-scope alert"
         title={formatTokenLabel(alert.detectionType)}
         description={alert.normalizedSummary}
         badges={
@@ -222,7 +227,9 @@ export function AlertDetailPage() {
             <Badge tone="outline">{alert.sourceType}</Badge>
             <SeverityChip severity={alert.severity} />
             <StatusChip status={alert.status} />
-            <Badge tone="brand">risk {alert.riskScore ?? "n/a"}</Badge>
+            <Badge tone={(alert.riskScore ?? 0) >= 70 ? "warning" : "brand"}>
+              risk {alert.riskScore ?? "n/a"}
+            </Badge>
             {alert.linkedIncidentId ? (
               <Badge tone="outline">incident {alert.linkedIncidentId}</Badge>
             ) : (
@@ -252,9 +259,9 @@ export function AlertDetailPage() {
       <section className="grid gap-4 2xl:grid-cols-[1.35fr_0.65fr]">
         <div className="space-y-4">
           <EvidencePanel
-            eyebrow="Common schema"
+            eyebrow="Evidence"
             title="Normalized details"
-            description="AegisCore-normalized evidence aligned to the future backend detail response."
+            description="Structured fields for triage (hosts, auth, paths, ports, users). Use with raw payload below for full fidelity."
           >
             <KeyValueGrid items={alert.normalizedDetails} columns={3} />
           </EvidencePanel>
@@ -385,10 +392,11 @@ export function AlertDetailPage() {
             <EvidencePanel
               eyebrow="Scoring"
               title="Score explanation unavailable"
-              description="The backend did not return a risk explanation for this alert yet."
+              description="Risk is still shown in the header when present; a full factor breakdown was not returned for this alert."
             >
               <p className="type-body-sm">
-                The detail flow remains connected to the backend, but this alert does not currently include a score rationale payload.
+                Refresh after scoring runs, or open the scoring docs if you are validating the
+                pipeline in a lab environment.
               </p>
             </EvidencePanel>
           )}
@@ -396,7 +404,7 @@ export function AlertDetailPage() {
           <EvidencePanel
             eyebrow="Workflow"
             title="Lifecycle actions"
-            description="Persisted alert lifecycle controls backed by audit logging and live detail refresh."
+            description="Acknowledge, link to an incident, or close. Each action is persisted and reflected on refresh."
           >
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
@@ -451,8 +459,8 @@ export function AlertDetailPage() {
                 </p>
               ) : (
                 <p className="type-body-sm">
-                  Acknowledge, incident linkage, and close actions now persist through the
-                  backend workflow APIs.
+                  Choose an action above; success or errors appear here immediately after the
+                  request completes.
                 </p>
               )}
             </div>

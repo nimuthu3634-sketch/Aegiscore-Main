@@ -30,8 +30,8 @@ export function RecentResponsesPanel({
           <p className="type-label-md">Most recent responses</p>
           <CardTitle>Execution history</CardTitle>
           <CardDescription>
-            The latest automated or analyst-triggered response actions returned by the
-            backend.
+            Policy-driven actions for in-scope scenarios (block IP, notify admin, manual
+            review, and related controls)—see mode and outcome at a glance.
           </CardDescription>
         </div>
         <Button variant="ghost" size="sm" onClick={onViewResponses}>
@@ -79,7 +79,8 @@ export function RecentResponsesPanel({
         ) : (
           <div className="rounded-panel border border-dashed border-border-subtle bg-surface-subtle/35 px-4 py-5">
             <p className="type-body-sm">
-              No response executions are available in the current history window.
+              No responses in this window. When policies fire, executions and outcomes
+              will list here and on the response history page.
             </p>
           </div>
         )}

@@ -6,6 +6,8 @@ This guide is for operators running **AegisCore**, the **final scoped v1 product
 
 For a concise command-first operating sequence, use the [Operator Runbook](operator-runbook.md).
 
+**Ubuntu VirtualBox lab (live Wazuh + Suricata):** use **[ubuntu-vm-lab-live-soc.md](ubuntu-vm-lab-live-soc.md)** as the primary connected-SOC setup story—SOC server, Wazuh manager/agents/FIM, Suricata `eve.json`, attacker VM, connector health checks, and live verification examples.
+
 ## Local Startup
 
 ```powershell

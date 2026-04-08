@@ -210,6 +210,7 @@ Operational health endpoints:
 - [Operator Guide](docs/setup/operator-guide.md)
 - [Operator Runbook](docs/setup/operator-runbook.md)
 - [Analyst Guide](docs/setup/analyst-guide.md)
+- [Ubuntu VM lab — live SOC (Wazuh + Suricata)](docs/setup/ubuntu-vm-lab-live-soc.md)
 - [Wazuh Live Integration](docs/setup/wazuh-live-integration.md)
 - [Suricata Live Integration](docs/setup/suricata-live-integration.md)
 - [Notifications Setup](docs/setup/notifications.md)

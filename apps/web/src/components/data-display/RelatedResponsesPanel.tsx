@@ -39,8 +39,9 @@ export function RelatedResponsesPanel({
 }: RelatedResponsesPanelProps) {
   return (
     <EvidencePanel
+      eyebrow="Response history"
       title={title}
-      description="Related automated and analyst-triggered actions connected to this investigation context."
+      description="What ran against this alert or incident: policy name, target, dry-run vs live, outcome, and any linked notification deliveries."
     >
       {responses.length ? (
         <div className="space-y-3">
@@ -117,7 +118,8 @@ export function RelatedResponsesPanel({
       ) : (
         <div className="rounded-panel border border-dashed border-border-subtle bg-surface-base/30 p-4">
           <p className="type-body-sm">
-            No automated or analyst-triggered response actions are linked to this record yet.
+            No policy executions recorded for this record yet. If automation is enabled, actions
+            appear here after they run.
           </p>
         </div>
       )}

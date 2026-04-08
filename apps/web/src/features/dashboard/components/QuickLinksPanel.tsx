@@ -27,10 +27,11 @@ export function QuickLinksPanel({ items }: QuickLinksPanelProps) {
     <Card className="h-full">
       <CardHeader>
         <div className="space-y-2">
-          <p className="type-label-md">Quick links</p>
-          <CardTitle>Operational jump points</CardTitle>
+          <p className="type-label-md">Analyst workflow</p>
+          <CardTitle>Next steps</CardTitle>
           <CardDescription>
-            Fast access into the queues analysts will move to next from the overview.
+            Numbers shown are live summary counts—use them to jump straight into triage,
+            incidents, assets, or response audit.
           </CardDescription>
         </div>
       </CardHeader>

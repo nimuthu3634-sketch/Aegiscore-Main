@@ -2,6 +2,8 @@
 
 This guide enables continuous Suricata ingestion in AegisCore using `eve.json` tail polling.
 
+For the **Ubuntu SOC host + VirtualBox lab** (sensor VM or co-located Suricata, bind-mounted `eve.json`), see **[ubuntu-vm-lab-live-soc.md](ubuntu-vm-lab-live-soc.md)** first.
+
 ## Readiness Level
 
 - **Implemented**: live Suricata connector in `file_tail` mode with inode/offset checkpointing, retries, malformed-line logging, duplicate protection, and connector status visibility.
@@ -54,11 +56,26 @@ docker compose exec api alembic upgrade head
 
 ## 5) Verify Connector Health
 
-With authenticated API access:
+With authenticated JWT:
 
 ```http
 GET /integrations/suricata/connector/status
 ```
+
+**Direct API (Ubuntu SOC host):**
+
+```bash
+TOKEN=$(curl -s -X POST "http://127.0.0.1:8000/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"YOUR_ADMIN_PASSWORD"}' | jq -r .access_token)
+
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/integrations/suricata/connector/status" | jq .
+```
+
+**Through NGINX:** `http://localhost/api/integrations/suricata/connector/status` with the same header.
+
+**Readiness:** `GET /health/ready` → `dependencies.suricata_connector`.
 
 Key fields:
 
@@ -70,10 +87,22 @@ Key fields:
 
 ## 6) End-to-End Lab Validation
 
-1. generate a controlled port scan in the monitored network segment
-2. confirm event lands in Suricata `eve.json`
-3. check connector status counters increment (`total_fetched`, `total_ingested`)
-4. verify alert appears in AegisCore and inherits normal scoring/incident/response behavior
+**Concrete Ubuntu lab example (`port_scan`):**
+
+1. **Suricata** observes the lab segment; `eve.json` is mounted into the AegisCore **`api`** container at `SURICATA_EVE_FILE_PATH`.
+2. **Attacker VM (lab-only):** run a TCP scan toward a visible target, e.g. `nmap -sS <target-ip> -p 22,3389`.
+3. On the sensor: `tail` / `grep` `eve.json` and confirm a **Suricata alert** JSON line was appended.
+4. **AegisCore:** `GET /integrations/suricata/connector/status` — `total_ingested` increases and checkpoint advances.
+5. **AegisCore UI:** Alerts → **`port_scan`** (or parser-mapped in-scope type) → detail → scoring, incident, responses.
+
+**Short checklist:**
+
+1. Controlled port scan (or other in-scope network test) in the monitored segment.
+2. Event lands in Suricata `eve.json`.
+3. Connector status counters increment (`total_fetched`, `total_ingested`).
+4. Alert appears in AegisCore with normal scoring/incident/response behavior.
+
+See [ubuntu-vm-lab-live-soc.md](ubuntu-vm-lab-live-soc.md) for the full lab role diagram.
 
 ## Operational Notes
 

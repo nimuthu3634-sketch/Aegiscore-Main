@@ -28,7 +28,8 @@ export function TopAffectedAssetsPanel({
           <p className="type-label-md">Top affected assets</p>
           <CardTitle>Asset exposure</CardTitle>
           <CardDescription>
-            Endpoints with the highest recent alert pressure in the current dataset.
+            Hosts with the most in-scope alert activity—pair with incidents to prioritize
+            review.
           </CardDescription>
         </div>
         <Button variant="ghost" size="sm" onClick={onViewAssets}>
@@ -69,7 +70,8 @@ export function TopAffectedAssetsPanel({
         ) : (
           <div className="rounded-panel border border-dashed border-border-subtle bg-surface-subtle/35 px-4 py-5">
             <p className="type-body-sm">
-              No assets are available for the current monitoring scope.
+              No asset ranking yet. Once endpoints report alerts, the hottest hosts surface
+              here.
             </p>
           </div>
         )}

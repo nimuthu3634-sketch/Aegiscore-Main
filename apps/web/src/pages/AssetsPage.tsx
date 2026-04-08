@@ -96,7 +96,7 @@ export function AssetsPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="outline">{data?.total ?? 0} monitored assets</Badge>
             <Badge tone="brand">
-              {assets.filter((asset) => asset.openIncidents > 0).length} with incidents on page
+              {assets.filter((asset) => asset.openIncidents > 0).length} hosts with open incidents
             </Badge>
           </div>
         }
@@ -114,13 +114,13 @@ export function AssetsPage() {
             <MetricCard
               label="Online agents"
               value={String(assets.filter((asset) => asset.agentStatus === "online").length)}
-              detail="Current page slice of assets reporting healthy telemetry."
+              detail="On this page: healthy telemetry from monitored hosts."
               tone="highlight"
             />
             <MetricCard
               label="Degraded or offline"
               value={String(assets.filter((asset) => asset.agentStatus !== "online").length)}
-              detail="Current page slice of assets needing endpoint or agent attention."
+              detail="On this page: prioritize before trusting detections from these agents."
               tone="warning"
             />
             <MetricCard
@@ -128,7 +128,7 @@ export function AssetsPage() {
               value={String(
                 assets.reduce((total, asset) => total + asset.recentAlertsCount, 0)
               )}
-              detail="Current page slice of recent alerts across the visible endpoint set."
+              detail="On this page: sum of in-scope alerts per visible host—pairs with top assets on the overview."
             />
           </>
         )}
@@ -303,7 +303,7 @@ export function AssetsPage() {
         <EmptyState
           iconName="endpoints"
           title="No assets match the current filters"
-          description="Broaden the asset filters or clear the search to restore the operational endpoint list."
+          description="Clear search and filters to see the full monitored inventory. Use this view alongside incidents for host-level context."
           action={
             <Button
               variant="secondary"

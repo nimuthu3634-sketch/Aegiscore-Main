@@ -2,6 +2,8 @@
 
 This guide enables continuous live Wazuh ingestion in AegisCore while preserving the existing backend normalization, scoring, incident creation, and response automation flow.
 
+For the **Ubuntu Server + VirtualBox lab topology** (SOC host, Wazuh manager, monitored agents with FIM, attacker VM), start with **[ubuntu-vm-lab-live-soc.md](ubuntu-vm-lab-live-soc.md)**—then use this page for Wazuh-specific variables and behavior.
+
 ## Readiness Level
 
 - **Implemented**: live Wazuh polling connector with auth modes (`basic`, `token`, `bearer`), retries, checkpointing, duplicate protection, and connector status visibility.
@@ -60,10 +62,29 @@ docker compose exec api alembic upgrade head
 
 ## 4) Verify Connector Health and Sync
 
-Use an authenticated API token and query:
+Use an authenticated JWT (`Authorization: Bearer …`) and query:
 
 ```http
 GET /integrations/wazuh/connector/status
+```
+
+**Direct API (Ubuntu SOC host, port 8000 published):**
+
+```bash
+TOKEN=$(curl -s -X POST "http://127.0.0.1:8000/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"YOUR_ADMIN_PASSWORD"}' | jq -r .access_token)
+
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://127.0.0.1:8000/integrations/wazuh/connector/status" | jq .
+```
+
+**Through NGINX** (default Compose): use `http://localhost/api/auth/login` and `http://localhost/api/integrations/wazuh/connector/status` with the same `Authorization` header.
+
+**Readiness rollup** (connector state in `dependencies.wazuh_connector`):
+
+```bash
+curl -s "http://127.0.0.1:8000/health/ready" | jq .
 ```
 
 Key fields:
@@ -78,13 +99,23 @@ Key fields:
 
 ## 5) Validate Live End-to-End Flow
 
-Generate a controlled VM-lab event (for example brute force or FIM), then confirm:
+**Concrete Ubuntu lab example (host / log path — e.g. `brute_force`):**
 
-1. event appears in Wazuh manager
-2. connector status metrics increase (`total_fetched`, `total_ingested`)
-3. alert is created in AegisCore through normal routes
-4. risk scoring and incident linkage execute as expected
-5. policy automation actions are recorded (dry-run/live based on policy and safety settings)
+1. **Monitored Ubuntu client:** Wazuh agent enrolled; optional: Syscheck (FIM) watching test paths for `file_integrity_violation` experiments.
+2. **Attacker VM (lab-only):** induce multiple failed SSH logins to the client so Wazuh raises an authentication / brute-force style alert.
+3. **Wazuh manager:** confirm the alert exists for that agent.
+4. **AegisCore API:** `GET /integrations/wazuh/connector/status` — after a poll cycle, `metrics.total_ingested` (and related counters) should move.
+5. **AegisCore UI:** Alerts list → filter **brute_force** → open detail → confirm score, incident link, and response history per policy.
+
+**Checklist (any in-scope Wazuh-driven scenario):**
+
+1. Event appears in Wazuh manager.
+2. Connector status metrics increase (`total_fetched`, `total_ingested`).
+3. Alert is created in AegisCore through the live connector (not manual POST).
+4. Risk scoring and incident linkage execute as expected.
+5. Policy automation actions are recorded (dry-run/live based on policy and safety settings).
+
+See also the **Live lab verification** section in [ubuntu-vm-lab-live-soc.md](ubuntu-vm-lab-live-soc.md).
 
 ## Operational Notes
 

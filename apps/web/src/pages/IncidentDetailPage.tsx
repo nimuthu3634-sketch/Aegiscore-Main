@@ -21,6 +21,7 @@ import {
   transitionIncident,
   useIncidentDetail
 } from "../features/incidents/detail/service";
+import { formatTokenLabel } from "../lib/formatters";
 
 export function IncidentDetailPage() {
   const navigate = useNavigate();
@@ -107,7 +108,11 @@ export function IncidentDetailPage() {
     { label: "Created at", value: incident.createdAt, mono: true },
     { label: "Updated at", value: incident.updatedAt, mono: true },
     { label: "Primary asset", value: incident.primaryAsset, emphasized: true },
-    { label: "Detection type", value: incident.detectionType, mono: true },
+    {
+      label: "Detection type",
+      value: formatTokenLabel(incident.detectionType),
+      emphasized: true
+    },
     { label: "Linked alerts", value: String(incident.linkedAlertsCount), mono: true },
     { label: "Source type", value: incident.sourceType, emphasized: true }
   ];
@@ -201,7 +206,7 @@ export function IncidentDetailPage() {
         badges={
           <>
             <Badge tone="outline">{incident.id}</Badge>
-            <Badge tone="outline">{incident.detectionType}</Badge>
+            <Badge tone="brand">{formatTokenLabel(incident.detectionType)}</Badge>
             <PriorityChip priority={incident.priority} />
             <IncidentStateBadge state={incident.state} />
             <Badge tone="outline">{incident.assignee}</Badge>

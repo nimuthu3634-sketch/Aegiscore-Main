@@ -15,6 +15,7 @@ import { Select } from "../components/ui/Select";
 import { AlertsTable } from "../features/alerts/components/AlertsTable";
 import { useAlertsList } from "../features/alerts/service";
 import type { AlertsDateRange, AlertsListQuery, AlertsSortField } from "../features/alerts/types";
+import { formatTokenLabel } from "../lib/formatters";
 import { supportedDetectionSelectOptions } from "../lib/supportedDetections";
 import { pageBlueprints } from "../lib/theme/tokens";
 
@@ -90,7 +91,7 @@ export function AlertsPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="outline">{data?.total ?? 0} alerts in feed</Badge>
             <Badge tone="brand">
-              {alerts.filter((alert) => (alert.riskScore ?? 0) >= 80).length} high-risk on page
+              {alerts.filter((alert) => (alert.riskScore ?? 0) >= 70).length} high-risk on page
             </Badge>
           </div>
         }
@@ -113,7 +114,7 @@ export function AlertsPage() {
             <MetricCard
               label="Matching alerts"
               value={String(meta?.total ?? 0)}
-              detail="Total alerts returned by the current server-side query."
+              detail="Alerts matching filters in the four supported detection types."
               tone="highlight"
             />
             <MetricCard
@@ -123,7 +124,7 @@ export function AlertsPage() {
                   (alert) => alert.severity === "critical" || alert.severity === "high"
                 ).length
               )}
-              detail="Current page slice of the highest priority alert work."
+              detail="On this page: worst severity first when you sort by severity."
               tone="warning"
             />
             <MetricCard
@@ -131,7 +132,7 @@ export function AlertsPage() {
               value={String(
                 alerts.filter((alert) => alert.status === "pending_response").length
               )}
-              detail="Current page slice already linked to queued or in-progress response work."
+              detail="On this page: automation queued or running—check response history for outcomes."
             />
           </>
         )}
@@ -139,7 +140,7 @@ export function AlertsPage() {
 
       <SearchFilterToolbar
         title="Alert triage filters"
-        description="Search by alert ID, asset, IP, username, or event ID and refine by severity, status, detection, source, asset, and time window."
+        description="Search by ID, asset, IP, username, or event ID. Filter by severity, status, one of the four detection types, source, asset, and time window."
         search={
           <SearchInput
             value={search}
@@ -300,7 +301,7 @@ export function AlertsPage() {
         activeFilters={[
           severity && `severity:${severity}`,
           status && `status:${status}`,
-          detectionType && `detection:${detectionType}`,
+          detectionType && `detection:${formatTokenLabel(detectionType)}`,
           sourceType && `source:${sourceType}`,
           asset && `asset:${asset}`,
           dateRange !== "24h" && `range:${dateRange}`,
@@ -317,9 +318,10 @@ export function AlertsPage() {
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="type-body-sm">
-              Select a row to open the detailed investigation surface for that alert.
+              Open a row for detection context, evidence, score rationale, responses, and
+              notifications.
             </p>
-            <Badge tone="outline">server-backed query</Badge>
+            <Badge tone="outline">risk 70+ = priority review</Badge>
           </div>
           <AlertsTable
             alerts={alerts}
@@ -342,7 +344,7 @@ export function AlertsPage() {
         <EmptyState
           iconName="alerts"
           title="No alerts match the current filters"
-          description="Adjust the server-side alert filters or sort options to bring matching alerts back into the queue."
+          description="Broaden the time window or clear filters to see in-scope alerts again. The product only surfaces the four approved detection types."
           action={
             <Button
               variant="secondary"

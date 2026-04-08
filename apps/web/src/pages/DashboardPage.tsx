@@ -13,6 +13,7 @@ import {
   YAxis
 } from "recharts";
 import { ChartCard } from "../components/data-display/ChartCard";
+import { DetectionScopeCallout } from "../components/data-display/DetectionScopeCallout";
 import { MetricCard } from "../components/data-display/MetricCard";
 import { EmptyState } from "../components/feedback/EmptyState";
 import { ErrorState } from "../components/feedback/ErrorState";
@@ -67,7 +68,7 @@ export function DashboardPage() {
         label: "Total alerts",
         value: metricFormatter.format(data.summary.totalAlerts),
         detail:
-          "Normalized alerts currently visible through the backend summary contract.",
+          "In-scope signals (Wazuh and Suricata) in the current window—your triage backlog.",
         tone: "highlight" as const,
         trend: <Badge tone="outline">{data.summary.pendingResponses} pending response</Badge>
       },
@@ -75,7 +76,7 @@ export function DashboardPage() {
         label: "High-risk alerts",
         value: metricFormatter.format(data.summary.highRiskAlerts),
         detail:
-          "Alerts with backend risk scores of 70 or higher across the live alert dataset.",
+          "Risk score 70+ (brute force, FIM, port scan, or user creation)—review these first.",
         tone: "warning" as const,
         trend: <Badge tone="warning">avg risk {data.summary.averageRiskScore}</Badge>
       },
@@ -83,7 +84,7 @@ export function DashboardPage() {
         label: "Open incidents",
         value: metricFormatter.format(data.summary.openIncidents),
         detail:
-          "Incidents still in triage or investigation and visible to the operational queue.",
+          "Cases not yet resolved; drive each from triage through containment or closure.",
         tone: "danger" as const,
         trend: <Badge tone="outline">{data.latestIncidents.length} latest surfaced</Badge>
       },
@@ -91,7 +92,7 @@ export function DashboardPage() {
         label: "Active assets / endpoints",
         value: metricFormatter.format(data.summary.activeAssets),
         detail:
-          "Assets reporting online or degraded status through the current asset inventory.",
+          "Monitored hosts online or degraded—cross-check with top affected assets below.",
         tone: "neutral" as const,
         trend: <Badge tone="outline">{data.topAffectedAssets.length} top in focus</Badge>
       },
@@ -99,7 +100,7 @@ export function DashboardPage() {
         label: "Recent responses",
         value: metricFormatter.format(data.summary.recentResponses),
         detail:
-          "Response executions observed in the last 24 hours from live response history.",
+          "Policy actions in the last 24h (dry-run or live)—confirm what already ran.",
         tone: "neutral" as const,
         trend: <Badge tone="brand">{data.recentResponsesFeed.length} latest listed</Badge>
       }
@@ -129,7 +130,7 @@ export function DashboardPage() {
         description={pageBlueprints.overview.description}
         meta={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="outline">backend summary + live lists</Badge>
+            <Badge tone="outline">four-detection scope</Badge>
             {data ? <Badge tone="brand">refreshed {data.fetchedAt}</Badge> : null}
           </div>
         }
@@ -144,6 +145,8 @@ export function DashboardPage() {
           </Button>
         }
       />
+
+      <DetectionScopeCallout />
 
       {error && data ? (
         <ErrorState
@@ -201,7 +204,7 @@ export function DashboardPage() {
             <ChartCard
               eyebrow="Alert volume over time"
               title="Live alert flow"
-              description="Recent alert activity from the real alert feed, ordered by newest backend timestamps."
+              description="What happened recently across the four supported scenarios—use the chips to see mix by detection."
               className="min-h-[23rem]"
               footer={
                 <div className="flex flex-wrap items-center gap-2">
@@ -262,8 +265,8 @@ export function DashboardPage() {
                 ) : (
                   <EmptyState
                     iconName="alerts"
-                    title="No alert volume is available"
-                    description="The backend has not returned alert timestamps for the current summary window."
+                    title="No alert volume for this window"
+                    description="No timestamps in range yet, or ingestion is quiet. Refresh after new Wazuh or Suricata activity."
                   />
                 )}
               </div>
@@ -272,7 +275,7 @@ export function DashboardPage() {
             <ChartCard
               eyebrow="Severity / risk"
               title="Priority distribution"
-              description="Compact distribution of current alert severity and score bands."
+              description="How serious the queue looks: severity bands plus risk buckets (70+ is elevated)."
               className="min-h-[23rem]"
               actions={
                 <Badge tone="warning">
@@ -289,7 +292,7 @@ export function DashboardPage() {
             <ChartCard
               eyebrow="Incident state"
               title="Investigation posture"
-              description="Current incident-state mix across the live investigation queue."
+              description="Where open work sits in the lifecycle—new, triaged, investigating, contained, or resolved."
               className="min-h-[23rem]"
               actions={
                 <Badge tone="outline">
@@ -339,8 +342,8 @@ export function DashboardPage() {
                 ) : (
                   <EmptyState
                     iconName="incidents"
-                    title="No incident states are available"
-                    description="The current incident queue returned no state data for the overview."
+                    title="No incident state breakdown"
+                    description="No incidents in the queue yet, or state counts are empty. Open the incidents queue when cases appear."
                   />
                 )}
               </div>
@@ -358,7 +361,7 @@ export function DashboardPage() {
                 {
                   id: "alerts",
                   label: "Alerts queue",
-                  description: "Jump into the live triage surface.",
+                  description: "Triage in-scope detections; sort by risk when the queue is full.",
                   value: metricFormatter.format(data.summary.highRiskAlerts),
                   icon: "alerts",
                   onClick: () => navigate("/alerts")
@@ -366,7 +369,7 @@ export function DashboardPage() {
                 {
                   id: "incidents",
                   label: "Incidents queue",
-                  description: "Open the active investigation workload.",
+                  description: "Group and close investigations tied to those alerts.",
                   value: metricFormatter.format(data.summary.openIncidents),
                   icon: "incidents",
                   onClick: () => navigate("/incidents")
@@ -374,7 +377,7 @@ export function DashboardPage() {
                 {
                   id: "assets",
                   label: "Assets / endpoints",
-                  description: "Review monitored endpoint health and exposure.",
+                  description: "See which hosts carry the most alert load.",
                   value: metricFormatter.format(data.summary.activeAssets),
                   icon: "endpoints",
                   onClick: () => navigate("/assets")
@@ -382,7 +385,7 @@ export function DashboardPage() {
                 {
                   id: "responses",
                   label: "Response history",
-                  description: "Inspect recent automated and manual actions.",
+                  description: "Audit what policies already executed (dry-run or live).",
                   value: metricFormatter.format(data.summary.recentResponses),
                   icon: "responses",
                   onClick: () => navigate("/responses")
@@ -405,8 +408,8 @@ export function DashboardPage() {
       ) : (
         <EmptyState
           iconName="dashboard"
-          title="No overview data is available"
-          description="The backend returned no summary data for the dashboard."
+          title="Overview unavailable"
+          description="Summary data did not load. Check the API and database, then retry."
           action={
             <Button variant="secondary" size="sm" onClick={reload}>
               Retry overview

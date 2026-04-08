@@ -15,6 +15,7 @@ import { Select } from "../components/ui/Select";
 import { IncidentsTable } from "../features/incidents/components/IncidentsTable";
 import { useIncidentsList } from "../features/incidents/service";
 import type { IncidentStateFilter, IncidentsListQuery, IncidentsSortField } from "../features/incidents/types";
+import { formatTokenLabel } from "../lib/formatters";
 import { supportedDetectionSelectOptions } from "../lib/supportedDetections";
 import { pageBlueprints } from "../lib/theme/tokens";
 
@@ -73,7 +74,7 @@ export function IncidentsPage() {
         meta={
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="brand">{data?.total ?? 0} queue items</Badge>
-            <Badge tone="outline">Server-backed queue controls</Badge>
+            <Badge tone="outline">four-detection incidents</Badge>
           </div>
         }
       />
@@ -90,7 +91,7 @@ export function IncidentsPage() {
             <MetricCard
               label="Open or triaged"
               value={String(meta?.total ?? 0)}
-              detail="Total incidents matching the current server-side queue filters."
+              detail="Incidents matching your filters—each maps to an in-scope detection cluster."
               tone="highlight"
             />
             <MetricCard
@@ -246,7 +247,7 @@ export function IncidentsPage() {
         activeFilters={[
           priority && `priority:${priority}`,
           state && `state:${state}`,
-          detectionType && `detection:${detectionType}`,
+          detectionType && `detection:${formatTokenLabel(detectionType)}`,
           assignee && `assignee:${assignee}`,
           sortBy !== "updated_at" && `sort:${sortBy}`,
           sortDirection !== "desc" && `dir:${sortDirection}`
@@ -261,9 +262,9 @@ export function IncidentsPage() {
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="type-body-sm">
-              Select a queue row to open the full incident investigation workspace.
+              Open a row for linked alerts, evidence, scoring, responses, and state transitions.
             </p>
-            <Badge tone="outline">detail route enabled</Badge>
+            <Badge tone="outline">review linked alerts first</Badge>
           </div>
           <IncidentsTable
             incidents={incidents}
@@ -286,7 +287,7 @@ export function IncidentsPage() {
         <EmptyState
           iconName="incidents"
           title="No incidents match the current queue filters"
-          description="Broaden the server-side queue filters to restore the current incident set."
+          description="Reset filters or wait for alerts to roll up into incidents. Scope stays limited to the four supported scenarios."
           action={
             <Button
               variant="secondary"

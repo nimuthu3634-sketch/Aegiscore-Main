@@ -77,7 +77,7 @@ export function ResponsesPage() {
         meta={
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="outline">{data?.total ?? 0} execution records</Badge>
-            <Badge tone="brand">Server-backed response history</Badge>
+            <Badge tone="brand">auditable executions</Badge>
           </div>
         }
       />
@@ -132,7 +132,7 @@ export function ResponsesPage() {
 
       <SearchFilterToolbar
         title="Response execution filters"
-        description="Compact analyst-friendly server-side filtering for action type, run mode, execution outcome, and sorting."
+        description="Filter executions from policies tied to brute force, FIM, port scan, and unauthorized user creation—by action, mode, and outcome."
         search={
           <SearchInput
             value={search}
@@ -278,7 +278,7 @@ export function ResponsesPage() {
         <EmptyState
           iconName="responses"
           title="No response executions match the current filters"
-          description="Clear the response filters or sort changes to restore the current action history."
+          description="Clear filters to see the full audit trail. Nothing here usually means policies have not fired in this view yet."
           action={
             <Button
               variant="secondary"

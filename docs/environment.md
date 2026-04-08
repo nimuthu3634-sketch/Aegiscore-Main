@@ -1,5 +1,7 @@
 # Environment Reference
 
+For wiring **live Wazuh polling** and **Suricata `file_tail`** on an **Ubuntu Server SOC host** in a VirtualBox lab (including bind-mounting `eve.json`), see **[setup/ubuntu-vm-lab-live-soc.md](setup/ubuntu-vm-lab-live-soc.md)** and the integration guides linked there.
+
 ## Root Compose Variables
 
 - `POSTGRES_DB`: local database name

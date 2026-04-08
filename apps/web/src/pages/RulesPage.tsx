@@ -131,7 +131,7 @@ export function RulesPage() {
         description={pageBlueprints.rules.description}
         meta={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="brand">real backend policies</Badge>
+            <Badge tone="brand">four-detection policies</Badge>
             {data ? <Badge tone="outline">fetched {data.fetchedAt}</Badge> : null}
           </div>
         }
@@ -164,24 +164,24 @@ export function RulesPage() {
             <MetricCard
               label="Enabled policies"
               value={String(summary.enabled)}
-              detail="Active automated response policies currently enforced by the backend."
+              detail="Automation that can run for in-scope detections when conditions match."
               tone="highlight"
             />
             <MetricCard
               label="Dry-run policies"
               value={String(summary.dryRun)}
-              detail="Policies simulating action outcomes without live external changes."
+              detail="Safe lab default: log what would happen without touching production controls."
             />
             <MetricCard
               label="Live policies"
               value={String(summary.live)}
-              detail="Policies allowed to record live outcomes through safe internal actions or adapters."
+              detail="Production-leaning mode—confirm each rule before demos with external systems."
               tone="warning"
             />
             <MetricCard
               label="Incident-scoped"
               value={String(summary.incident)}
-              detail="Policies evaluating incident rollups rather than individual alerts."
+              detail="Rules that fire when an investigation reaches a given state or threshold."
             />
           </>
         )}
@@ -191,8 +191,8 @@ export function RulesPage() {
         title="Policy filters"
         description={
           canTogglePolicies
-            ? "Backend-owned policies can be enabled or disabled here. Threshold, action, and mode edits remain backend-managed in this build."
-            : "Backend-owned policies are visible here in analyst read-only mode. Policy enable/disable requires an admin session."
+            ? "Only the four in-scope detections appear here. Enable or disable automation; threshold and action edits stay backend-managed in this build."
+            : "Read-only view of the same four-detection policies. Admins can toggle enablement from an admin session."
         }
         search={
           <SearchInput
@@ -294,7 +294,7 @@ export function RulesPage() {
         <EmptyState
           iconName="rules"
           title="No policies match the current filters"
-          description="Clear the local policy filters to see the backend-managed automated response rules again."
+          description="Clear filters to see all SME automation rules. Scope is limited to brute force, FIM, port scan, and unauthorized user creation."
           action={
             <Button
               variant="secondary"

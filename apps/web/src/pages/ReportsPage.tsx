@@ -94,35 +94,35 @@ export function ReportsPage() {
       {
         label: "Daily alerts",
         value: metricFormatter.format(data.daily.totalAlerts),
-        detail: "Alerts normalized in the current daily report window.",
+        detail: "In-scope volume for the day (Wazuh and Suricata normalized alerts).",
         tone: "highlight" as const,
         trend: <Badge tone="outline">weekly {data.weekly.totalAlerts}</Badge>
       },
       {
         label: "High-risk alerts",
         value: metricFormatter.format(data.daily.highRiskAlerts),
-        detail: "Backend risk scores of 70 or higher in the daily review window.",
+        detail: "Score 70+ for the day—same threshold as triage badges elsewhere.",
         tone: "warning" as const,
         trend: <Badge tone="warning">avg risk {data.daily.averageRiskScore}</Badge>
       },
       {
         label: "Open incidents",
         value: metricFormatter.format(data.daily.openIncidents),
-        detail: "Linked investigations still active for the current daily window.",
+        detail: "Investigations not yet resolved in the daily slice.",
         tone: "danger" as const,
         trend: <Badge tone="outline">weekly {data.weekly.openIncidents}</Badge>
       },
       {
         label: "Response actions",
         value: metricFormatter.format(data.daily.responseActions),
-        detail: "Policy and analyst response activity recorded in the daily window.",
+        detail: "What automation or analysts executed—pairs with the response history page.",
         tone: "neutral" as const,
         trend: <Badge tone="outline">weekly {data.weekly.responseActions}</Badge>
       },
       {
         label: "Active assets",
         value: metricFormatter.format(data.daily.activeAssets),
-        detail: "Assets touched by alerts in the current daily reporting slice.",
+        detail: "Hosts that saw alert activity in the reporting window.",
         tone: "neutral" as const,
         trend: <Badge tone="brand">weekly {data.weekly.activeAssets}</Badge>
       }
@@ -171,7 +171,7 @@ export function ReportsPage() {
         description={pageBlueprints.reports.description}
         meta={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="outline">real backend report summaries</Badge>
+            <Badge tone="outline">in-scope report summaries</Badge>
             {data ? <Badge tone="brand">fetched {data.fetchedAt}</Badge> : null}
           </div>
         }
@@ -581,7 +581,7 @@ export function ReportsPage() {
         <EmptyState
           iconName="reports"
           title="No report data is available"
-          description="The backend returned no report summary data for the selected scope."
+          description="Adjust date or detection filters, or retry once the reporting API has data for the four supported scenarios."
           action={
             <Button variant="secondary" size="sm" onClick={reload}>
               Retry reports

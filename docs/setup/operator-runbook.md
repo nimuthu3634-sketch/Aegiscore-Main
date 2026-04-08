@@ -4,9 +4,26 @@
 
 This runbook is the concise day-2 operations guide for local/lab AegisCore operation in SME scope.
 
+## Reference: Ubuntu VM lab (live Wazuh + Suricata)
+
+The **intended connected product environment** is an **Ubuntu Server SOC host** (Docker Compose), **Wazuh** for host/log monitoring (manager + agents + FIM on monitored Ubuntu clients), **Suricata** for network monitoring (`eve.json` → **`file_tail`** connector), plus an **attacker/test VM** in VirtualBox. **Live connectors are the normal mode**; manual `POST` ingestion is test/demo-only.
+
+Full topology, env summary, JWT `curl` examples, and **live lab verification** (one Wazuh-style example, one Suricata example): **[ubuntu-vm-lab-live-soc.md](ubuntu-vm-lab-live-soc.md)**.
+
 ## 1) First Startup
 
+**Windows (PowerShell):**
+
 ```powershell
+docker compose up --build -d
+docker compose exec api alembic upgrade head
+docker compose exec api python -m app.db.seed
+docker compose ps
+```
+
+**Ubuntu SOC host (`bash`):**
+
+```bash
 docker compose up --build -d
 docker compose exec api alembic upgrade head
 docker compose exec api python -m app.db.seed
@@ -20,7 +37,7 @@ Expected:
 
 ## 2) Verify Health And Readiness
 
-Core health:
+Core health (via NGINX on the SOC host):
 
 ```powershell
 curl http://localhost/api/health/live
@@ -28,19 +45,29 @@ curl http://localhost/api/health
 curl http://localhost/api/health/ready
 ```
 
-Connector visibility:
+**Ubuntu / `bash` (same endpoints; replace host if remote):**
 
-```powershell
-curl http://localhost/api/integrations/wazuh/connector/status
-curl http://localhost/api/integrations/suricata/connector/status
+```bash
+curl -s "http://localhost/api/health/live"
+curl -s "http://localhost/api/health" | jq .
+curl -s "http://localhost/api/health/ready" | jq .
+```
+
+Connector visibility requires a **JWT** (see [ubuntu-vm-lab-live-soc.md](ubuntu-vm-lab-live-soc.md) for `curl` + `jq` login). Example via NGINX after exporting `TOKEN`:
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://localhost/api/integrations/wazuh/connector/status" | jq .
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://localhost/api/integrations/suricata/connector/status" | jq .
 ```
 
 Operational interpretation:
 
 - `health/live` confirms API process liveness
 - `health` confirms API + DB summary
-- `health/ready` confirms DB readiness plus dependency status details
-- connector status routes show last success/error and checkpoint metrics
+- `health/ready` confirms DB readiness plus **`dependencies.wazuh_connector`** and **`dependencies.suricata_connector`** summaries
+- **`GET /integrations/*/connector/status`** (authenticated) shows last success/error, checkpoints, and **metrics** for event flow debugging
 
 ## 3) Restart After Failure
 
