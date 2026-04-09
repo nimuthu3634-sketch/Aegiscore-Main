@@ -1,5 +1,7 @@
 # AegisCore
 
+**AegisCore is the final scoped v1 product for single-tenant SME/lab deployment.**
+
 AegisCore is the **final scoped v1 product** for this project: a **single-tenant** SOC for **SME/lab** deployment. It is **not an enterprise commercial SOC platform**. It ingests Wazuh (logs) and Suricata (network) events, normalizes them into a shared alert model, assigns **ML-capable risk scores** (deterministic baseline by default; optional scikit-learn model when enabled), groups incidents, records analyst workflow, evaluates safe automated-response policies, and exposes the result through a backend-owned web console.
 
 **Supported detections only** (no others are in scope):
@@ -223,7 +225,7 @@ Operational health endpoints:
 
 - Live Suricata integration is currently limited to `file_tail` mode for `eve.json`; authenticated forwarding mode is not yet implemented.
 - Live Wazuh integration is implemented for common lab endpoint/auth shapes and currently expects a list response or a `data.affected_items`/`data.items` envelope.
-- Playwright now covers core read workflows plus key write flows and selected negative paths, but still does not cover every possible negative-path mutation branch; some incident-dependent branches are conditionally skipped when no incident candidate is available in seeded runs.
+- Playwright covers core read workflows, key write flows, one simulated API failure on alert acknowledge, and selected negative paths, but does not cover every possible negative-path mutation branch; some incident-dependent branches are conditionally skipped when no incident candidate is available in seeded runs. The suite currently defines **17** browser tests—see [docs/testing/playwright-coverage.md](docs/testing/playwright-coverage.md).
 - The frontend is operational and validated, but still large enough to benefit from additional route-level code splitting over time.
 
 ## Future Work

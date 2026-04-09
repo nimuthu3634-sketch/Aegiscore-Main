@@ -1,5 +1,7 @@
 # Final Submission Checklist
 
+**AegisCore is the final scoped v1 product for single-tenant SME/lab deployment.**
+
 This checklist is the final handoff gate for AegisCore as the **final scoped v1 product** for this project: **single-tenant**, **SME/lab**, **not an enterprise commercial SOC platform**, with threat scope limited to the four supported detections only.
 
 ## 1) Pre-Submission Checks
@@ -76,7 +78,15 @@ Fallback:
 - `docs/setup/analyst-guide.md`
 - `docs/setup/operator-runbook.md`
 
-## 5) Freeze Result Record (2026-04-08, Release-Candidate Verification)
+## 5) Verification record
+
+### 2026-04-09 (host frontend + doc alignment)
+
+- frontend lint: **passed** — `npm run lint:web`
+- frontend build: **passed** — `npm run build:web`
+- backend pytest / Playwright / scenario script: *run on your machine* (requires Docker + API); not re-recorded in the doc-only pass environment
+
+### 2026-04-08 (full five-step release-candidate run)
 
 - backend tests: passed — **`103 passed`**, `1 warning` — `docker compose run --rm --entrypoint pytest api`
 - frontend lint: passed — `npm run lint:web`
@@ -84,13 +94,18 @@ Fallback:
 - Playwright: passed — **16 passed**, 0 skipped — `npm run test:web:e2e` with Compose API on `127.0.0.1:8000` and `docker compose exec api python -m app.db.seed`
 - attack scenario validation: passed (all four scenarios) — `py -3 scripts/validate_attack_scenarios.py`
 
+**Suite note:** the repo now includes **17** Playwright tests. After pulling latest, re-run e2e once so your local snapshot matches the current tree.
+
 Prior freeze-cycle blockers (now closed): Playwright `/auth/login` proxy stability; `brute_force` daily-report alignment in the scenario validator.
 
 ## 6) Submission Decision Gate
 
 Mark one before handoff:
 
-- [x] **Release-candidate / submission-ready**: the 2026-04-08 verification sequence completed successfully in the documented environment; remaining limits are documented as scope constraints, not open blockers.
-- [ ] **Not ready**: a verification step failed or the environment does not match the documented prerequisites.
+- [ ] **Full gate green (recommended for viva):** all five commands in section 1 succeeded on **your** machine **after** pulling the latest commit (including **17** Playwright tests if using current tree).
+- [x] **Documentation / product story ready:** scope, limitations, integrations, notifications, and automated response are consistent across `README.md`, `release-readiness.md`, this checklist, `requirement-compliance-matrix.md`, and `demo-script.md` (2026-04-09 alignment pass).
+- [ ] **Not ready:** a verification step failed or prerequisites are missing.
+
+**Honest stance:** Materials are **submission- and demo-ready** from a **documentation and frontend build** perspective. **Formal “all automated checks green”** requires you to run the Docker-backed commands in section 1 on hardware where Docker and the API are available. The **2026-04-08** row above is the last recorded full five-step success.
 
 See [release-candidate-note.md](release-candidate-note.md) for the one-line RC stance.

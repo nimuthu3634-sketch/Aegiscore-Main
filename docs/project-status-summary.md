@@ -1,5 +1,7 @@
 # AegisCore Project Status Summary
 
+**AegisCore is the final scoped v1 product for single-tenant SME/lab deployment** (not an enterprise commercial SOC platform).
+
 ## 1. System Overview
 
 AegisCore is the **final scoped v1 product** for this project: **single-tenant**, **SME/lab** SOC operation. It is **not an enterprise commercial SOC platform**. It centralizes security event review (logs and network traffic), alert prioritization with **ML-capable scoring** (baseline default; optional trainable model), incident investigation, basic automated response, and operational reporting.
@@ -112,13 +114,16 @@ Validation uses real backend ingestion/workflow APIs. The default repeatable pro
 
 ## 6. Test Summary
 
-At the current validated state (2026-04-08 release-candidate pass):
+**2026-04-09:** Host-only verification confirmed **frontend lint** and **production build** pass (`npm run lint:web`, `npm run build:web`). Backend pytest, Playwright, and `validate_attack_scenarios.py` require Docker and a running seeded API on the examiner machine.
 
-- backend test suite: **103 passed**, 1 warning (Docker pytest run)
-- frontend lint: passing
-- frontend production build: passing
-- Playwright suite: **16 passed**, 0 skipped (with API on `127.0.0.1:8000` and seeded DB)
-- four-scenario validation script: successful across all supported detections
+**2026-04-08 (last full five-step recorded run):**
+
+- backend test suite: **103 passed**, 1 warning (`docker compose run --rm --entrypoint pytest api`)
+- frontend lint and production build: passing
+- Playwright: **16 passed**, 0 skipped (API on `127.0.0.1:8000`, seeded DB)
+- four-scenario validation script: successful for all supported detections
+
+**Current Playwright tree:** **17** tests (added `operator-workflows.spec.ts` for deterministic API failure feedback). Re-run `npm run test:web:e2e` to record an updated all-green row after pulling latest.
 
 The validated commands are:
 
@@ -150,7 +155,7 @@ The frontend Reports page uses those real endpoints for summary cards, distribut
 
 - role model is intentionally simple (`admin` + `analyst`) and does not provide enterprise RBAC custom role authoring
 - deterministic validation still relies heavily on fixture-backed scenarios even though live connectors and adapters are implemented
-- Playwright covers core read workflows and major write workflows plus selected negative paths, but not every negative-path role/edge branch; incident-dependent browser branches can be conditionally skipped when seeded runs do not produce incident candidates
+- Playwright covers core read workflows, major write workflows, one simulated mutation failure path, and selected negative paths, but not every negative-path role/edge branch; incident-dependent browser branches can be conditionally skipped when seeded runs do not produce incident candidates
 - destructive live response behavior remains safety-gated and disabled by default
 - the worker service is still a future-facing shell rather than a mature asynchronous execution subsystem
 - scheduled reporting and PDF export are not implemented; **SMTP/log operator notifications** for critical incidents and policy-driven outcomes are implemented (`docs/setup/notifications.md`) and are separate from scheduled reporting

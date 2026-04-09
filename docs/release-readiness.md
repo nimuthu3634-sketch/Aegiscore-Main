@@ -1,5 +1,9 @@
 # Release Readiness
 
+## Final product declaration
+
+**AegisCore is the final scoped v1 product for single-tenant SME/lab deployment.** It is **not** positioned as an enterprise commercial SOC platform. Threat scope, connectors, notifications, and automated response are **lab-bounded** and **honestly limited** as described in this document and [project-status-summary.md](project-status-summary.md).
+
 ## Final Freeze Note
 
 This repository state is the **final scoped v1 release candidate** for academic handoff and SME/lab deployment unless a new blocker is found. Any post–release-candidate change should be treated as **blocker-only** remediation, followed by a full re-run of the verification sequence and an update to this document and related checklists.
@@ -94,7 +98,7 @@ py -3 scripts/validate_attack_scenarios.py
 ## Known Limitations
 
 - deterministic validation still relies heavily on fixtures despite live connector support
-- Playwright covers core routes, major write workflows, notification panel surfaces, and selected negative paths; **some tests can still skip** in sparse databases (e.g. no incident or no alert–incident link). The latest RC run used a seeded Compose API and reported **16 passed, 0 skipped**. See [testing/playwright-coverage.md](testing/playwright-coverage.md) for intentional gaps.
+- Playwright covers core routes, major write workflows, notification panel surfaces, simulated API failure on alert acknowledge, and selected negative paths; **some tests can still skip** in sparse databases (e.g. no incident or no alert–incident link). The repository currently ships **17** Playwright tests; the last **full-stack** recorded run reported **16 passed, 0 skipped** (before `operator-workflows.spec.ts` was added). Re-run `npm run test:web:e2e` after pulling latest to refresh counts. See [testing/playwright-coverage.md](testing/playwright-coverage.md) for intentional gaps.
 - the frontend is operational but still benefits from additional route-level code splitting over time
 - no scheduled reporting or digest-email workflow exists; **operator notification delivery** (high-risk / state / response / `notify_admin`) is implemented via persisted `notification_events`, backend `log` mode, and optional SMTP configuration (`docs/setup/notifications.md`)
 
@@ -111,9 +115,21 @@ py -3 scripts/validate_attack_scenarios.py
 - Proposal/requirement alignment evidence is maintained in [requirement-compliance-matrix.md](requirement-compliance-matrix.md).
 - Use that matrix during review to separate implemented behavior from intentional local/lab constraints.
 
-## Latest Freeze Verification Snapshot
+## Latest verification snapshot
 
-Execution date: **2026-04-08** (release-candidate verification pass).
+### 2026-04-09 (documentation alignment + host frontend gate)
+
+Executed in the maintainer environment **without** Docker Desktop / API: frontend toolchain only.
+
+| Check | Command | Result | Notes |
+| --- | --- | --- | --- |
+| Frontend lint | `npm run lint:web` | **Passed** | ESLint clean. |
+| Frontend build | `npm run build:web` | **Passed** | `tsc -b && vite build` succeeded. |
+| Backend tests | `docker compose run --rm --entrypoint pytest api` | *Not run (this pass)* | Requires Docker; use command before submission. |
+| Playwright | `npm run test:web:e2e` | *Not run (this pass)* | Requires API on `127.0.0.1:8000` + seed. |
+| Attack scenario validation | `py -3 scripts/validate_attack_scenarios.py` | *Not run (this pass)* | Requires running API (default port 8000). |
+
+### 2026-04-08 (full-stack release-candidate run, seeded Compose API)
 
 | Check | Command | Result | Notes |
 | --- | --- | --- | --- |
@@ -122,6 +138,8 @@ Execution date: **2026-04-08** (release-candidate verification pass).
 | Frontend build | `npm run build:web` | Passed | Vite production build succeeded. |
 | Playwright | `npm run test:web:e2e` | Passed | **16 passed**, 0 skipped (API on `127.0.0.1:8000`, DB seeded). |
 | Attack scenario validation | `py -3 scripts/validate_attack_scenarios.py` | Passed | All four supported scenarios validated end-to-end against the same API. |
+
+**After 2026-04-08:** the suite gained one Playwright spec (`tests/operator-workflows.spec.ts`, simulated acknowledge failure). **Expected Playwright count is now 17** — re-run e2e to record an updated green snapshot before viva if you need a single dated row for all five checks.
 
 Freeze route-surface smoke checks (authenticated API) returned `200` for:
 

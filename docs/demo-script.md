@@ -1,5 +1,7 @@
 # AegisCore Demo Script
 
+**AegisCore is the final scoped v1 product for single-tenant SME/lab deployment.**
+
 ## Demo Goal
 
 Present AegisCore as the **final scoped v1 product** for this project (**single-tenant**, **SME/lab**; **not** an enterprise commercial SOC), with honest boundaries and a real end-to-end workflow for **only** these detections:
@@ -50,8 +52,8 @@ Use this for tight viva time windows.
    - sign in as `admin / AegisCore123!`
    - say: "Authentication is real JWT-based access, not a mocked bypass."
 2. **Dashboard (`/overview`)**
-   - show totals, high-risk indicators, and recent activity panels
-   - say: "This is a live summary of normalized SOC data."
+   - show totals, high-risk indicators, recent activity panels, and the **v1 threat scope** callout (four detections + analyst review order)
+   - say: "This is a live summary of normalized in-scope SOC data—not a generic enterprise dashboard."
 3. **Alert -> Incident (`/alerts` then `/alerts/{id}` then `/incidents/{id}`)**
    - open one high-risk alert, show score explanation + raw payload + linked incident
    - open linked incident and show timeline/response history
