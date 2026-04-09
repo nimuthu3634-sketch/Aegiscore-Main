@@ -87,6 +87,18 @@ export function clearStoredAccessToken() {
   window.localStorage.removeItem(sessionRoleStorageKey);
 }
 
+/**
+ * Ends the operator browser session: clears persisted JWT and role, and drops any
+ * in-flight dev-bootstrap token fetch so the next request does not reuse a stale promise.
+ *
+ * Storage keys removed: `aegiscore.access_token`, `aegiscore.session_role`.
+ * (Dev credentials live in env vars only; there is no separate localStorage key for them.)
+ */
+export function logoutOperator() {
+  clearStoredAccessToken();
+  devAccessTokenPromise = null;
+}
+
 export function hasStoredAccessToken() {
   return Boolean(getStoredAccessToken());
 }

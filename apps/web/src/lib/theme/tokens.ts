@@ -30,7 +30,8 @@ export type IconName =
   | "server"
   | "check-circle"
   | "warning"
-  | "x-circle";
+  | "x-circle"
+  | "logout";
 
 export type Severity = "critical" | "high" | "medium" | "low";
 export type StatusTone =

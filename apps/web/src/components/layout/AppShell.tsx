@@ -12,6 +12,7 @@ type AppShellProps = {
   items: NavigationItem[];
   activeId: NavKey;
   onNavigate: (id: NavKey) => void;
+  onLogout: () => void;
   pageTitle: string;
   pageDescription: string;
   healthTone: HealthTone;
@@ -26,6 +27,7 @@ export function AppShell({
   items,
   activeId,
   onNavigate,
+  onLogout,
   pageTitle,
   pageDescription,
   healthTone,
@@ -42,6 +44,11 @@ export function AppShell({
     setSidebarOpen(false);
   };
 
+  const handleLogout = () => {
+    setSidebarOpen(false);
+    onLogout();
+  };
+
   return (
     <div className="relative min-h-screen bg-shell">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.14),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(249,115,22,0.05),transparent_40%)]" />
@@ -52,13 +59,23 @@ export function AppShell({
           role="presentation"
         >
           <div onClick={(event) => event.stopPropagation()} role="presentation">
-            <Sidebar items={items} activeId={activeId} onNavigate={handleNavigate} />
+            <Sidebar
+              items={items}
+              activeId={activeId}
+              onNavigate={handleNavigate}
+              onLogout={handleLogout}
+            />
           </div>
         </div>
       ) : null}
       <div className="relative mx-auto min-h-screen max-w-shell lg:grid lg:grid-cols-shell">
         <div className="hidden px-3 py-3 lg:block">
-          <Sidebar items={items} activeId={activeId} onNavigate={handleNavigate} />
+          <Sidebar
+            items={items}
+            activeId={activeId}
+            onNavigate={handleNavigate}
+            onLogout={handleLogout}
+          />
         </div>
         <div className="min-w-0">
           <TopNavigation
@@ -70,6 +87,7 @@ export function AppShell({
             searchValue={searchValue}
             onSearchChange={onSearchChange}
             onMenuClick={() => setSidebarOpen(true)}
+            onLogout={handleLogout}
           />
           <main className="px-4 pb-8 pt-6 md:px-6 lg:px-8">
             <div className="mx-auto max-w-[76rem]">{children}</div>

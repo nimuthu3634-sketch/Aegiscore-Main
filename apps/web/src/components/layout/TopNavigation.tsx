@@ -15,6 +15,7 @@ type TopNavigationProps = {
   searchValue: string;
   onSearchChange: ChangeEventHandler<HTMLInputElement>;
   onMenuClick: () => void;
+  onLogout: () => void;
 };
 
 const healthToneMap: Record<HealthTone, "success" | "warning" | "danger"> = {
@@ -31,7 +32,8 @@ export function TopNavigation({
   sessionLabel,
   searchValue,
   onSearchChange,
-  onMenuClick
+  onMenuClick,
+  onLogout
 }: TopNavigationProps) {
   return (
     <header className="sticky top-0 z-20 border-b border-border-subtle bg-white/92 backdrop-blur-xl">
@@ -56,17 +58,29 @@ export function TopNavigation({
         <div className="hidden min-w-[20rem] max-w-[28rem] flex-1 xl:block">
           <SearchInput value={searchValue} onChange={onSearchChange} />
         </div>
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="flex shrink-0 items-center gap-2 md:gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onLogout}
+            aria-label="Log out"
+            className="text-content-secondary hover:text-brand-hover"
+            leadingIcon={<Icon name="logout" className="h-4 w-4" />}
+          >
+            <span className="hidden sm:inline">Log out</span>
+          </Button>
           <Badge
             tone={healthToneMap[healthTone]}
             icon={<Icon name="health" className="h-3.5 w-3.5" />}
+            className="hidden md:inline-flex"
           >
             {healthLabel}
           </Badge>
           <Button
             variant="secondary"
             size="sm"
-            className="border-border-subtle bg-surface-subtle/80"
+            className="hidden border-border-subtle bg-surface-subtle/80 md:inline-flex"
             leadingIcon={<Icon name="shield" className="h-4 w-4" />}
           >
             {sessionLabel}

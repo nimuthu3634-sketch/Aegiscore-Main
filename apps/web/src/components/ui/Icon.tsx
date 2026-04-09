@@ -57,6 +57,13 @@ const iconPaths: Record<IconName, ReactNode> = {
   ),
   "x-circle": (
     <path d="M12 22a10 10 0 1 1 10-10 10 10 0 0 1-10 10Zm-3-13 6 6m0-6-6 6" />
+  ),
+  logout: (
+    <>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="m16 17 5-5-5-5" />
+      <path d="M21 12H9" />
+    </>
   )
 };
 

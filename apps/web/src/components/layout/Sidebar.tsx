@@ -8,6 +8,7 @@ type SidebarProps = {
   items: NavigationItem[];
   activeId: NavKey;
   onNavigate: (id: NavKey) => void;
+  onLogout: () => void;
   className?: string;
 };
 
@@ -15,6 +16,7 @@ export function Sidebar({
   items,
   activeId,
   onNavigate,
+  onLogout,
   className
 }: SidebarProps) {
   return (
@@ -67,12 +69,14 @@ export function Sidebar({
           Wazuh and Suricata remain behind the API boundary. The UI consumes backend-only contracts.
         </p>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
-          className="mt-4 justify-start px-0 text-slate-100 hover:bg-slate-800/70"
-          trailingIcon={<Icon name="chevron-right" className="h-4 w-4" />}
+          className="mt-4 w-full justify-start border border-slate-600/60 text-slate-100 hover:border-brand-primary/45 hover:bg-brand-primary/15 hover:text-white"
+          leadingIcon={<Icon name="logout" className="h-4 w-4" />}
+          onClick={onLogout}
         >
-          Review platform scope
+          Log out
         </Button>
       </div>
     </aside>

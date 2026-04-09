@@ -23,6 +23,7 @@ import {
   getStoredSessionRole,
   hasStoredAccessToken,
   isDevAuthBootstrapEnabled,
+  logoutOperator,
   type HealthResponse
 } from "./lib/api";
 import {
@@ -122,6 +123,11 @@ export default function App() {
       ? `API ${health.status} · database ${health.database}`
       : "Checking API health";
 
+  function handleLogout() {
+    logoutOperator();
+    navigate("/login", { replace: true });
+  }
+
   if (isLoginRoute) {
     return (
       <Routes>
@@ -146,6 +152,7 @@ export default function App() {
           navigate(target.path);
         }
       }}
+      onLogout={handleLogout}
       pageTitle={pageContent.title}
       pageDescription={pageContent.description}
       healthTone={healthTone}
