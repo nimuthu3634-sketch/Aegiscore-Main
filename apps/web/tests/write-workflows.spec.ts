@@ -234,27 +234,18 @@ test("alerts support acknowledge, close, note, and link-to-incident write flows"
     await page.getByTestId("alert-link-incident-btn").click({ force: true });
     await expect(page.getByText("Link Alert To Incident")).toBeVisible();
     await page.getByTestId("link-incident-mode-existing-btn").click();
-    await page
-      .getByTestId("link-incident-search-input")
-      .fill(activeIncident!.id);
+    await page.getByTestId("link-incident-search-input").fill(activeIncident.id);
     const targetedCandidate = page.getByTestId(
-      `link-incident-candidate-${activeIncident!.id}`
+      `link-incident-candidate-${activeIncident.id}`
     );
-    const fallbackCandidate = page
-      .locator('[data-testid^="link-incident-candidate-"]')
-      .first();
-    if (await targetedCandidate.count()) {
-      await targetedCandidate.click();
-    } else if (await fallbackCandidate.count()) {
-      await fallbackCandidate.click();
-    }
+    await expect(targetedCandidate).toBeVisible({ timeout: 20000 });
+    await targetedCandidate.click();
     const confirmButton = page.getByTestId("link-incident-confirm-btn");
-    if (await confirmButton.isEnabled()) {
-      await confirmButton.click();
-      await expect(page.getByText("Alert linked into an existing incident.")).toBeVisible();
-    } else {
-      await page.getByRole("button", { name: "Cancel" }).click();
-    }
+    await expect(confirmButton).toBeEnabled({ timeout: 10000 });
+    await confirmButton.click();
+    await expect(page.getByText("Alert linked into an existing incident.")).toBeVisible({
+      timeout: 15000
+    });
   }
 
   let createNewAlertId = alerts.items.find(
@@ -333,11 +324,9 @@ test("incident transitions, policy toggles, and reports export trigger stay oper
   await page
     .getByTestId(`incident-transition-${transitionAction!.replace(/_/g, "-")}-btn`)
     .click();
-  await expect(
-    page.getByText(
-      `Incident transitioned to ${transitionTargetStateByAction[transitionAction!]}.`
-    )
-  ).toBeVisible();
+  await expect(page.getByTestId("incident-transition-feedback")).toHaveText(
+    `Incident transitioned to ${transitionTargetStateByAction[transitionAction!]}.`
+  );
 
   await page.goto("/rules");
   const policyToggle = page.locator('[data-testid^="policy-toggle-"]').first();

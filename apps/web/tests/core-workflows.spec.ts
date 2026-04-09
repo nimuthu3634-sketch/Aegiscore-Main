@@ -131,7 +131,7 @@ test("assets, responses, rules, and reports render live backend-backed operation
   await expect(
     page.getByRole("table", { name: "Automated response policies table" })
   ).toBeVisible();
-  await expect(page.getByText("real backend policies")).toBeVisible();
+  await expect(page.getByText("four-detection policies")).toBeVisible();
 
   await page
     .locator('nav[aria-label="Primary"]')

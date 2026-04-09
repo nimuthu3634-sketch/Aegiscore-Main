@@ -1,8 +1,34 @@
 # Playwright Coverage
 
-Browser tests support the **final scoped v1** product (**single-tenant**, **SME/lab**): they validate the real console against the four supported detections and core workflows—not enterprise SOC breadth.
+Browser tests support the **final scoped v1** product (**single-tenant**, **SME/lab**): they validate the real console against the four supported detections and **operator write paths**—not enterprise SOC breadth.
 
-## Root Cause
+## Operator workflow proof (checklist)
+
+These are the **intentionally covered** operator-relevant flows and where they are asserted. All require a **running API** (see Runbook).
+
+| # | Flow | Proof | Test file (test name) |
+|---|------|--------|-------------------------|
+| 1 | Login success | UI navigates to `/overview` after valid credentials | `core-workflows.spec.ts` — *login route authenticates and opens the overview dashboard* |
+| 2 | Login failure | Stays on `/login`, shows invalid-credentials copy | `core-workflows.spec.ts` — *login route shows clear error on invalid credentials* |
+| 3 | Alert acknowledge | Success message in `alert-workflow-feedback` | `write-workflows.spec.ts` — *alerts support acknowledge, close, note, and link-to-incident write flows* |
+| 4 | Alert close | Success message in `alert-workflow-feedback` | same |
+| 5 | Link alert → existing incident | Modal: search by incident id, select candidate, enabled confirm, success toast | same (skipped when no unlinked alert or no incident id) |
+| 6 | Create new incident from alert | New-incident mode + confirm | same |
+| 7 | Add analyst note | Note text visible after save | same |
+| 8 | Incident transition | Success copy in `incident-transition-feedback` | `write-workflows.spec.ts` — *incident transitions, policy toggles, and reports export trigger stay operational* |
+| 9 | Policy enable / disable | Toggle twice; success toast copy each time | same |
+| 10 | Report export trigger | Incidents export (JSON) download or inline export message | same; **alerts** CSV export in `core-workflows.spec.ts` — *assets, responses, rules, and reports…* |
+| 11 | Notification visibility | Incident panel + linked-alert panel; responses table or empty | `notification-and-negative-paths.spec.ts` — *notification panels render…* |
+| 12 | Not-found detail routes | `detail-record-not-found` on unknown alert/incident UUID | `notification-and-negative-paths.spec.ts` — *detail routes show not-found…* |
+| 13 | Forbidden / role-restricted | Analyst: disabled policy toggles + `policy-admin-only-hint`; API `PATCH` returns 403 | `write-workflows.spec.ts` — *analyst role cannot mutate policy enabled state* |
+| 14 | Failed mutation (client) | Empty note → `analyst-notes-feedback` validation | `notification-and-negative-paths.spec.ts` — *analyst note save rejects empty draft…* |
+| 15 | Failed mutation (simulated API) | Route stub `503` on acknowledge → `alert-workflow-feedback` shows `detail` | `operator-workflows.spec.ts` — *alert acknowledge surfaces server error in workflow feedback* |
+
+Additional **negative / API** coverage (not only UI): invalid incident transition returns `400/409` with *cannot transition* in body — `write-workflows.spec.ts` — *incident transition invalid action is rejected…*
+
+Per-detection **read + evidence** paths: `scenario-coverage.spec.ts` (four scenarios).
+
+## Root cause (historical)
 
 The earlier Playwright gap was not a missing test directory. The real root causes were:
 
@@ -11,9 +37,7 @@ The earlier Playwright gap was not a missing test directory. The real root cause
 - the frontend did not yet expose a real `/login` route for browser-authenticated workflow coverage
 - scenario seeding could collide with duplicate-ingestion protection and accidentally validate stale alerts instead of the fresh end-to-end path
 
-## Fixes Applied
-
-The coverage stack was corrected in these areas:
+## Fixes applied (stack)
 
 - `apps/web/playwright.config.ts`
   - switched Playwright to the Vite dev server
@@ -32,49 +56,6 @@ The coverage stack was corrected in these areas:
   - added authenticated-session helpers
   - added live scenario seeding with unique external identifiers per run
 
-## Current Coverage
-
-The Playwright suite now covers:
-
-- login route
-- login success
-- login failure on invalid credentials
-- invalid or expired session redirect to `/login`
-- overview dashboard
-- alerts list
-- alert detail
-- alert acknowledge
-- alert close
-- alert link to existing incident
-- alert link by creating a new incident
-- alert analyst note save
-- incidents list
-- incident detail
-- incident state transition
-- incident invalid-transition rejection path
-- assets
-- responses
-- rules and policies
-- policy enable/disable toggles
-- analyst forbidden policy mutation path
-- reports
-- export trigger coverage for alerts
-- export trigger coverage for incidents
-- not-found empty states for unknown alert and incident detail routes (`detail-record-not-found`)
-- client-side validation feedback for empty analyst note saves (`analyst-notes-feedback`)
-- administrator notification panels on incident detail and on alerts linked to an incident (`incident-notifications-panel`, `alert-notifications-panel`, plus either `notification-event-row` or `notification-empty-state`)
-- responses list table or filtered-empty state; optional `response-row-notification-summary` when the API includes delivery copy on list rows
-- related-response notification delivery subsection when the API returns `related_notifications` (`response-linked-notification-deliveries`, `response-notification-delivery-item`)
-- one happy-path validation for each supported detection (`scenario-coverage.spec.ts`), including:
-  - overview dashboard detection badges (all four types always listed from the API with counts)
-  - alerts queue filtered by detection type
-  - incidents queue filtered by detection type when the scenario produced a linked incident
-  - response history table showing the scenario’s expected policy action label (`block_ip`, `create_manual_review`, or `notify_admin`, rendered with `formatTokenLabel`)
-  - `brute_force`
-  - `file_integrity_violation`
-  - `port_scan`
-  - `unauthorized_user_creation`
-
 ## Stable `data-testid` hooks (browser tests)
 
 | Hook | Purpose |
@@ -84,30 +65,39 @@ The Playwright suite now covers:
 | `alert-notification-link-required` | Alert not linked to an incident (notifications scoped to incidents) |
 | `notification-event-row` / `notification-empty-state` | Notification history rows or empty copy inside those panels |
 | `alert-workflow-feedback` | Acknowledge/close/link workflow success or error message on alert detail |
+| `incident-transition-feedback` | Incident state transition success or error message |
 | `analyst-notes-feedback` | Analyst note save validation or success copy |
 | `response-linked-notification-deliveries` / `response-notification-delivery-item` | Nested delivery list on related response cards |
 | `response-row-notification-summary` | Optional delivery summary line in the responses list table |
+| `policy-admin-only-hint` | Analyst read-only explanation on Rules / Policies |
+| `alert-acknowledge-btn` / `alert-close-btn` / `alert-link-incident-btn` | Alert lifecycle actions |
+| `link-incident-*` | Link modal mode, search, candidates, confirm |
+| `policy-toggle-*` | Per-row policy enable/disable control |
+| `incident-transition-*-btn` | Incident workflow buttons |
 
-## Test Files
+## Test files
 
-- `apps/web/tests/core-workflows.spec.ts`
-- `apps/web/tests/scenario-coverage.spec.ts`
-- `apps/web/tests/write-workflows.spec.ts`
-- `apps/web/tests/notification-and-negative-paths.spec.ts`
+- `apps/web/tests/core-workflows.spec.ts` — login, session redirect, navigation, alerts/incidents filters, assets/responses/rules/reports, **alerts export**
+- `apps/web/tests/scenario-coverage.spec.ts` — four detection scenarios end-to-end
+- `apps/web/tests/write-workflows.spec.ts` — **serial** alert/incident/policy/report **mutations** + analyst forbidden path + invalid transition API check
+- `apps/web/tests/notification-and-negative-paths.spec.ts` — not-found, empty-note validation, notification panels + responses list
+- `apps/web/tests/operator-workflows.spec.ts` — **deterministic** simulated API failure on acknowledge (Playwright `route`)
 - `apps/web/tests/support/e2e.ts`
 
 ## Runbook
 
-Playwright starts the Vite dev server and proxies `/api` to **`http://127.0.0.1:8000`**. Start the API (for example `docker compose up -d api`), apply migrations if needed, and seed users so login succeeds:
+Playwright starts the Vite dev server and proxies `/api` to **`http://127.0.0.1:8000`**. **Without the API, tests fail immediately** (login/seed cannot run). Start the API (for example `docker compose up -d api`), apply migrations if needed, and seed users so login succeeds:
 
 ```powershell
 docker compose exec api python -m app.db.seed
 npm run test:web:e2e
 ```
 
-### Latest recorded run (release candidate, 2026-04-08)
+### Latest recorded run
 
-- **16 passed**, **0 skipped** against a Compose-backed API with a seeded database.
+Update this line when you record a full green run in CI or locally:
+
+- *(local):* run `npm run test:web:e2e` with API up; expect **17** tests (or fewer if conditional skips apply—see below).
 
 ### Conditional skips (honest branch coverage)
 
@@ -115,21 +105,21 @@ In **other** environments (empty DB, missing incidents, or no alerts linked to i
 
 - `notification-and-negative-paths.spec.ts` — combined notification/responses test skips when no incident exists or no alert has an incident link.
 - `write-workflows.spec.ts` — incident transition, policy toggle, export, and invalid-transition tests skip when no non-terminal incident candidate exists after seeding.
+- Link-to-existing requires a visible non-terminal incident row after search; if the list omits the target id, the step fails fast (no silent cancel).
 
-These branches are **data-dependent**, not flaky styling tests; a healthy seeded lab run should execute them (as in the latest RC pass).
+These branches are **data-dependent**, not flaky styling tests; a healthy seeded lab run should execute them.
 
-## Remaining Gaps
+## Intentionally not covered (exclusions)
 
-- There is no dedicated response **detail** route in the UI; notification delivery lines on the responses **list** are asserted only when the backend populates `notificationSummary` on list rows.
-- Linked-alert **Related responses** notification sublists (`response-linked-notification-deliveries`) are not separately asserted in Playwright when no execution in the fixture set includes `related_notifications`.
-- Reports export coverage validates browser download triggers, not full file-content parsing in browser assertions.
-- Browser coverage validates one analyst forbidden mutation path (`PATCH /policies/{id}`), but does not yet exhaustively cover every role-protected endpoint negative path.
-- Incident transition negative coverage validates one deterministic invalid-action rejection path, not every invalid-state/action permutation.
-- Incident-state-transition and policy/export mutation checks are executed when at least one incident candidate is available; the spec skips those branches when the seeded run produces no incident records.
-- Coverage is intentionally practical and SME-oriented; it is not a pixel-test suite and it avoids brittle styling assertions.
+- **No** dedicated response **detail** route in the UI; list-row notification summaries are optional when the API omits `notificationSummary`.
+- **Related responses** nested `related_notifications` blocks are not separately asserted unless the fixture set returns them.
+- **Export file content** is not parsed in the browser (only download filename or UI export message).
+- **Role matrix**: only one forbidden path is proven in browser + API (`PATCH /policies/{id}` as analyst); other admin-only endpoints are not exhaustively negative-tested in Playwright.
+- **Invalid transition matrix**: one invalid action + API assertion; not every state/action permutation.
+- **Cosmetic / pixel** assertions are avoided; copy may evolve if product strings change—prefer `data-testid` and stable API messages where listed above.
+- **Simulated acknowledge failure** (`operator-workflows.spec.ts`) proves the **error surface**, not production outage behavior.
 
-## Future Coverage Work
+## Future coverage work
 
-- extend analyst-role browser checks to manual-ingestion route surfaces and other admin-only mutations where UI exposure exists
-- add additional invalid transition matrix checks if workflow complexity increases
-- add targeted export file-content validation in API-layer tests for generated CSV/JSON payload integrity
+- Additional admin-only surfaces if new UI mutations ship.
+- Export payload validation in **API** tests rather than Playwright.

@@ -516,9 +516,19 @@ export function IncidentDetailPage() {
                   : "Mark false positive"}
               </Button>
               {transitionError ? (
-                <p className="text-body-sm text-status-danger">{transitionError}</p>
+                <p
+                  className="text-body-sm text-status-danger"
+                  data-testid="incident-transition-feedback"
+                >
+                  {transitionError}
+                </p>
               ) : transitionMessage ? (
-                <p className="text-body-sm text-status-success">{transitionMessage}</p>
+                <p
+                  className="text-body-sm text-status-success"
+                  data-testid="incident-transition-feedback"
+                >
+                  {transitionMessage}
+                </p>
               ) : null}
             </div>
           </EvidencePanel>
