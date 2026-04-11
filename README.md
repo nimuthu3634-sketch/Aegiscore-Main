@@ -236,3 +236,6 @@ Operational health endpoints:
 - expand browser coverage for remaining terminal/edge workflow branches
 - move selected heavy frontend routes to dynamic imports if bundle size becomes a sustained local problem
 - add background replay handling for ingestion failures and broaden lab validation coverage for destructive adapter paths
+
+## Academic Supervision
+This project was guided and supervised by Ann Roshanie Appuhamy as part of undergraduate coursework.
