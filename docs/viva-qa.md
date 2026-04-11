@@ -21,7 +21,7 @@
 
 ### What Is Complete
 
-- end-to-end scoped workflow is implemented for all four supported detections
+- end-to-end scoped workflow is implemented for all four validated threat categories
 - backend role-based protection for sensitive actions is in place
 - frontend reflects role constraints (for example, read-only analyst policy controls)
 - deterministic test and validation commands are documented and repeatable
@@ -43,7 +43,7 @@ The core SOC pipeline is fully implemented and demonstrable within declared scop
    It is positioned as a **commercial-style SOC platform MVP** for this project: persistent data model, real APIs, role enforcement, operational docs, and repeatable validation—including simulated-attack scenarios and optional **evaluation-lab** connectors. The **detection catalog** is intentionally narrow (four validated types), but the **operational pipeline** is implemented end-to-end—not a mock-up.
 
 2. **Why only four detections?**  
-   The project intentionally enforces a bounded threat scope (`brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`) to stay defensible, testable, and aligned with stated requirements.
+   The project intentionally enforces the academic MVP four-category scope (`brute_force`, `port_scan`, `file_integrity_violation`, `unauthorized_user_creation`); broader detection families are roadmap-only, to stay defensible, testable, and aligned with stated requirements.
 
 3. **How is AI used in the system?**  
    AI/risk scoring is used for prioritization after detection. Baseline scoring is always available; optional ML scoring is supported when model artifacts are present.

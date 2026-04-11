@@ -61,8 +61,8 @@ The Incidents page groups linked alerts into an investigation record.
 This build supports only:
 
 - `brute_force`
-- `file_integrity_violation`
 - `port_scan`
+- `file_integrity_violation`
 - `unauthorized_user_creation`
 
 If a source event does not map to one of those detections, it is out of scope for the current scoped v1 product and should not be treated as validated coverage.

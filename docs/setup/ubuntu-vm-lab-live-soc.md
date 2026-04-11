@@ -14,7 +14,7 @@ This document is the **reference topology** for running AegisCore as a **real co
 
 **VirtualBox:** use a host-only or internal network, static IPs, and NTP/time sync so Wazuh timestamps and AegisCore checkpoints stay coherent.
 
-**Product scope:** only the four supported detections (`brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`). Tune Wazuh rules and Suricata signatures so lab noise maps into those categories where possible.
+**Product scope:** only the academic MVP four-category scope (`brute_force`, `port_scan`, `file_integrity_violation`, `unauthorized_user_creation`); broader detection families are roadmap-only. Tune Wazuh rules and Suricata signatures so lab noise maps into those categories where possible.
 
 ## Normal operating mode (live connectors)
 

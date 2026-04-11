@@ -1,6 +1,6 @@
 # Playwright Coverage
 
-Browser tests support the **MVP** product posture (**single-tenant**, **commercial-style** console): they validate the real console against the four supported detections and **operator write paths** within the **academic release** boundary—without implying unlimited enterprise SOC breadth.
+Browser tests support the **MVP** product posture (**single-tenant**, **commercial-style** console): they validate the real console against the **four validated threat categories** and **operator write paths** within the **academic release** boundary—without implying unlimited enterprise SOC breadth.
 
 ## Operator workflow proof (checklist)
 

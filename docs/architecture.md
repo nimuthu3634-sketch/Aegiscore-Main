@@ -70,7 +70,7 @@ The **current academic release** delivers the capabilities above on a **modular,
 
 ## Scoring And Response Model
 
-- Supported detection scope remains limited to `brute_force`, `file_integrity_violation`, `port_scan`, and `unauthorized_user_creation`.
+- Supported detection scope remains limited to `brute_force`, `port_scan`, `file_integrity_violation`, and `unauthorized_user_creation` (see [final-product.md](final-product.md) for standard wording and roadmap note).
 - Risk scoring is a prioritization layer after detection, not the detector itself.
 - The deterministic baseline is the production-safe default.
 - The optional TensorFlow model stays loadable and auditable through stored model metadata (legacy rows may still reference `sklearn_model`).

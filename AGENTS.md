@@ -19,11 +19,13 @@ Business goal: deliver a **defensible, testable** end-to-end SOC workflow that m
 
 ## Detection Scope
 
-Only the following detections are in scope unless the user explicitly expands scope:
+The current academic MVP validates four core threat categories: brute-force attacks, port scans, file integrity violations, and unauthorized user account creation. Additional detection categories are **future roadmap** items, not part of the current implementation.
+
+Only the following `DetectionType` values are in scope unless the user explicitly expands scope:
 
 1. `brute_force`
-2. `file_integrity_violation`
-3. `port_scan`
+2. `port_scan`
+3. `file_integrity_violation`
 4. `unauthorized_user_creation`
 
 Do not add extra detection types, speculative threat modules, or enterprise-only security workflows without explicit approval.

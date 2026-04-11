@@ -14,8 +14,8 @@ import type {
 
 const detectionPalette = {
   brute_force: "#F97316",
-  file_integrity_violation: "#EF4444",
   port_scan: "#F59E0B",
+  file_integrity_violation: "#EF4444",
   unauthorized_user_creation: "#22C55E"
 } as const;
 

@@ -23,7 +23,7 @@ Expected outcome:
 - backend tests pass
 - frontend lint/build pass
 - Playwright run is green with the API reachable at `127.0.0.1:8000` (or any failure is documented as a blocker)
-- scenario validation passes for all four supported detections against the same API
+- scenario validation passes for all four validated threat categories against the same API
 
 ## 2) Demo-Day Checks
 
@@ -58,7 +58,7 @@ Fallback:
 
 ## 3) Known Limitations (Must Be Stated Honestly)
 
-- threat detection is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** only; ransomware, phishing, APT, zero-day, and large-scale enterprise SOC claims are out of scope.
+- threat detection is limited to **`brute_force`**, **`port_scan`**, **`file_integrity_violation`**, and **`unauthorized_user_creation`** only (the academic MVP four-category scope; broader categories are roadmap-only); ransomware, phishing, APT, zero-day, and large-scale enterprise SOC claims are out of scope.
 - Suricata live ingestion is limited to `file_tail` (`eve.json`) mode.
 - Wazuh live compatibility is tuned for common lab envelope variants.
 - deterministic acceptance validation is fixture-backed by default.
@@ -68,6 +68,7 @@ Fallback:
 ## 4) Must-Have Files And Docs
 
 - `README.md`
+- `docs/final-product.md`
 - `docs/project-status-summary.md`
 - `docs/demo-script.md`
 - `docs/viva-qa.md`

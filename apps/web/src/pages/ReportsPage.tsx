@@ -171,7 +171,7 @@ export function ReportsPage() {
         description={pageBlueprints.reports.description}
         meta={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="outline">in-scope report summaries</Badge>
+            <Badge tone="outline">MVP threat-scope summaries</Badge>
             {data ? <Badge tone="brand">fetched {data.fetchedAt}</Badge> : null}
           </div>
         }
@@ -486,7 +486,7 @@ export function ReportsPage() {
             <ChartCard
               eyebrow="Daily distributions"
               title="Detection and severity mix"
-              description="Daily breakdown of supported detection types and normalized severity bands."
+              description="Daily breakdown of the four validated threat categories and normalized severity bands."
               className="min-h-[23rem]"
             >
               <div className="grid gap-4 lg:grid-cols-2">
@@ -581,7 +581,7 @@ export function ReportsPage() {
         <EmptyState
           iconName="reports"
           title="No report data is available"
-          description="Adjust date or detection filters, or retry once the reporting API has data for the four supported scenarios."
+          description="Adjust date or detection filters, or retry once the reporting API has data for the four validated threat categories."
           action={
             <Button variant="secondary" size="sm" onClick={reload}>
               Retry reports

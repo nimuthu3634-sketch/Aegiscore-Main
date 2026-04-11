@@ -114,7 +114,7 @@ export function AlertsPage() {
             <MetricCard
               label="Matching alerts"
               value={String(meta?.total ?? 0)}
-              detail="Alerts matching filters in the four supported detection types."
+              detail="Alerts matching filters in the four validated threat categories (academic MVP scope)."
               tone="highlight"
             />
             <MetricCard
@@ -140,7 +140,7 @@ export function AlertsPage() {
 
       <SearchFilterToolbar
         title="Alert triage filters"
-        description="Search by ID, asset, IP, username, or event ID. Filter by severity, status, one of the four detection types, source, asset, and time window."
+        description="Search by ID, asset, IP, username, or event ID. Filter by severity, status, one of the four validated threat categories, source, asset, and time window."
         search={
           <SearchInput
             value={search}
@@ -344,7 +344,7 @@ export function AlertsPage() {
         <EmptyState
           iconName="alerts"
           title="No alerts match the current filters"
-          description="Broaden the time window or clear filters to see in-scope alerts again. The product only surfaces the four approved detection types."
+          description="Broaden the time window or clear filters to see alerts again. The academic MVP only surfaces the four validated threat categories."
           action={
             <Button
               variant="secondary"

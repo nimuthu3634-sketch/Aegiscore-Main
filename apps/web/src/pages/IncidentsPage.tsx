@@ -91,7 +91,7 @@ export function IncidentsPage() {
             <MetricCard
               label="Open or triaged"
               value={String(meta?.total ?? 0)}
-              detail="Incidents matching your filters—each maps to an in-scope detection cluster."
+              detail="Incidents matching your filters—each maps to the academic MVP four-category scope."
               tone="highlight"
             />
             <MetricCard
@@ -287,7 +287,7 @@ export function IncidentsPage() {
         <EmptyState
           iconName="incidents"
           title="No incidents match the current queue filters"
-          description="Reset filters or wait for alerts to roll up into incidents. Scope stays limited to the four supported scenarios."
+          description="Reset filters or wait for alerts to roll up into incidents. Scope stays limited to the four validated threat categories."
           action={
             <Button
               variant="secondary"

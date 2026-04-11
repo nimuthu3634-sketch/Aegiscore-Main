@@ -13,6 +13,8 @@ Canonical wording for reports and panels: **[docs/final-product.md](docs/final-p
 - `file_integrity_violation`
 - `unauthorized_user_creation`
 
+The current academic MVP validates four core threat categories: brute-force attacks, port scans, file integrity violations, and unauthorized user account creation. Additional detection categories are **future roadmap** items, not part of the current implementation.
+
 **Explicitly out of scope** for this project: ransomware-specific pipelines, phishing campaigns, APT hunting, zero-day detection claims, multi-tenant SaaS, and other full commercial-grade SOC features beyond the bounded workflow above.
 
 ## Start Here (Examiner Flow)

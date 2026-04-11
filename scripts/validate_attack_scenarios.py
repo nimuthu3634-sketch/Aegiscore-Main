@@ -28,6 +28,7 @@ class ScenarioDefinition:
     expected_value: Any
 
 
+# Academic MVP order: brute_force → port_scan → file_integrity_violation → unauthorized_user_creation
 SCENARIOS = [
     ScenarioDefinition(
         key="brute_force",
@@ -38,20 +39,20 @@ SCENARIOS = [
         expected_value=24,
     ),
     ScenarioDefinition(
-        key="file_integrity_violation",
-        source="wazuh",
-        fixture_file="wazuh_file_integrity_violation.json",
-        detection_type="file_integrity_violation",
-        normalized_field="file_path",
-        expected_value="D:\\Operations\\Policies\\access-control.xlsx",
-    ),
-    ScenarioDefinition(
         key="port_scan",
         source="suricata",
         fixture_file="suricata_port_scan.json",
         detection_type="port_scan",
         normalized_field="destination_port",
         expected_value=3389,
+    ),
+    ScenarioDefinition(
+        key="file_integrity_violation",
+        source="wazuh",
+        fixture_file="wazuh_file_integrity_violation.json",
+        detection_type="file_integrity_violation",
+        normalized_field="file_path",
+        expected_value="D:\\Operations\\Policies\\access-control.xlsx",
     ),
     ScenarioDefinition(
         key="unauthorized_user_creation",

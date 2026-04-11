@@ -1,3 +1,5 @@
+"""Normalize upstream events; reject detections outside the academic MVP four-category scope."""
+
 from __future__ import annotations
 
 import hashlib

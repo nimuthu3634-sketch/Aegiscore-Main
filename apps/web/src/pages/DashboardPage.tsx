@@ -204,7 +204,7 @@ export function DashboardPage() {
             <ChartCard
               eyebrow="Alert volume over time"
               title="Live alert flow"
-              description="What happened recently across the four supported scenarios—use the chips to see mix by detection."
+              description="What happened recently across the four validated threat categories—use the chips to see mix by detection."
               className="min-h-[23rem]"
               footer={
                 <div className="flex flex-wrap items-center gap-2">
@@ -361,7 +361,7 @@ export function DashboardPage() {
                 {
                   id: "alerts",
                   label: "Alerts queue",
-                  description: "Triage in-scope detections; sort by risk when the queue is full.",
+                  description: "Triage the four validated threat categories; sort by risk when the queue is full.",
                   value: metricFormatter.format(data.summary.highRiskAlerts),
                   icon: "alerts",
                   onClick: () => navigate("/alerts")

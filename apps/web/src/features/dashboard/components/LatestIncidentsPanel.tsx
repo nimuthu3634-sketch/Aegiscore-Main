@@ -30,7 +30,7 @@ export function LatestIncidentsPanel({
           <p className="type-label-md">Latest incidents</p>
           <CardTitle>Investigation queue</CardTitle>
           <CardDescription>
-            Latest case updates across the four supported detections—open one to review
+            Latest case updates across the four validated threat categories—open one to review
             evidence, scoring, and responses.
           </CardDescription>
         </div>

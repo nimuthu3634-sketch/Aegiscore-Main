@@ -112,7 +112,7 @@ The official lockup uses the supplied angular mark, a vertical divider, an outli
 | Component | Role | Key Variants | Primary Pages |
 | --- | --- | --- | --- |
 | `SourceBadge` | Alert source marker | Wazuh, Suricata | Alerts, Detail, Incidents |
-| `DetectionBadge` | Detection identifier | brute_force, file_integrity_violation, port_scan, unauthorized_user_creation | Alerts, Detail, Rules |
+| `DetectionBadge` | Detection identifier | brute_force, port_scan, file_integrity_violation, unauthorized_user_creation | Alerts, Detail, Rules |
 | `SeverityChip` | Severity indicator | critical, high, medium, low | Alerts, Detail, Incidents |
 | `StatusChip` | Workflow state indicator | new, triaged, investigating, contained, resolved, failed, disabled | All operational pages |
 | `RiskScoreChip` | Scored risk summary | low, medium, high with numeric value | Alerts, Detail, Dashboard |

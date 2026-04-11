@@ -176,7 +176,7 @@ export const pageBlueprints: Record<
     eyebrow: "SOC overview",
     title: "Overview Dashboard",
     description:
-      "At-a-glance posture for the four in-scope threats: volume, risk, incidents, responses, and affected assets—built for a focused SME lab console."
+      "At-a-glance posture for the academic MVP threat scope (four core categories): volume, risk, incidents, responses, and affected assets—built for a centralized SOC platform MVP console."
   },
   alerts: {
     eyebrow: "Normalized alerts",
@@ -194,7 +194,7 @@ export const pageBlueprints: Record<
     eyebrow: "Asset inventory",
     title: "Assets / Endpoints",
     description:
-      "Endpoints carrying in-scope alert load. Use this to see which hosts need attention alongside incidents."
+      "Endpoints carrying alert load for the four validated threat categories. Use this to see which hosts need attention alongside incidents."
   },
   responses: {
     eyebrow: "Action history",
@@ -206,13 +206,13 @@ export const pageBlueprints: Record<
     eyebrow: "Detection scope",
     title: "Rules / Policies",
     description:
-      "Automation rules for the four supported detections only—tune enablement and modes without leaving SME-safe defaults behind."
+      "Automation rules for the academic MVP four-category scope only—tune enablement and modes; broader detections are roadmap-only."
   },
   reports: {
     eyebrow: "Operational reporting",
     title: "Reports",
     description:
-      "Summaries and exports for the same in-scope activity you see in the queues—ideal for demos and handoffs."
+      "Summaries and exports for the same four-category activity you see in the queues—ideal for demos and handoffs."
   },
   settings: {
     eyebrow: "Platform configuration",

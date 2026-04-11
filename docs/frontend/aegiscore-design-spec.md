@@ -621,7 +621,7 @@ Tablet behavior:
 
 Purpose:
 
-- Manage in-scope detection and response policies without expanding beyond the approved product scope
+- Manage detection and response policies for the **four validated threat categories** without expanding beyond the academic MVP scope
 
 Desktop layout:
 
@@ -629,11 +629,11 @@ Desktop layout:
 - Right-side detail or edit panel for the selected policy
 - Top header with create policy action and scope reminder
 
-Policy scope for v1:
+Policy scope for v1 (academic MVP—four core threat categories only; broader categories are roadmap-only):
 
 - `brute_force`
-- `file_integrity_violation`
 - `port_scan`
+- `file_integrity_violation`
 - `unauthorized_user_creation`
 
 Key UI rules:

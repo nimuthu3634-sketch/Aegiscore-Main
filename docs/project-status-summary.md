@@ -8,11 +8,11 @@
 
 **AegisCore** is the **submission MVP** named above: **single-tenant**, **enterprise-inspired** in operator workflow, with **centralized visibility**, **alert triage**, **risk-based prioritization**, **incident handling**, **explainable AI-assisted scoring** (deterministic baseline default; optional **TensorFlow** trainable model), **controlled automated response**, and **operational reporting**—aligned with commercial SOC practice while **clearly bounding** the **academic release** to the four listed threats.
 
-**Approved scope** matches the four supported detections only: `brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`. **Beyond this release (documented, not implied):** ransomware/phishing/APT/zero-day product lines; claims of unlimited enterprise rollout; and parity with full commercial SOC suites.
+**Approved scope** matches the four validated threat categories only: `brute_force`, `port_scan`, `file_integrity_violation`, `unauthorized_user_creation`. The current academic MVP validates four core threat categories: brute-force attacks, port scans, file integrity violations, and unauthorized user account creation; broader categories are **roadmap-only** beyond this implementation. **Beyond this release (documented, not implied):** ransomware/phishing/APT/zero-day product lines; claims of unlimited enterprise rollout; and parity with full commercial SOC suites.
 
 ### Product Positioning
 
-- **MVP**: complete backend-owned workflow for the four detections—ingestion, normalization, scoring, incidents, responses, reporting, authenticated access—delivered as a **substantive commercial-style build**, not a UI-only mock-up.
+- **MVP**: complete backend-owned workflow for the four validated threat categories—ingestion, normalization, scoring, incidents, responses, reporting, authenticated access—delivered as a **substantive commercial-style build**, not a UI-only mock-up.
 - **Live connectors (evaluation-ready)**:
   - Wazuh: authenticated live polling with retries, pagination/checkpointing, dedupe, and status (common lab envelopes).
   - Suricata: `file_tail` on `eve.json` with checkpointing and retries; authenticated forwarding not implemented.
@@ -94,15 +94,15 @@ The frontend communicates only with backend APIs. All integration complexity for
 The current implemented and validated threat scope is intentionally limited to:
 
 1. `brute_force`
-2. `file_integrity_violation`
-3. `port_scan`
+2. `port_scan`
+3. `file_integrity_violation`
 4. `unauthorized_user_creation`
 
 No additional detection categories should be claimed as implemented in the current project state.
 
 ## 5. Validation Summary
 
-The project has been validated across the implemented end-to-end flow for the four supported detections:
+The project has been validated across the implemented end-to-end flow for the four validated threat categories:
 
 - source event ingestion
 - normalization into the alert schema
@@ -229,7 +229,7 @@ Requirement traceability for proposal review is documented in [requirement-compl
 ### Practical Handoff Points
 
 - the frontend currently assumes backend ownership of all integrations and scoring contracts
-- the four supported detections are the project boundary and should remain explicit in any review discussion
+- the four validated threat categories are the project boundary and should remain explicit in any review discussion
 - normal **evaluation / demonstration** runs should use connector-driven ingestion when sources are configured; manual ingestion endpoints are kept for regression and panel tooling
 - dev auth bootstrap is opt-in and should usually remain disabled for realistic testing
 - local validation commands are stable and should be rerun before demos or submission packaging
@@ -251,7 +251,7 @@ AegisCore is a **commercial-style SOC platform MVP** for this project—**single
 
 ### What Is Complete
 
-- full scoped flow for the four supported detections is implemented
+- full scoped flow for the four validated threat categories is implemented
 - backend role enforcement is in place for sensitive mutations
 - reporting and export are live and usable
 - deterministic validation path is documented and repeatable
@@ -265,4 +265,4 @@ AegisCore is a **commercial-style SOC platform MVP** for this project—**single
 
 ### Why This Is Still A Valid MVP
 
-Within the **declared academic release boundary**, AegisCore provides a complete, testable, and auditable SOC workflow from ingestion to response and reporting for the four in-scope detections. The remaining gaps are **explicitly documented** scope limits—not missing core pipeline functionality for that boundary.
+Within the **declared academic release boundary**, AegisCore provides a complete, testable, and auditable SOC workflow from ingestion to response and reporting for the four validated threat categories. The remaining gaps are **explicitly documented** scope limits—not missing core pipeline functionality for that boundary.

@@ -7,8 +7,8 @@
 Present **AegisCore** as that **final product**: a **transparent academic release** with a real end-to-end workflow for **only** these **validated** detections:
 
 - `brute_force`
-- `file_integrity_violation`
 - `port_scan`
+- `file_integrity_violation`
 - `unauthorized_user_creation`
 
 ## Pre-Demo Setup
@@ -52,8 +52,8 @@ Use this for tight viva time windows.
    - sign in as `admin / AegisCore123!`
    - say: "Authentication is real JWT-based access, not a mocked bypass."
 2. **Dashboard (`/overview`)**
-   - show totals, high-risk indicators, recent activity panels, and the **v1 threat scope** callout (four detections + analyst review order)
-   - say: "This is a live summary of normalized in-scope SOC data—**MVP-focused** for triage and review within the four-detection academic release."
+   - show totals, high-risk indicators, recent activity panels, and the **academic MVP threat scope** callout (four validated categories + analyst review order)
+   - say: "This is a live summary of normalized SOC data for the **academic MVP**—**MVP-focused** triage across the **four validated threat categories**."
 3. **Alert -> Incident (`/alerts` then `/alerts/{id}` then `/incidents/{id}`)**
    - open one high-risk alert, show score explanation + raw payload + linked incident
    - open linked incident and show timeline/response history

@@ -164,7 +164,7 @@ export function RulesPage() {
             <MetricCard
               label="Enabled policies"
               value={String(summary.enabled)}
-              detail="Automation that can run for in-scope detections when conditions match."
+              detail="Automation that can run for the four validated threat categories when conditions match."
               tone="highlight"
             />
             <MetricCard
@@ -191,7 +191,7 @@ export function RulesPage() {
         title="Policy filters"
         description={
           canTogglePolicies
-            ? "Only the four in-scope detections appear here. Enable or disable automation; threshold and action edits stay backend-managed in this build."
+            ? "Only the academic MVP four validated threat categories appear here. Enable or disable automation; threshold and action edits stay backend-managed in this build."
             : "Read-only view of the same four-detection policies. Admins can toggle enablement from an admin session."
         }
         search={

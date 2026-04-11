@@ -7,6 +7,10 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { authenticateOperator } from "../features/auth/service";
 import { hasStoredAccessToken, isDevAuthBootstrapEnabled } from "../lib/api";
+import {
+  ACADEMIC_THREAT_SCOPE_DESCRIPTION,
+  ACADEMIC_THREAT_SCOPE_ROADMAP_NOTE
+} from "../lib/supportedDetections";
 
 const devAuthBootstrapEnabled = isDevAuthBootstrapEnabled();
 const defaultUsername = devAuthBootstrapEnabled
@@ -67,7 +71,7 @@ export function LoginPage() {
         <section className="space-y-6">
           <AegisCoreLogo titleAs="h1" className="items-start" />
           <div className="max-w-2xl space-y-4">
-            <Badge tone="brand">Single-tenant SME SOC</Badge>
+            <Badge tone="brand">Centralized SOC platform MVP</Badge>
             <h2 className="type-display-lg text-content-primary">
               Sign in to AegisCore
             </h2>
@@ -80,10 +84,9 @@ export function LoginPage() {
           <div className="grid gap-4 md:grid-cols-3">
             {[
               {
-                label: "In-scope detections",
+                label: "Threat detection scope",
                 value: "4",
-                detail:
-                  "brute force, file integrity violation, port scan, and unauthorized user creation"
+                detail: `${ACADEMIC_THREAT_SCOPE_DESCRIPTION} ${ACADEMIC_THREAT_SCOPE_ROADMAP_NOTE}`
               },
               {
                 label: "Core workflow",

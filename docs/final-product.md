@@ -22,7 +22,9 @@ The **academic release** is **intentionally limited** to **four validated threat
 3. `file_integrity_violation`
 4. `unauthorized_user_creation`
 
-No additional detection types are claimed for this release. Items outside this catalog (for example ransomware-specific pipelines, phishing campaigns, or APT product lines) are **out of scope** for the submitted product.
+**Standard description:** The current academic MVP validates four core threat categories: brute-force attacks, port scans, file integrity violations, and unauthorized user account creation. **Additional detection categories are future roadmap items**, not part of the current implementation.
+
+No further detection types are claimed for this release. Items outside this catalog (for example ransomware-specific pipelines, phishing campaigns, or APT product lines) are **out of scope** for the submitted product.
 
 ## Relationship to the repository
 

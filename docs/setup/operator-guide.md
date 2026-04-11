@@ -164,8 +164,8 @@ Connector verification routes:
 Supported detections only:
 
 - `brute_force`
-- `file_integrity_violation`
 - `port_scan`
+- `file_integrity_violation`
 - `unauthorized_user_creation`
 
 Rejected or malformed events are recorded in `ingestion_failures` for review. Duplicate source events are de-duplicated safely by `source + external_id`.

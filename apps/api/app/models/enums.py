@@ -7,9 +7,16 @@ class RoleName(str, enum.Enum):
 
 
 class DetectionType(str, enum.Enum):
+    """Academic MVP threat scope (canonical iteration order matches public documentation).
+
+    The current academic MVP validates four core threat categories: brute-force attacks,
+    port scans, file integrity violations, and unauthorized user account creation.
+    Additional detection families are roadmap-only beyond this implementation.
+    """
+
     BRUTE_FORCE = "brute_force"
-    FILE_INTEGRITY_VIOLATION = "file_integrity_violation"
     PORT_SCAN = "port_scan"
+    FILE_INTEGRITY_VIOLATION = "file_integrity_violation"
     UNAUTHORIZED_USER_CREATION = "unauthorized_user_creation"
 
 

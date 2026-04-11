@@ -11,8 +11,8 @@ import {
 /** Policy action type labels as rendered on Response History (matches `formatTokenLabel` on API snake_case). */
 const scenarioResponseActionLabel: Record<ScenarioKey, string> = {
   brute_force: formatTokenLabel("block_ip"),
-  file_integrity_violation: formatTokenLabel("create_manual_review"),
   port_scan: formatTokenLabel("notify_admin"),
+  file_integrity_violation: formatTokenLabel("create_manual_review"),
   unauthorized_user_creation: formatTokenLabel("notify_admin")
 };
 
@@ -26,8 +26,8 @@ test.beforeAll(async ({ request }) => {
 
 const scenarioKeys: ScenarioKey[] = [
   "brute_force",
-  "file_integrity_violation",
   "port_scan",
+  "file_integrity_violation",
   "unauthorized_user_creation"
 ];
 

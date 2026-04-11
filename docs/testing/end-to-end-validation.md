@@ -2,7 +2,7 @@
 
 **Final product:** **AegisCore** is the **centralized SOC platform MVP** under test (**single-tenant**). Definition: **[final-product.md](../final-product.md)**.
 
-This document validates that **transparent MVP** posture. The **current academic release** is intentionally limited to the four supported detections:
+This document validates that **transparent MVP** posture. The **current academic release** is intentionally limited to the **four validated threat categories**:
 
 - `brute_force`
 - `port_scan`
@@ -62,7 +62,7 @@ Daily report totals reflect **all** alerts in the daily window for that API data
 
 ## Validation Notes
 
-- The dashboard summary’s `alerts_by_detection` list always includes **all four** supported detection types (count `0` when none are ingested), so lab UIs treat every approved scenario symmetrically.
+- The dashboard summary’s `alerts_by_detection` list always includes **all four** validated threat categories (count `0` when none are ingested), so lab UIs treat every approved scenario symmetrically.
 - The ingestion pipeline preserves raw payloads and rejects unsupported detections explicitly.
 - Asset resolution was hardened during this validation cycle to safely reuse an existing asset when a duplicate hostname create race occurs.
 - `port_scan` now validates cleanly end to end because incident-scoped automated-response policies can create the minimal incident context they require after scoring.
@@ -72,7 +72,7 @@ Daily report totals reflect **all** alerts in the daily window for that API data
 
 - Live connector support exists for Wazuh and Suricata, but deterministic validation in this document still uses fixture-backed ingestion as the default repeatable proof path.
 - Browser coverage includes major write workflows, selected negative paths, and notification panel surfaces (see [playwright-coverage.md](playwright-coverage.md)); it does not cover every negative-path role restriction or terminal edge case.
-- Daily summary visibility is confirmed for the supported detections, but there is no scheduled or emailed reporting workflow yet.
+- Daily summary visibility is confirmed for the four validated threat categories, but there is no scheduled or emailed reporting workflow yet.
 
 ## Future Validation Work
 

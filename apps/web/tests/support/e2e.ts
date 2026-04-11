@@ -17,8 +17,8 @@ const fixturesDir = path.resolve(
 
 export type ScenarioKey =
   | "brute_force"
-  | "file_integrity_violation"
   | "port_scan"
+  | "file_integrity_violation"
   | "unauthorized_user_creation";
 
 type ScenarioDefinition = {
@@ -66,15 +66,6 @@ const scenarioDefinitions: ScenarioDefinition[] = [
     expectedEvidenceText: "203.0.113.88"
   },
   {
-    key: "file_integrity_violation",
-    fixtureFile: "wazuh_file_integrity_violation.json",
-    source: "wazuh",
-    detectionType: "file_integrity_violation",
-    expectedSourceLabel: "Wazuh",
-    expectedResponseText: "manual review",
-    expectedEvidenceText: "D:\\Operations\\Policies\\access-control.xlsx"
-  },
-  {
     key: "port_scan",
     fixtureFile: "suricata_port_scan.json",
     source: "suricata",
@@ -82,6 +73,15 @@ const scenarioDefinitions: ScenarioDefinition[] = [
     expectedSourceLabel: "Suricata",
     expectedResponseText: "notify admin",
     expectedEvidenceText: "3389"
+  },
+  {
+    key: "file_integrity_violation",
+    fixtureFile: "wazuh_file_integrity_violation.json",
+    source: "wazuh",
+    detectionType: "file_integrity_violation",
+    expectedSourceLabel: "Wazuh",
+    expectedResponseText: "manual review",
+    expectedEvidenceText: "D:\\Operations\\Policies\\access-control.xlsx"
   },
   {
     key: "unauthorized_user_creation",

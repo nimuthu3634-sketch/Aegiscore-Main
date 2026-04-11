@@ -7,7 +7,7 @@
 ## Product stance
 
 - **Commercial-style, enterprise-inspired SOC MVP** for this project: **single-tenant**; **transparent** scope limited to **four validated detections** in the **academic release** (not an unlimited production catalogue).
-- Threat scope is **only** the four supported detections: `brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`. **Beyond this release:** ransomware/phishing/APT/zero-day product lines; large-scale rollout maturity claims; or parity with full commercial SOC suites.
+- Threat scope is **only** the four validated threat categories: `brute_force`, `port_scan`, `file_integrity_violation`, `unauthorized_user_creation` (standard wording: [final-product.md](final-product.md)). **Beyond this release:** ransomware/phishing/APT/zero-day product lines; large-scale rollout maturity claims; or parity with full commercial SOC suites.
 - Live Wazuh and Suricata connectors are implemented for **evaluation** use with documented limits; deterministic acceptance still relies primarily on fixture-backed APIs and browser tests; simulated-attack validation is documented separately (including optional **university lab** setups).
 
 ## Verification record pointer

@@ -103,7 +103,7 @@ For wiring **live Wazuh polling** and **Suricata `file_tail`** on an **Ubuntu Se
 
 ## Automated Response Safety Notes
 
-- Automated response is policy-driven and currently scoped to `brute_force`, `file_integrity_violation`, `port_scan`, and `unauthorized_user_creation`.
+- Automated response is policy-driven and scoped to the academic MVP: `brute_force`, `port_scan`, `file_integrity_violation`, and `unauthorized_user_creation` (broader detection families are not implemented in this release).
 - Built-in adapters are first-party and backend-owned; they do not require external scripts for lab-safe defaults.
 - Live execution still requires `AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true`.
 - Destructive adapters remain blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.

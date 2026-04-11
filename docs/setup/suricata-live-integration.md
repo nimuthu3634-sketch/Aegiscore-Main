@@ -12,9 +12,9 @@ For the **Ubuntu SOC host + VirtualBox lab** (sensor VM or co-located Suricata, 
 
 ## Scope Guardrails
 
-- Supported detections remain limited to:
-  - `port_scan`
-  - `brute_force` only when existing Suricata parsing safely maps signal text into in-scope detection logic
+- Supported detections align with the academic MVP four-category scope. For Suricata specifically:
+  - `port_scan` (primary network path)
+  - `brute_force` only when parsing safely maps signal text into this category
 - Unsupported detections are rejected and logged into `ingestion_failures`.
 - Frontend behavior remains source-agnostic; integration complexity stays in backend services.
 

@@ -12,7 +12,7 @@ def test_complete_alerts_by_detection_counts_fills_zeros_and_orders_enum() -> No
     assert [r[0] for r in result] == [d.value for d in DetectionType]
     assert dict(result) == {
         "brute_force": 2,
-        "file_integrity_violation": 0,
         "port_scan": 4,
+        "file_integrity_violation": 0,
         "unauthorized_user_creation": 0,
     }

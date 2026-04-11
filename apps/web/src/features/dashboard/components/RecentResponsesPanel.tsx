@@ -30,7 +30,7 @@ export function RecentResponsesPanel({
           <p className="type-label-md">Most recent responses</p>
           <CardTitle>Execution history</CardTitle>
           <CardDescription>
-            Policy-driven actions for in-scope scenarios (block IP, notify admin, manual
+            Policy-driven actions for the four validated threat categories (block IP, notify admin, manual
             review, and related controls)—see mode and outcome at a glance.
           </CardDescription>
         </div>

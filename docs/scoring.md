@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Within the **MVP** product boundary of the **current academic release** (four supported detections only; **single-tenant** deployment), AegisCore risk scoring is a prioritization layer that runs after those detections are created.
+Within the **MVP** product boundary of the **current academic release** (the four core threat categories in [final-product.md](final-product.md); **single-tenant** deployment), AegisCore risk scoring is a prioritization layer that runs after those detections are created.
 
 **Dependency note:** `tensorflow-cpu` currently constrains **NumPy** to a range below 2.2; the API package pins NumPy/Pandas accordingly so installs resolve cleanly (including Windows).
 It does not replace the detector. The scoring runtime converts normalized alert context into a

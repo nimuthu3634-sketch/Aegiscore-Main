@@ -12,10 +12,10 @@ For the **Ubuntu Server + VirtualBox lab topology** (SOC host, Wazuh manager, mo
 
 ## Scope Guardrails
 
-- Supported detections remain limited to:
+- Supported detections match the academic MVP four-category scope:
   - `brute_force`
-  - `file_integrity_violation`
   - `port_scan`
+  - `file_integrity_violation`
   - `unauthorized_user_creation`
 - Wazuh events outside that scope are rejected and logged in `ingestion_failures`.
 - Frontend contracts do not change; Wazuh complexity stays inside backend integration services.
@@ -107,7 +107,7 @@ Key fields:
 4. **AegisCore API:** `GET /integrations/wazuh/connector/status` — after a poll cycle, `metrics.total_ingested` (and related counters) should move.
 5. **AegisCore UI:** Alerts list → filter **brute_force** → open detail → confirm score, incident link, and response history per policy.
 
-**Checklist (any in-scope Wazuh-driven scenario):**
+**Checklist (any MVP-scope Wazuh-driven scenario):**
 
 1. Event appears in Wazuh manager.
 2. Connector status metrics increase (`total_fetched`, `total_ingested`).

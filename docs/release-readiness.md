@@ -12,7 +12,7 @@ See also [release-candidate-note.md](release-candidate-note.md).
 
 ## Intended Readiness Level
 
-AegisCore is the **MVP** for this project: **single-tenant**, **commercial-style**, **enterprise-inspired** in architecture and UX. Threat coverage in the **academic release** is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** (see `README.md` for items **beyond this release**).
+AegisCore is the **MVP** for this project: **single-tenant**, **commercial-style**, **enterprise-inspired** in architecture and UX. Threat coverage in the **academic release** is limited to **`brute_force`**, **`port_scan`**, **`file_integrity_violation`**, and **`unauthorized_user_creation`**—the four core threat categories described in [final-product.md](final-product.md) (broader families are **roadmap-only**). See `README.md` for items **beyond this release**.
 
 ## Product Positioning
 
@@ -137,7 +137,7 @@ Executed in the maintainer environment **without** Docker Desktop / API: fronten
 | Frontend lint | `npm run lint:web` | Passed | No ESLint errors. |
 | Frontend build | `npm run build:web` | Passed | Vite production build succeeded. |
 | Playwright | `npm run test:web:e2e` | Passed | **16 passed**, 0 skipped (API on `127.0.0.1:8000`, DB seeded). |
-| Attack scenario validation | `py -3 scripts/validate_attack_scenarios.py` | Passed | All four supported scenarios validated end-to-end against the same API. |
+| Attack scenario validation | `py -3 scripts/validate_attack_scenarios.py` | Passed | All four validated threat categories validated end-to-end against the same API. |
 
 **After 2026-04-08:** the suite gained one Playwright spec (`tests/operator-workflows.spec.ts`, simulated acknowledge failure). **Expected Playwright count is now 17** — re-run e2e to record an updated green snapshot before viva if you need a single dated row for all five checks.
 

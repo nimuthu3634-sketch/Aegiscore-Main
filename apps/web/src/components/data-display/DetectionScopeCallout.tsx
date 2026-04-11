@@ -1,16 +1,22 @@
 import { Badge } from "../ui/Badge";
 import { formatTokenLabel } from "../../lib/formatters";
-import { SUPPORTED_DETECTION_TYPES } from "../../lib/supportedDetections";
+import {
+  ACADEMIC_THREAT_SCOPE_DESCRIPTION,
+  ACADEMIC_THREAT_SCOPE_ROADMAP_NOTE,
+  SUPPORTED_DETECTION_TYPES
+} from "../../lib/supportedDetections";
 
 /**
- * Compact reminder of the four approved detections and the analyst workflow this console supports.
+ * Compact reminder of the academic MVP threat scope and the analyst workflow this console supports.
  */
 export function DetectionScopeCallout() {
   return (
     <div className="rounded-panel border border-brand-primary/30 bg-surface-subtle/50 px-4 py-4 md:px-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
         <div className="min-w-0 space-y-2">
-          <p className="type-label-md text-brand-primary">v1 threat scope — four detections</p>
+          <p className="type-label-md text-brand-primary">Academic MVP — threat detection scope</p>
+          <p className="max-w-3xl type-body-sm text-content-secondary">{ACADEMIC_THREAT_SCOPE_DESCRIPTION}</p>
+          <p className="max-w-3xl type-body-sm text-content-muted">{ACADEMIC_THREAT_SCOPE_ROADMAP_NOTE}</p>
           <p className="max-w-3xl type-body-sm text-content-secondary">
             <span className="font-medium text-content-primary">Review in order: </span>
             what happened (alerts and evidence), how serious it is (severity and risk score), what
