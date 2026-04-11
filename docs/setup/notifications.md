@@ -1,6 +1,6 @@
 # Notification Subsystem Setup
 
-AegisCore supports SME-friendly critical-incident notifications from backend-owned logic with auditable persistence.
+AegisCore supports **operator-grade** critical-incident notifications from backend-owned logic with auditable persistence—aligned with commercial SOC notification patterns within the MVP scope.
 
 ## Supported Channels
 

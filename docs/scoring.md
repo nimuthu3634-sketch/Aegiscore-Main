@@ -1,8 +1,10 @@
 # Risk Scoring
 
+**Final product context:** Risk scoring is a component of the **AegisCore** SOC platform MVP (see **[final-product.md](final-product.md)**).
+
 ## Purpose
 
-Within the **MVP** product boundary (four supported detections only; SME/lab, single-tenant), AegisCore risk scoring is a prioritization layer that runs after those detections are created.
+Within the **MVP** product boundary of the **current academic release** (four supported detections only; **single-tenant** deployment), AegisCore risk scoring is a prioritization layer that runs after those detections are created.
 
 **Dependency note:** `tensorflow-cpu` currently constrains **NumPy** to a range below 2.2; the API package pins NumPy/Pandas accordingly so installs resolve cleanly (including Windows).
 It does not replace the detector. The scoring runtime converts normalized alert context into a
@@ -20,7 +22,7 @@ The backend baseline engine is the production-safe default.
 - Version source: `SCORING_BASELINE_VERSION`
 - Output: score, confidence, priority label, explanation, feature snapshot
 
-The baseline uses explainable additive rules over approved SME SOC context:
+The baseline uses explainable additive rules over **standard tier-1 SOC-style** context fields:
 
 - source type
 - detection type

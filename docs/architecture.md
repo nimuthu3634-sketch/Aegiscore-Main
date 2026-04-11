@@ -1,8 +1,12 @@
 # Architecture Overview
 
-## Product Direction
+## Final product
 
-AegisCore is an **enterprise-inspired commercial SOC platform MVP** for this **final-year project**: **single-tenant**, **SME/lab** deployment. It centralizes alert review (from **system logs** and **network traffic**), incident investigation, explainable risk scoring, safe automated response, and practical reporting. **This build** does not target full global-enterprise production maturity or large-scale multi-tenant SaaS. Threat scope is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** only.
+**AegisCore** is the **final software product** described by this architecture: a **centralized SOC platform MVP** (`apps/web` + `apps/api` + PostgreSQL, with `ai` for TensorFlow-aligned training/inference). It implements **monitoring** (Wazuh/Suricata ingestion paths), **alert handling**, **incident workflows**, **explainable AI-assisted risk scoring** (baseline + optional **TensorFlow/Keras**), **reporting/export**, and **controlled automated response**. The **academic release** enforces **only** four validated detections: **`brute_force`**, **`port_scan`**, **`file_integrity_violation`**, **`unauthorized_user_creation`**. Canonical wording: [final-product.md](final-product.md).
+
+## Product direction
+
+The **current academic release** delivers the capabilities above on a **modular, single-tenant** codebase aligned with **enterprise SOC direction**. The documentation does **not** imply unlimited threat catalogues, full production completeness, or multi-tenant SaaS maturity.
 
 ## Runtime Boundaries
 
@@ -62,7 +66,7 @@ AegisCore is an **enterprise-inspired commercial SOC platform MVP** for this **f
 - `analyst` can execute investigation workflows and read operational/reporting surfaces, but cannot mutate policy state or submit manual ingestion events.
 - Admin-only API mutations are explicit at route level (`PATCH /policies/{id}`, `POST /integrations/wazuh/events`, `POST /integrations/suricata/events`).
 - Analyst and admin both retain read/investigation access (`GET /policies`, connector status routes, alerts/incidents/responses/reports read APIs, and investigation workflow writes).
-- The role model is explicit and scoped for single-tenant SME operation; there is no enterprise RBAC matrix, tenant hierarchy, or custom role builder.
+- The role model is explicit and scoped for **single-tenant MVP** operation (`admin`, `analyst`); richer RBAC, tenant hierarchy, and custom role builders are **deferred** beyond the academic release.
 
 ## Scoring And Response Model
 
@@ -77,18 +81,18 @@ AegisCore is an **enterprise-inspired commercial SOC platform MVP** for this **f
 ## Reporting Model
 
 - Daily summaries focus on short-window SOC review.
-- Weekly summaries support broader SME operational review.
+- Weekly summaries support broader **operator-level** operational review within the MVP console.
 - Alert, incident, and response exports are explicit, typed, and auditable.
-- The reports surface stays operational and compact instead of adding enterprise BI complexity.
+- The reports surface is **operational-first** for the MVP; dedicated enterprise BI stacks are **out of scope** for this release.
 
 ## Dev And Operator Boundaries
 
 - Browser authentication remains explicit by default.
 - Optional local browser auto-auth is gated behind `VITE_ENABLE_DEV_AUTH_BOOTSTRAP=true`.
 - Raw payloads remain backend-owned and never need to be interpreted directly by the frontend.
-- Validation uses the real API surface with fixture-backed ingestion as the deterministic baseline, and optional live connector polling in VM/lab environments.
+- Validation uses the real API surface with fixture-backed ingestion as the deterministic baseline, and optional live connector polling in **evaluation** environments.
 
 ## Known Limitations
 
 - Browser tests validate core read paths and major write paths, but not every role-restriction or edge-path branch yet.
-- Some asset enrichment remains backend-derived rather than source-owned because the project stays intentionally SME-scoped.
+- Some asset enrichment remains backend-derived rather than source-owned, reflecting the **bounded academic release** rather than a full CMDB integration.

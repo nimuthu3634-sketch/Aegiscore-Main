@@ -19,7 +19,7 @@ The implementation order for frontend work should stay aligned to that blueprint
 
 ## 1. Brand Overview
 
-AegisCore is a premium, single-tenant SOC platform for SMEs. The UI should feel like a real operations console: calm under pressure, high-contrast, dense enough for analysts, and intentionally minimal. It should not read like a marketing site or a generic admin template.
+AegisCore is a premium, **single-tenant commercial-style SOC platform MVP** (university project). The UI should feel like a **real enterprise operations console**: calm under pressure, high-contrast, dense enough for analysts, and intentionally minimal. It should not read like a marketing site or a generic admin template.
 
 Brand principles:
 
@@ -588,7 +588,7 @@ Key UI rules:
 
 - Hostnames and IPs should be easy to compare and copy
 - Asset detail should connect directly to incidents and recent alerts
-- Keep the SME focus: inventory should remain practical, not overloaded with enterprise CMDB concepts
+- Keep the **MVP focus**: inventory should remain practical, not overloaded with enterprise CMDB concepts
 
 Tablet behavior:
 
@@ -650,7 +650,7 @@ Tablet behavior:
 
 Purpose:
 
-- Provide operational summaries for SMEs without enterprise reporting complexity
+- Provide operational summaries suitable for **tier-1 triage** without enterprise reporting complexity in this release
 
 Desktop layout:
 

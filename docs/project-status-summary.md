@@ -1,20 +1,22 @@
 # AegisCore Project Status Summary
 
-**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for this final-year project: **single-tenant**, **SME/lab** deployment, with **honest academic scope** (four detections only).
+## Final product
 
-## 1. System Overview
+**AegisCore** is the **final submitted product**: a **centralized SOC platform MVP** (web console + backend + database) covering **monitoring**, **alert handling**, **incident workflows**, **explainable AI-assisted risk scoring** (baseline + optional **TensorFlow**), **reporting**, and **controlled automated response**. The **academic release** implements **only** **`brute_force`**, **`port_scan`**, **`file_integrity_violation`**, and **`unauthorized_user_creation`**. Full definition: **[final-product.md](final-product.md)**.
 
-AegisCore is the **submission MVP** for this project: **single-tenant**, **SME/lab** SOC operation, presented in an **enterprise-inspired** product style. It centralizes security event review (logs and network traffic), alert prioritization with **AI-assisted scoring** (deterministic baseline default; optional **TensorFlow** trainable model), incident investigation, basic automated response, and operational reporting.
+## 1. System overview
 
-**Approved scope** matches the four supported detections only: `brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`. **Out of scope**: ransomware/phishing/APT/zero-day product claims, large-scale enterprise deployment, and full commercial-grade SOC breadth.
+**AegisCore** is the **submission MVP** named above: **single-tenant**, **enterprise-inspired** in operator workflow, with **centralized visibility**, **alert triage**, **risk-based prioritization**, **incident handling**, **explainable AI-assisted scoring** (deterministic baseline default; optional **TensorFlow** trainable model), **controlled automated response**, and **operational reporting**—aligned with commercial SOC practice while **clearly bounding** the **academic release** to the four listed threats.
+
+**Approved scope** matches the four supported detections only: `brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`. **Beyond this release (documented, not implied):** ransomware/phishing/APT/zero-day product lines; claims of unlimited enterprise rollout; and parity with full commercial SOC suites.
 
 ### Product Positioning
 
-- **MVP**: complete backend-owned workflow for the four detections—ingestion, normalization, scoring, incidents, responses, reporting, authenticated access—not a prototype-only UI.
-- **Live connectors (lab-bounded)**:
+- **MVP**: complete backend-owned workflow for the four detections—ingestion, normalization, scoring, incidents, responses, reporting, authenticated access—delivered as a **substantive commercial-style build**, not a UI-only mock-up.
+- **Live connectors (evaluation-ready)**:
   - Wazuh: authenticated live polling with retries, pagination/checkpointing, dedupe, and status (common lab envelopes).
   - Suricata: `file_tail` on `eve.json` with checkpointing and retries; authenticated forwarding not implemented.
-- **Validation**: deterministic regression is primarily fixture- and test-backed; **VM/lab validation with simulated attacks** is supported via documented replay and `scripts/validate_attack_scenarios.py`.
+- **Validation**: deterministic regression is primarily fixture- and test-backed; **simulated-attack validation** is supported via documented replay and `scripts/validate_attack_scenarios.py`, with optional live connectors in **evaluation** environments.
 
 The implemented platform covers the full backend-owned workflow for a narrow and deliberate scope:
 
@@ -141,7 +143,7 @@ py -3 scripts/validate_attack_scenarios.py
 
 ## 7. Reports And Export Summary
 
-The reporting layer is practical and SME-oriented rather than enterprise-heavy. The backend exposes:
+The reporting layer is **operational-first** for the MVP (exportable summaries and CSV/JSON) rather than a full analytics platform. The backend exposes:
 
 - `GET /reports/daily-summary`
 - `GET /reports/weekly-summary`
@@ -168,7 +170,7 @@ The frontend Reports page uses those real endpoints for summary cards, distribut
 - add replay handling for ingestion failures
 - broaden repeatable lab validation coverage for intentionally gated destructive adapter paths
 - continue incremental frontend code splitting if the dashboard grows
-- extend reporting only where it remains practical for SME operations
+- extend reporting only where it remains practical for **operator workflows** within the MVP scope
 
 ## 10. Local Deployment Summary
 
@@ -228,13 +230,13 @@ Requirement traceability for proposal review is documented in [requirement-compl
 
 - the frontend currently assumes backend ownership of all integrations and scoring contracts
 - the four supported detections are the project boundary and should remain explicit in any review discussion
-- normal VM/lab operations should run connector-driven ingestion; manual ingestion endpoints are kept for test/demo tooling
+- normal **evaluation / demonstration** runs should use connector-driven ingestion when sources are configured; manual ingestion endpoints are kept for regression and panel tooling
 - dev auth bootstrap is opt-in and should usually remain disabled for realistic testing
 - local validation commands are stable and should be rerun before demos or submission packaging
 
-### Honest Project Position
+### MVP position statement (academic release)
 
-AegisCore is an **enterprise-inspired commercial SOC MVP** for this project—**single-tenant**, **SME/lab**—with **only** the four approved detections in scope. It delivers a complete ingest-to-report pipeline for those threats, with honest limits on connector variants, browser edge coverage, and production hardening.
+AegisCore is a **commercial-style SOC platform MVP** for this project—**single-tenant**, **enterprise-inspired**—with **only** the four **validated** detections in scope. It delivers a complete ingest-to-report pipeline for those threats, with **documented** limits on connector variants, browser edge coverage, and production hardening—appropriate for a **defensible university submission** and **panel-style demos**.
 
 ## 13. Viva Quick Defense
 
@@ -263,4 +265,4 @@ AegisCore is an **enterprise-inspired commercial SOC MVP** for this project—**
 
 ### Why This Is Still A Valid MVP
 
-Within the declared SME/lab boundary, AegisCore provides a complete, testable, and auditable SOC workflow from ingestion to response and reporting for the four in-scope detections. The remaining gaps are explicitly documented scope limits, not missing core pipeline functionality for that boundary.
+Within the **declared academic release boundary**, AegisCore provides a complete, testable, and auditable SOC workflow from ingestion to response and reporting for the four in-scope detections. The remaining gaps are **explicitly documented** scope limits—not missing core pipeline functionality for that boundary.

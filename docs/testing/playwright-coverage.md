@@ -1,6 +1,6 @@
 # Playwright Coverage
 
-Browser tests support the **MVP** product posture (**single-tenant**, **SME/lab**): they validate the real console against the four supported detections and **operator write paths**—not unlimited enterprise SOC breadth.
+Browser tests support the **MVP** product posture (**single-tenant**, **commercial-style** console): they validate the real console against the four supported detections and **operator write paths** within the **academic release** boundary—without implying unlimited enterprise SOC breadth.
 
 ## Operator workflow proof (checklist)
 
@@ -99,7 +99,7 @@ Update this line when you record a full green run in CI or locally:
 
 - *(local):* run `npm run test:web:e2e` with API up; expect **17** tests (or fewer if conditional skips apply—see below).
 
-### Conditional skips (honest branch coverage)
+### Conditional skips (documented branch coverage)
 
 In **other** environments (empty DB, missing incidents, or no alerts linked to incidents), the following may skip or narrow assertions:
 

@@ -2,23 +2,23 @@
 
 ## Final product declaration
 
-**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for this final-year project (**single-tenant**, **SME/lab**). Threat scope, connectors, notifications, and automated response are **lab-bounded** and **honestly limited** to the four approved detections, as described in this document and [project-status-summary.md](project-status-summary.md).
+The **final product** delivered for this project is **AegisCore**: a **centralized SOC platform MVP** (**single-tenant** web system) providing **monitoring**, **alert handling**, **incident workflows**, **explainable AI-assisted risk scoring** (baseline + optional **TensorFlow/Keras**), **reporting**, and **controlled automated response**. The **academic release** is scoped to **`brute_force`**, **`port_scan`**, **`file_integrity_violation`**, and **`unauthorized_user_creation`**; connectors, notifications, and automation are documented accordingly. Canonical definition: [final-product.md](final-product.md). Related summary: [project-status-summary.md](project-status-summary.md).
 
 ## Final Freeze Note
 
-This repository state is the **submission release candidate** for academic handoff and SME/lab deployment unless a new blocker is found. Any post–release-candidate change should be treated as **blocker-only** remediation, followed by a full re-run of the verification sequence and an update to this document and related checklists.
+This repository state is the **submission release candidate** for academic handoff and **evaluation / demonstration** deployment unless a new blocker is found. Any post–release-candidate change should be treated as **blocker-only** remediation, followed by a full re-run of the verification sequence and an update to this document and related checklists.
 
 See also [release-candidate-note.md](release-candidate-note.md).
 
 ## Intended Readiness Level
 
-AegisCore is the **MVP** for this project: **single-tenant**, **SME/lab**, **enterprise-inspired** in presentation. Threat coverage is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** (see `README.md` for explicit out-of-scope items).
+AegisCore is the **MVP** for this project: **single-tenant**, **commercial-style**, **enterprise-inspired** in architecture and UX. Threat coverage in the **academic release** is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** (see `README.md` for items **beyond this release**).
 
 ## Product Positioning
 
 - **Release readiness**: real backend-owned SOC workflows for those four detections only—dashboard, ingestion/normalization, **AI-assisted risk scoring** (baseline + optional TensorFlow model), incidents, responses, reporting/export.
-- **Live connectors (lab-bounded)**: Wazuh polling and Suricata `file_tail` as documented; not universal vendor coverage or enterprise SOAR.
-- **Validation**: deterministic release checks are fixture- and browser/API-test-backed; **VM/lab simulated-attack validation** is documented and repeatable (`scripts/validate_attack_scenarios.py`, operator guides).
+- **Live connectors (evaluation-ready)**: Wazuh polling and Suricata `file_tail` as documented for **reference configurations**; additional vendor profiles and SOAR-class orchestration are **natural extensions** beyond the academic release.
+- **Validation**: deterministic release checks are fixture- and browser/API-test-backed; **simulated-attack validation** is documented and repeatable (`scripts/validate_attack_scenarios.py`, operator guides), including optional **university lab / pilot** setups.
 
 ## Local Release Checklist
 
@@ -35,14 +35,14 @@ AegisCore is the **MVP** for this project: **single-tenant**, **SME/lab**, **ent
 
 ### Security And Access
 
-- `JWT_SECRET_KEY` is set to a non-placeholder value outside throwaway local work
+- `JWT_SECRET_KEY` is set to a non-placeholder value for any **shared evaluation**, **demo**, or **submission** environment
 - `VITE_ENABLE_DEV_AUTH_BOOTSTRAP=false` unless temporary local testing explicitly needs it
 - destructive automated response remains disabled unless adapters and controls are understood
 
 ### Data Flow
 
-- live Wazuh and Suricata connector status endpoints are healthy for configured lab sources
-- live connectors are enabled for normal VM/lab ingestion (`WAZUH_CONNECTOR_ENABLED=true`, `SURICATA_CONNECTOR_ENABLED=true`)
+- live Wazuh and Suricata connector status endpoints are healthy for configured **evaluation** sources
+- live connectors are enabled for normal **evaluation / demonstration** ingestion (`WAZUH_CONNECTOR_ENABLED=true`, `SURICATA_CONNECTOR_ENABLED=true`)
 - normalized alerts appear in the list and detail UI
 - scoring metadata is visible in alert and incident detail
 - policy-driven responses appear in response history
@@ -107,13 +107,13 @@ py -3 scripts/validate_attack_scenarios.py
 - add Suricata authenticated forwarding mode beyond `file_tail`
 - extend browser coverage to role-restriction and remaining edge-case mutation paths
 - add background replay handling for failed ingestions
-- broaden lab verification coverage for explicitly gated destructive adapter paths
+- broaden **evaluation-environment** verification coverage for explicitly gated destructive adapter paths
 - continue splitting the frontend bundle if the console grows substantially
 
 ## Requirement Traceability
 
 - Proposal/requirement alignment evidence is maintained in [requirement-compliance-matrix.md](requirement-compliance-matrix.md).
-- Use that matrix during review to separate implemented behavior from intentional local/lab constraints.
+- Use that matrix during review to separate implemented behavior from **documented MVP constraints** of the academic release.
 
 ## Latest verification snapshot
 

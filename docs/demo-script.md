@@ -1,10 +1,10 @@
 # AegisCore Demo Script
 
-**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for this final-year project (**single-tenant**, **SME/lab**).
+**Final product:** **AegisCore** is the **submitted centralized SOC platform MVP** (single-tenant web app)—**monitoring**, **alerts**, **incidents**, **explainable AI-assisted scoring** (baseline + optional **TensorFlow**), **reporting**, **controlled automated response**—scoped to four detections. See **[final-product.md](final-product.md)**.
 
 ## Demo Goal
 
-Present AegisCore as that **commercial-style MVP**, with **honest academic boundaries** and a real end-to-end workflow for **only** these detections:
+Present **AegisCore** as that **final product**: a **transparent academic release** with a real end-to-end workflow for **only** these **validated** detections:
 
 - `brute_force`
 - `file_integrity_violation`
@@ -53,7 +53,7 @@ Use this for tight viva time windows.
    - say: "Authentication is real JWT-based access, not a mocked bypass."
 2. **Dashboard (`/overview`)**
    - show totals, high-risk indicators, recent activity panels, and the **v1 threat scope** callout (four detections + analyst review order)
-   - say: "This is a live summary of normalized in-scope SOC data—not a generic enterprise dashboard."
+   - say: "This is a live summary of normalized in-scope SOC data—**MVP-focused** for triage and review within the four-detection academic release."
 3. **Alert -> Incident (`/alerts` then `/alerts/{id}` then `/incidents/{id}`)**
    - open one high-risk alert, show score explanation + raw payload + linked incident
    - open linked incident and show timeline/response history
@@ -62,14 +62,14 @@ Use this for tight viva time windows.
    - show auditable response outcomes
    - show policy table with role-aware controls
    - trigger one export on Reports
-   - say: "Automation is policy-driven and auditable, with practical reporting for SMEs."
+   - say: "Automation is policy-driven and auditable, with **operator-grade** exports suitable for incident review and governance evidence."
 
 ## 7-10 Minute Demo Path (Full Review)
 
 Use this when examiners want evidence depth.
 
 1. **Open with positioning (20-30s)**
-   - say: "AegisCore is an enterprise-inspired SOC MVP for this project—single-tenant, four detections only, lab-bounded—not unlimited enterprise SaaS."
+   - say: "AegisCore is a **commercial-style SOC platform MVP** for this university project: **single-tenant**, **enterprise-inspired workflow**, **four validated detections** in the **current academic release**—**transparent** scope, not an unlimited production catalogue."
 2. **Login and role model (`/login`)**
    - sign in as admin
    - note admin/analyst split and backend enforcement
@@ -117,7 +117,7 @@ This remains a real backend flow (ingestion, normalization, scoring, incidenting
 ## Viva-Defense Notes During Demo
 
 - Why valid final product: complete scoped workflow is implemented and validated end-to-end.
-- Why not enterprise: intentionally single-tenant SME/lab design boundary.
+- MVP design choice: **single-tenant** architecture and **bounded detection catalog** keep the submission **defensible, testable, and panel-ready** while preserving a **scale-out direction**.
 - Why four detections: explicit requirement boundary to keep implementation defensible and testable.
 - Where Q&A is documented: [viva-qa.md](viva-qa.md).
 

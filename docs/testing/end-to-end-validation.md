@@ -1,12 +1,12 @@
 # AegisCore End-to-End Validation
 
-**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for this final-year project (**single-tenant**, **SME/lab**).
+**Final product:** **AegisCore** is the **centralized SOC platform MVP** under test (**single-tenant**). Definition: **[final-product.md](../final-product.md)**.
 
-This document supports validation of that **honest MVP** posture. Scope is intentionally limited to the four supported detections:
+This document validates that **transparent MVP** posture. The **current academic release** is intentionally limited to the four supported detections:
 
 - `brute_force`
-- `file_integrity_violation`
 - `port_scan`
+- `file_integrity_violation`
 - `unauthorized_user_creation`
 
 The goal of this validation pass is to prove the real application flow works end to end for those scenarios only:

@@ -1,8 +1,8 @@
 # Final Submission Checklist
 
-**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for this final-year project (**single-tenant**, **SME/lab**).
+**Final product:** **AegisCore** is the **submitted end deliverable**—the **centralized SOC platform MVP** (single-tenant web application: console, API, database, optional TensorFlow scoring artifacts) implementing **monitoring**, **alerts**, **incidents**, **explainable AI-assisted risk scoring**, **reporting**, and **controlled automated response**, scoped to **`brute_force`**, **`port_scan`**, **`file_integrity_violation`**, and **`unauthorized_user_creation`**. See **[final-product.md](final-product.md)**.
 
-This checklist is the final handoff gate for that MVP, with threat scope **limited to the four supported detections only** and **no false claims** of broader coverage or full enterprise production maturity.
+This checklist is the final handoff gate for that product, with **no overstated claims** of broader coverage or full production completeness beyond the academic release.
 
 ## 1) Pre-Submission Checks
 

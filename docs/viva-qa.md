@@ -1,8 +1,12 @@
 # AegisCore Viva Q&A
 
+## Final product (one sentence)
+
+**AegisCore** is the **final submitted product**: a **centralized SOC platform MVP** with **monitoring**, **alerts**, **incidents**, **explainable AI-assisted risk scoring** (baseline + optional **TensorFlow**), **reporting**, and **controlled automated response**, limited to **`brute_force`**, **`port_scan`**, **`file_integrity_violation`**, and **`unauthorized_user_creation`**. Full definition: **[final-product.md](final-product.md)**.
+
 ## 1-Minute Positioning
 
-AegisCore is an **enterprise-inspired commercial SOC platform MVP** for this project: **single-tenant**, **SME/lab**, with **truthful** scope—it monitors **logs** (Wazuh) and **network traffic** (Suricata), detects only **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`**, provides a **centralized dashboard**, **AI-assisted risk scores** (baseline + optional **TensorFlow** model), **basic automated response**, and full **incident/response recording**, validated in VM/lab with **simulated attacks**. It does not claim ransomware/phishing/APT/zero-day coverage or full global-enterprise SOC maturity.
+**AegisCore** is the **delivered coursework product** above: **single-tenant**, **transparently scoped** to the four detections—demonstrating **centralized monitoring**, **alert triage**, **AI-assisted prioritization** (baseline + optional **TensorFlow** model), **incident handling**, **controlled automated response**, and **audit-backed recording**, validated with **simulated attacks** and optional live connectors in **evaluation** environments. The release does **not extend to** ransomware/phishing/APT/zero-day product lines or claims of **full** global-enterprise production maturity.
 
 ## Concise Viva Defense
 
@@ -25,18 +29,18 @@ AegisCore is an **enterprise-inspired commercial SOC platform MVP** for this pro
 ### What Is Still Limited
 
 - Suricata live connector currently uses `file_tail` mode for `eve.json`
-- Wazuh live compatibility is designed around common lab envelope variants
+- Wazuh live compatibility is designed around **common reference API envelope** variants used in evaluation setups
 - deterministic acceptance validation remains primarily fixture-backed
 - destructive live adapter behavior is intentionally gated and disabled by default
 
-### Why It Is Still A Valid Final Scoped Product
+### Why it remains a defensible MVP submission
 
 The core SOC pipeline is fully implemented and demonstrable within declared scope: ingest -> normalize -> score -> incident -> response -> report. Remaining items are explicitly documented boundary limits rather than missing core product flow.
 
 ## Likely Examiner Questions (Top 10)
 
 1. **Why do you call this a product and not just a prototype?**  
-   It is positioned as an **enterprise-inspired commercial SOC MVP** for this project: persistent data model, real APIs, role enforcement, operational docs, and repeatable validation—including VM/lab simulated-attack scenarios. The boundary is narrow (four detections, SME/lab), but the pipeline is implemented end-to-end, not a mock-up.
+   It is positioned as a **commercial-style SOC platform MVP** for this project: persistent data model, real APIs, role enforcement, operational docs, and repeatable validation—including simulated-attack scenarios and optional **evaluation-lab** connectors. The **detection catalog** is intentionally narrow (four validated types), but the **operational pipeline** is implemented end-to-end—not a mock-up.
 
 2. **Why only four detections?**  
    The project intentionally enforces a bounded threat scope (`brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`) to stay defensible, testable, and aligned with stated requirements.
@@ -53,8 +57,8 @@ The core SOC pipeline is fully implemented and demonstrable within declared scop
 6. **What are the major current limitations?**  
    Suricata authenticated forwarding is not implemented, Wazuh compatibility is tuned for common envelopes, deterministic validation is fixture-first, and enterprise orchestration features are out of scope.
 
-7. **Why is this suitable for SMEs?**  
-   It focuses on practical SOC essentials (triage, incidenting, safe automation, reporting) without enterprise complexity, making operation feasible in local/lab SME contexts.
+7. **Why is this credible as a commercial-style SOC prototype?**
+   It focuses on **core SOC operator workflows** (visibility, triage, incidenting, controlled automation, reporting) that appear in **enterprise platforms**, while keeping the **academic release** bounded to **four validated detections**—a realistic pattern for **MVP → roadmap** delivery.
 
 8. **How are roles enforced?**  
    Backend JWT role checks are authoritative (`admin` and `analyst`). Sensitive mutations (policy updates, manual ingestion) are admin-only; frontend mirrors this with role-aware controls.

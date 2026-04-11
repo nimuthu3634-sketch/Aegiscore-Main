@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This runbook is the concise day-2 operations guide for local/lab AegisCore operation in SME scope.
+This runbook is the concise day-2 operations guide for **evaluation**, **demonstration**, and **reference** deployments of the **academic-release** MVP.
 
 ## Reference: Ubuntu VM lab (live Wazuh + Suricata)
 

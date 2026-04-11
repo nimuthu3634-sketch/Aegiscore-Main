@@ -125,4 +125,4 @@ See also the **Live lab verification** section in [ubuntu-vm-lab-live-soc.md](ub
 - Connector polling uses page-size plus offset pagination and is bounded by `WAZUH_MAX_PAGES_PER_CYCLE` per cycle.
 - Duplicate protection remains enforced at ingestion by `source + external_id`.
 - Raw payload snapshots are preserved in `raw_alerts` and parse failures in `ingestion_failures`.
-- For single-tenant SME operation, run one API instance with the connector enabled to avoid redundant polling across multiple connector workers.
+- For **single-tenant MVP** operation, run one API instance with the connector enabled to avoid redundant polling across multiple connector workers.

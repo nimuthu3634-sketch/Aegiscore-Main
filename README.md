@@ -1,14 +1,16 @@
 # AegisCore
 
-**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for a **final-year university project**: a **single-tenant** security operations console aimed at **SME/lab** deployment. It ingests Wazuh (logs) and Suricata (network) events, normalizes them into a shared alert model, assigns **AI-assisted risk scores** (deterministic baseline by default; optional **TensorFlow (Keras)** model when enabled), groups incidents, records analyst workflow, evaluates safe automated-response policies, and exposes the result through a backend-owned web console.
+## Final product (proposal deliverable)
 
-**This submission implements only four threat detections** (see below). It does **not** claim full global-enterprise production completeness, unlimited threat coverage, or multi-tenant SaaS maturity.
+**AegisCore** is the **final application product** for this project: a **centralized SOC platform MVP**—a **single-tenant web system** (React + TypeScript analyst console, FastAPI backend, PostgreSQL, optional **TensorFlow/Keras** model artifacts for trainable risk scoring). It delivers **monitoring** (Wazuh and Suricata), **alert handling**, **incident investigation workflows**, **explainable AI-assisted risk scoring** (deterministic baseline by default; optional TensorFlow path when enabled), **reporting and export**, and **policy-driven, controlled automated response** with audit trails. The **academic release** implements **only** four **validated** threat detections, listed below.
 
-**Supported detections only** (no others are in scope):
+Canonical wording for reports and panels: **[docs/final-product.md](docs/final-product.md)**.
+
+**Supported detections only** (no others are in scope for this release):
 
 - `brute_force`
-- `file_integrity_violation`
 - `port_scan`
+- `file_integrity_violation`
 - `unauthorized_user_creation`
 
 **Explicitly out of scope** for this project: ransomware-specific pipelines, phishing campaigns, APT hunting, zero-day detection claims, multi-tenant SaaS, and other full commercial-grade SOC features beyond the bounded workflow above.
@@ -17,9 +19,9 @@
 
 If you are reviewing AegisCore for final academic submission, use this quick flow:
 
-1. Understand the product scope:
-   - enterprise-inspired SOC MVP, single-tenant SME/lab workflow
-   - intentionally limited to the four detections listed above
+1. Understand the **final product** (see [docs/final-product.md](docs/final-product.md)):
+   - **AegisCore** is the submitted **centralized SOC platform MVP** (web app + backend + data plane)
+   - **Academic release** limited to the four **validated** detections listed below
 2. Run the platform:
    - `docker compose up --build -d`
    - `docker compose exec api alembic upgrade head`
@@ -41,14 +43,14 @@ If you are reviewing AegisCore for final academic submission, use this quick flo
      - [docs/setup/operator-guide.md](docs/setup/operator-guide.md)
      - [docs/setup/analyst-guide.md](docs/setup/analyst-guide.md)
 
-## Product Positioning
+## Product positioning
 
-**Unified stance:** AegisCore is presented as an **enterprise-inspired commercial SOC platform MVP**—**single-tenant**, **SME/lab**—while staying honest about **academic scope**: only the four listed detections are implemented, and validation is **lab-bounded** (fixtures, automated tests, and documented **simulated attacks** / optional live connectors).
+**Unified stance:** The **final product** is the **AegisCore** SOC platform MVP above—**enterprise-inspired**, **single-tenant**—with a **transparent academic scope**: this **release** implements **only** the four validated detections below. Validation emphasizes **repeatable fixtures**, **automated tests**, and documented **simulated-attack** scenarios; optional **live Wazuh/Suricata connectors** support evaluation and demonstration environments.
 
-- **Implemented for this MVP**: centralized dashboard; log and network ingestion for the four detections only; risk scoring (deterministic baseline + optional TensorFlow trainable path); incident and response recording; basic automated response; JWT roles (`admin` / `analyst`); reporting and export.
-- **Live connectors (lab-bounded)**: Wazuh authenticated polling is implemented with retries, pagination/checkpointing, dedupe, and status visibility (common lab envelope variants). Suricata live ingestion is **`file_tail` on `eve.json`** with checkpointing, retries, dedupe, and status visibility; authenticated forwarding mode is not implemented.
-- **Operational default (VM/lab)**: with `WAZUH_CONNECTOR_ENABLED=true` and `SURICATA_CONNECTOR_ENABLED=true`, live connectors are the normal path; manual ingestion remains for deterministic test/demo fallback.
-- **Validation**: repeatable proof is fixture- and test-driven; live connector verification is optional in a configured lab.
+- **Implemented for this MVP**: centralized visibility; log and network ingestion for the four detections only; explainable risk scoring (deterministic baseline + optional TensorFlow trainable path); incident lifecycle and response history; controlled automated response; JWT roles (`admin` / `analyst`); operational reporting and export.
+- **Live connectors (evaluation-ready)**: Wazuh authenticated polling includes retries, pagination/checkpointing, dedupe, and status visibility (reference API envelope variants). Suricata live ingestion is **`file_tail` on `eve.json`** with checkpointing, retries, dedupe, and status visibility; authenticated forwarding mode is not implemented in this release.
+- **Operational default (evaluation / demonstration)**: with `WAZUH_CONNECTOR_ENABLED=true` and `SURICATA_CONNECTOR_ENABLED=true`, live connectors are the normal path; manual ingestion remains for deterministic regression and panel demos.
+- **Validation**: repeatable evidence is fixture- and test-driven; live connector checks are optional where sources are configured.
 
 ## Repository Tour
 
@@ -63,6 +65,7 @@ If you are reviewing AegisCore for final academic submission, use this quick flo
 
 ## Submission Docs
 
+- [Final product definition](docs/final-product.md)
 - [Project Status Summary](docs/project-status-summary.md)
 - [Demo Script](docs/demo-script.md)
 - [Requirement Compliance Matrix](docs/requirement-compliance-matrix.md)
@@ -152,7 +155,7 @@ Role model is intentionally minimal and single-tenant:
 - `analyst`: investigation and reporting access across alerts, incidents, responses, assets, dashboard, and reports
 - frontend behavior mirrors this boundary: policy toggle controls are admin-only and analyst sessions see read-only policy state
 
-This is authenticated role-based access for scoped SME/lab v1, not enterprise RBAC.
+This MVP ships a **focused admin/analyst model** for single-tenant operations; richer RBAC matrices are a natural extension beyond the academic release.
 
 Current live workflow endpoints:
 
@@ -188,7 +191,7 @@ Current ingestion endpoints:
 
 Server-side role enforcement is authoritative; UI restrictions are an operator UX layer and do not replace backend permission checks.
 
-Operational note: in normal VM/lab use, enable both live connectors and treat manual ingestion routes as test/demo tools.
+Operational note: in **evaluation and pilot-style deployments**, enable both live connectors when sources are available; treat manual ingestion routes as regression and demonstration tooling.
 
 Operational health endpoints:
 
@@ -202,10 +205,11 @@ Operational health endpoints:
 - Raw source payloads are preserved for auditability and debugging.
 - Automated response is policy-driven and limited to the supported detection scope.
 - Destructive live actions remain blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.
-- This MVP is intentionally single-tenant and SME/lab-oriented. It does not include multi-tenant SaaS or full enterprise SOAR complexity.
+- This MVP is **intentionally single-tenant** and optimized for **transparent evaluation**; **multi-tenant SaaS** and **full SOAR-class orchestration** are **out of scope** for the **current academic release** and documented as future-scale directions.
 
 ## Documentation Map
 
+- [Final product definition](docs/final-product.md)
 - [Architecture](docs/architecture.md)
 - [Environment Reference](docs/environment.md)
 - [Scoring](docs/scoring.md)

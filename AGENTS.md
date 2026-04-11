@@ -2,14 +2,16 @@
 
 ## Mission
 
-AegisCore is an **enterprise-inspired commercial SOC platform MVP** for this **final-year university project**: a **single-tenant** SOC console for **SME/lab** deployment. It monitors **system logs** (Wazuh) and **network traffic** (Suricata), implements **only** the four approved detections, and provides dashboard, AI-assisted risk scoring (baseline + optional TensorFlow path), basic automated response, and incident/response recording. Positioning is **commercial-style**; claims stay **truthful**—this build is **not** a fully production-complete global enterprise platform and **not** a toy demo.
+**Final product:** **AegisCore** is the **delivered end product** for this repository—a **centralized SOC platform MVP** (single-tenant web app: console + API + database) that implements **monitoring**, **alert handling**, **incident workflows**, **explainable AI-assisted risk scoring** (baseline + optional **TensorFlow**), **reporting**, and **controlled automated response**, scoped to the four **validated** detections in `AGENTS.md` / `README.md`. See **[docs/final-product.md](docs/final-product.md)** for the canonical definition aligned to proposal language.
 
-Business goal: deliver a defensible, testable end-to-end SOC workflow within that honest scope—not unlimited commercial-grade or large-scale enterprise features.
+AegisCore is developed as a **university final-year project**, **enterprise-inspired** in workflow, and **transparent** about MVP bounds: this release does **not** imply unlimited threat coverage, full production completeness, or multi-tenant SaaS maturity.
+
+Business goal: deliver a **defensible, testable** end-to-end SOC workflow that mirrors **commercial operator practice**, within the **explicit academic scope**—not a claim of unlimited commercial-grade breadth.
 
 ## Required Workflow
 
 - Use `/plan` first for every major step in this repository.
-- Treat this project as an SME/lab-oriented SOC MVP for security coursework, not as a throwaway demo or sandbox app.
+- Treat this project as a **substantive commercial-style SOC MVP** for security coursework—not a disposable UI exercise.
 - After each milestone, run validations for the changed areas and fix failures before moving on.
 - After each step, summarize the changed files.
 - Update docs continuously as behavior, architecture, setup, or env vars change.
@@ -44,7 +46,7 @@ Do not add extra detection types, speculative threat modules, or enterprise-only
 - Use modular architecture, not a monolith with random folders.
 - Use environment variables for all secrets and integration URLs.
 - Preserve raw source payloads for debugging and auditability.
-- Keep the system single-tenant and SME-focused.
+- Keep the system **single-tenant** and **MVP-scoped** to the four validated detections unless scope is explicitly expanded.
 - Do not add enterprise multi-tenant SaaS complexity.
 
 ## Frontend Product And Design Rules
@@ -115,6 +117,6 @@ Do not introduce incompatible replacement stacks unless the user explicitly asks
 - Keep integrations with Wazuh and Suricata inside backend service boundaries.
 - Normalize incoming data into a common internal alert schema before incident creation or scoring.
 - Preserve raw upstream payloads alongside normalized data for auditability and debugging.
-- Keep automation and response capabilities basic, explainable, and appropriate for SMEs.
+- Keep automation and response capabilities **basic, explainable, and controlled**—appropriate for an **academic MVP** that still mirrors **commercial SOC guardrails**.
 - Maintain clear history for audit events, incident changes, and response actions.
 - Favor clear module boundaries across ingestion, normalization, scoring, incidents, response, audit, and UI layers.

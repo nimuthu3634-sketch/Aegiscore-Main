@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This guide is for operators running **AegisCore**, an **enterprise-inspired commercial SOC MVP** for this project (**single-tenant**, **SME/lab**). It covers safe startup, validation (including **simulated-attack** replay), and safety controls—not a claim of full large-scale enterprise deployment.
+This guide is for operators running **AegisCore**, the **final centralized SOC platform MVP** for this project (**single-tenant**; see **[final-product.md](../final-product.md)**). It covers safe startup, validation (including **simulated-attack** replay), and safety controls for **evaluation, demonstration, and pilot-style** deployments—while documenting limits of the **academic release** relative to full-scale production rollouts.
 
 For a concise command-first operating sequence, use the [Operator Runbook](operator-runbook.md).
 

@@ -112,4 +112,4 @@ See [ubuntu-vm-lab-live-soc.md](ubuntu-vm-lab-live-soc.md) for the full lab role
 - Duplicate protection remains enforced by `source + external_id` in ingestion.
 - Raw source payloads are preserved in `raw_alerts`.
 - Malformed `eve.json` lines are logged into `ingestion_failures` with line/offset metadata.
-- For single-tenant SME operation, run one connector-enabled API instance to avoid duplicate tailing from multiple pollers.
+- For **single-tenant MVP** operation, run one connector-enabled API instance to avoid duplicate tailing from multiple pollers.
