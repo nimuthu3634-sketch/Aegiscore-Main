@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This guide is for analysts using the AegisCore console—the **final scoped v1**, **single-tenant** **SME/lab** product (**not** an enterprise commercial SOC). Investigations apply only to the four supported detections.
+This guide is for analysts using the AegisCore console—an **enterprise-inspired SOC MVP**, **single-tenant**, **SME/lab**. Investigations apply **only** to the four supported detections (honest academic scope).
 
 ## Sign In
 

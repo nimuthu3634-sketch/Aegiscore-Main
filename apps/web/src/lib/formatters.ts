@@ -16,7 +16,9 @@ export function formatScoreMethodLabel(value: string | null | undefined) {
     case "baseline_rules":
       return "Baseline rules";
     case "sklearn_model":
-      return "Scikit-learn model";
+      return "Legacy trainable model";
+    case "tensorflow_model":
+      return "TensorFlow model";
     default:
       return formatTokenLabel(value);
   }

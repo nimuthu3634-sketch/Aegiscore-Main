@@ -125,7 +125,7 @@ class Settings(BaseSettings):
         alias="SCORING_BASELINE_VERSION",
     )
     scoring_model_path: str = Field(
-        default="/srv/ai/models/aegiscore-risk-priority-model.joblib",
+        default="/srv/ai/models/aegiscore-risk-priority-model.keras",
         alias="SCORING_MODEL_PATH",
     )
     scoring_model_metadata_path: str = Field(

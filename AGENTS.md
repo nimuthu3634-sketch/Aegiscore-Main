@@ -2,14 +2,14 @@
 
 ## Mission
 
-AegisCore is the **final scoped v1 product** for this project: a **single-tenant** SOC console for **SME/lab** deployment. It monitors **system logs** (Wazuh) and **network traffic** (Suricata), supports only the four approved detections, and provides dashboard, risk scoring, basic automated response, and incident/response recording. It is **not an enterprise commercial SOC platform** and not a toy demo.
+AegisCore is an **enterprise-inspired commercial SOC platform MVP** for this **final-year university project**: a **single-tenant** SOC console for **SME/lab** deployment. It monitors **system logs** (Wazuh) and **network traffic** (Suricata), implements **only** the four approved detections, and provides dashboard, AI-assisted risk scoring (baseline + optional TensorFlow path), basic automated response, and incident/response recording. Positioning is **commercial-style**; claims stay **truthful**—this build is **not** a fully production-complete global enterprise platform and **not** a toy demo.
 
-Business goal: deliver a defensible, testable end-to-end SOC workflow within that scope—not full commercial-grade or large-scale enterprise features.
+Business goal: deliver a defensible, testable end-to-end SOC workflow within that honest scope—not unlimited commercial-grade or large-scale enterprise features.
 
 ## Required Workflow
 
 - Use `/plan` first for every major step in this repository.
-- Treat this project as the final scoped v1 product for SME/lab security teams, not as a throwaway demo or sandbox app.
+- Treat this project as an SME/lab-oriented SOC MVP for security coursework, not as a throwaway demo or sandbox app.
 - After each milestone, run validations for the changed areas and fix failures before moving on.
 - After each step, summarize the changed files.
 - Update docs continuously as behavior, architecture, setup, or env vars change.
@@ -88,7 +88,7 @@ Use the connected Figma plugin/tool for design system work and frontend page des
 - Reverse proxy: NGINX
 - Containerization: Docker + Docker Compose
 - Auth: JWT
-- AI: Python + scikit-learn + pandas + numpy
+- AI: Python + TensorFlow (Keras) + pandas + numpy for optional trainable risk scoring
 - Testing: Pytest + Playwright
 
 Do not introduce incompatible replacement stacks unless the user explicitly asks for a change.

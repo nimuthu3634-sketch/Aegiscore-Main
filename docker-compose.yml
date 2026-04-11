@@ -72,7 +72,7 @@ services:
       DEV_SEED_ANALYST_PASSWORD: ${DEV_SEED_ANALYST_PASSWORD:-AegisCore123!}
       SCORING_STRATEGY: ${SCORING_STRATEGY:-baseline}
       SCORING_BASELINE_VERSION: ${SCORING_BASELINE_VERSION:-baseline_v1}
-      SCORING_MODEL_PATH: ${SCORING_MODEL_PATH:-/srv/ai/models/aegiscore-risk-priority-model.joblib}
+      SCORING_MODEL_PATH: ${SCORING_MODEL_PATH:-/srv/ai/models/aegiscore-risk-priority-model.keras}
       SCORING_MODEL_METADATA_PATH: ${SCORING_MODEL_METADATA_PATH:-/srv/ai/models/aegiscore-risk-priority-model.metadata.json}
       SCORING_MODEL_VERSION: ${SCORING_MODEL_VERSION:-untrained}
       AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE: ${AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE:-false}

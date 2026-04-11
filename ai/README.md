@@ -5,7 +5,7 @@ The AI workspace supports AegisCore risk prioritization, not raw detection.
 ## Layout
 
 - `datasets`: fixture and future training datasets
-- `models`: locally generated scikit-learn artifacts
+- `models`: locally generated TensorFlow (Keras `.keras`) artifacts and paired metadata JSON
 - `training/train_risk_model.py`: baseline training entrypoint
 - `inference/predict_risk.py`: utility to score a JSON feature payload with a trained model
 

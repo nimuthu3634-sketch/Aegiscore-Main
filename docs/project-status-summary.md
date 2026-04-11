@@ -1,16 +1,16 @@
 # AegisCore Project Status Summary
 
-**AegisCore is the final scoped v1 product for single-tenant SME/lab deployment** (not an enterprise commercial SOC platform).
+**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for this final-year project: **single-tenant**, **SME/lab** deployment, with **honest academic scope** (four detections only).
 
 ## 1. System Overview
 
-AegisCore is the **final scoped v1 product** for this project: **single-tenant**, **SME/lab** SOC operation. It is **not an enterprise commercial SOC platform**. It centralizes security event review (logs and network traffic), alert prioritization with **ML-capable scoring** (baseline default; optional trainable model), incident investigation, basic automated response, and operational reporting.
+AegisCore is the **submission MVP** for this project: **single-tenant**, **SME/lab** SOC operation, presented in an **enterprise-inspired** product style. It centralizes security event review (logs and network traffic), alert prioritization with **AI-assisted scoring** (deterministic baseline default; optional **TensorFlow** trainable model), incident investigation, basic automated response, and operational reporting.
 
 **Approved scope** matches the four supported detections only: `brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`. **Out of scope**: ransomware/phishing/APT/zero-day product claims, large-scale enterprise deployment, and full commercial-grade SOC breadth.
 
 ### Product Positioning
 
-- **Final scoped v1**: complete backend-owned workflow for the four detections—ingestion, normalization, scoring, incidents, responses, reporting, authenticated access—not a prototype-only UI.
+- **MVP**: complete backend-owned workflow for the four detections—ingestion, normalization, scoring, incidents, responses, reporting, authenticated access—not a prototype-only UI.
 - **Live connectors (lab-bounded)**:
   - Wazuh: authenticated live polling with retries, pagination/checkpointing, dedupe, and status (common lab envelopes).
   - Suricata: `file_tail` on `eve.json` with checkpointing and retries; authenticated forwarding not implemented.
@@ -53,7 +53,7 @@ The implemented platform covers the full backend-owned workflow for a narrow and
 ### Scoring
 
 - deterministic baseline scoring for production-safe prioritization
-- optional trainable scikit-learn scoring path
+- optional trainable TensorFlow (Keras) scoring path
 - persisted score metadata including method, version, explanation, and driver information
 
 ### Automated Response
@@ -234,7 +234,7 @@ Requirement traceability for proposal review is documented in [requirement-compl
 
 ### Honest Project Position
 
-AegisCore is the **final scoped v1 product** for this project—**single-tenant**, **SME/lab**—and **not an enterprise commercial SOC platform**. It delivers a complete ingest-to-report pipeline for the four approved detections, with honest limits on connector variants, browser edge coverage, and production hardening.
+AegisCore is an **enterprise-inspired commercial SOC MVP** for this project—**single-tenant**, **SME/lab**—with **only** the four approved detections in scope. It delivers a complete ingest-to-report pipeline for those threats, with honest limits on connector variants, browser edge coverage, and production hardening.
 
 ## 13. Viva Quick Defense
 
@@ -242,7 +242,7 @@ AegisCore is the **final scoped v1 product** for this project—**single-tenant*
 
 - ingests supported Wazuh and Suricata events
 - normalizes data into one alert schema
-- scores alerts with baseline AI/risk logic (plus optional ML path)
+- scores alerts with baseline rules plus optional TensorFlow model path
 - groups and tracks incidents with audit history
 - evaluates policy-driven automated responses with safety gates
 - provides analyst/admin workflows and reporting/export in one SOC console
@@ -261,6 +261,6 @@ AegisCore is the **final scoped v1 product** for this project—**single-tenant*
 - destructive live response paths are intentionally guarded by explicit flags
 - deterministic acceptance validation remains fixture-backed by default
 
-### Why This Is Still A Valid Final Scoped Product
+### Why This Is Still A Valid MVP
 
-Within the declared SME/lab boundary, AegisCore now provides a complete, testable, and auditable SOC workflow from ingestion to response and reporting. The remaining gaps are explicitly documented scope limits, not missing core pipeline functionality.
+Within the declared SME/lab boundary, AegisCore provides a complete, testable, and auditable SOC workflow from ingestion to response and reporting for the four in-scope detections. The remaining gaps are explicitly documented scope limits, not missing core pipeline functionality for that boundary.

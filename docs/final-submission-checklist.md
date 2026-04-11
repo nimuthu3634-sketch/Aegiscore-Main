@@ -1,8 +1,8 @@
 # Final Submission Checklist
 
-**AegisCore is the final scoped v1 product for single-tenant SME/lab deployment.**
+**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for this final-year project (**single-tenant**, **SME/lab**).
 
-This checklist is the final handoff gate for AegisCore as the **final scoped v1 product** for this project: **single-tenant**, **SME/lab**, **not an enterprise commercial SOC platform**, with threat scope limited to the four supported detections only.
+This checklist is the final handoff gate for that MVP, with threat scope **limited to the four supported detections only** and **no false claims** of broader coverage or full enterprise production maturity.
 
 ## 1) Pre-Submission Checks
 

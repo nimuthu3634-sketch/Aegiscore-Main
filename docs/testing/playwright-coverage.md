@@ -1,6 +1,6 @@
 # Playwright Coverage
 
-Browser tests support the **final scoped v1** product (**single-tenant**, **SME/lab**): they validate the real console against the four supported detections and **operator write paths**—not enterprise SOC breadth.
+Browser tests support the **MVP** product posture (**single-tenant**, **SME/lab**): they validate the real console against the four supported detections and **operator write paths**—not unlimited enterprise SOC breadth.
 
 ## Operator workflow proof (checklist)
 

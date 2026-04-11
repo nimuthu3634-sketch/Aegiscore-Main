@@ -1,8 +1,8 @@
 # AegisCore End-to-End Validation
 
-**AegisCore is the final scoped v1 product for single-tenant SME/lab deployment.**
+**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for this final-year project (**single-tenant**, **SME/lab**).
 
-This document supports validation of that **final scoped v1** posture (**not** an enterprise commercial SOC). Scope is intentionally limited to the four supported detections:
+This document supports validation of that **honest MVP** posture. Scope is intentionally limited to the four supported detections:
 
 - `brute_force`
 - `file_integrity_violation`

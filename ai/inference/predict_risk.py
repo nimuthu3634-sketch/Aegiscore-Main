@@ -63,7 +63,7 @@ def main() -> None:
     model_path = Path(
         os.getenv(
             "AI_MODEL_PATH",
-            repo_root / "ai" / "models" / "aegiscore-risk-priority-model.joblib",
+            repo_root / "ai" / "models" / "aegiscore-risk-priority-model.keras",
         )
     )
     metadata_path = Path(
@@ -73,13 +73,13 @@ def main() -> None:
         )
     )
 
-    pipeline, metadata = load_priority_model(
+    model, metadata = load_priority_model(
         model_path=model_path,
         metadata_path=metadata_path,
     )
     result = score_with_model(
         features=features,
-        pipeline=pipeline,
+        model=model,
         metadata=metadata,
     )
     print(

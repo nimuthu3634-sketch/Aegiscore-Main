@@ -1,8 +1,8 @@
 # AegisCore
 
-**AegisCore is the final scoped v1 product for single-tenant SME/lab deployment.**
+**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for a **final-year university project**: a **single-tenant** security operations console aimed at **SME/lab** deployment. It ingests Wazuh (logs) and Suricata (network) events, normalizes them into a shared alert model, assigns **AI-assisted risk scores** (deterministic baseline by default; optional **TensorFlow (Keras)** model when enabled), groups incidents, records analyst workflow, evaluates safe automated-response policies, and exposes the result through a backend-owned web console.
 
-AegisCore is the **final scoped v1 product** for this project: a **single-tenant** SOC for **SME/lab** deployment. It is **not an enterprise commercial SOC platform**. It ingests Wazuh (logs) and Suricata (network) events, normalizes them into a shared alert model, assigns **ML-capable risk scores** (deterministic baseline by default; optional scikit-learn model when enabled), groups incidents, records analyst workflow, evaluates safe automated-response policies, and exposes the result through a backend-owned web console.
+**This submission implements only four threat detections** (see below). It does **not** claim full global-enterprise production completeness, unlimited threat coverage, or multi-tenant SaaS maturity.
 
 **Supported detections only** (no others are in scope):
 
@@ -18,8 +18,8 @@ AegisCore is the **final scoped v1 product** for this project: a **single-tenant
 If you are reviewing AegisCore for final academic submission, use this quick flow:
 
 1. Understand the product scope:
-   - final scoped v1, single-tenant SME/lab SOC workflow
-   - intentionally limited to four detections listed above
+   - enterprise-inspired SOC MVP, single-tenant SME/lab workflow
+   - intentionally limited to the four detections listed above
 2. Run the platform:
    - `docker compose up --build -d`
    - `docker compose exec api alembic upgrade head`
@@ -43,9 +43,9 @@ If you are reviewing AegisCore for final academic submission, use this quick flo
 
 ## Product Positioning
 
-**Unified stance:** AegisCore is the **final scoped v1 product** for this project—**single-tenant**, **SME/lab**—and **not an enterprise commercial SOC platform**. Validation includes VM/lab runs with **simulated attacks** against the four supported scenarios (fixtures and documented replay paths).
+**Unified stance:** AegisCore is presented as an **enterprise-inspired commercial SOC platform MVP**—**single-tenant**, **SME/lab**—while staying honest about **academic scope**: only the four listed detections are implemented, and validation is **lab-bounded** (fixtures, automated tests, and documented **simulated attacks** / optional live connectors).
 
-- **Implemented for scoped v1**: centralized dashboard; log and network ingestion for the four detections only; risk scoring (baseline + optional trainable model); incident and response recording; basic automated response; JWT roles (`admin` / `analyst`); reporting and export.
+- **Implemented for this MVP**: centralized dashboard; log and network ingestion for the four detections only; risk scoring (deterministic baseline + optional TensorFlow trainable path); incident and response recording; basic automated response; JWT roles (`admin` / `analyst`); reporting and export.
 - **Live connectors (lab-bounded)**: Wazuh authenticated polling is implemented with retries, pagination/checkpointing, dedupe, and status visibility (common lab envelope variants). Suricata live ingestion is **`file_tail` on `eve.json`** with checkpointing, retries, dedupe, and status visibility; authenticated forwarding mode is not implemented.
 - **Operational default (VM/lab)**: with `WAZUH_CONNECTOR_ENABLED=true` and `SURICATA_CONNECTOR_ENABLED=true`, live connectors are the normal path; manual ingestion remains for deterministic test/demo fallback.
 - **Validation**: repeatable proof is fixture- and test-driven; live connector verification is optional in a configured lab.
@@ -202,7 +202,7 @@ Operational health endpoints:
 - Raw source payloads are preserved for auditability and debugging.
 - Automated response is policy-driven and limited to the supported detection scope.
 - Destructive live actions remain blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.
-- This v1 product is intentionally single-tenant and SME-oriented. It does not include multi-tenant SaaS or enterprise SOAR complexity.
+- This MVP is intentionally single-tenant and SME/lab-oriented. It does not include multi-tenant SaaS or full enterprise SOAR complexity.
 
 ## Documentation Map
 

@@ -75,7 +75,8 @@ class NoteTargetType(str, enum.Enum):
 
 class ScoreMethod(str, enum.Enum):
     BASELINE_RULES = "baseline_rules"
-    SKLEARN_MODEL = "sklearn_model"
+    SKLEARN_MODEL = "sklearn_model"  # legacy persisted rows only; new training uses TensorFlow
+    TENSORFLOW_MODEL = "tensorflow_model"
 
 
 def enum_values(enum_class: type[enum.Enum]) -> list[str]:

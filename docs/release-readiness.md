@@ -2,21 +2,21 @@
 
 ## Final product declaration
 
-**AegisCore is the final scoped v1 product for single-tenant SME/lab deployment.** It is **not** positioned as an enterprise commercial SOC platform. Threat scope, connectors, notifications, and automated response are **lab-bounded** and **honestly limited** as described in this document and [project-status-summary.md](project-status-summary.md).
+**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for this final-year project (**single-tenant**, **SME/lab**). Threat scope, connectors, notifications, and automated response are **lab-bounded** and **honestly limited** to the four approved detections, as described in this document and [project-status-summary.md](project-status-summary.md).
 
 ## Final Freeze Note
 
-This repository state is the **final scoped v1 release candidate** for academic handoff and SME/lab deployment unless a new blocker is found. Any post–release-candidate change should be treated as **blocker-only** remediation, followed by a full re-run of the verification sequence and an update to this document and related checklists.
+This repository state is the **submission release candidate** for academic handoff and SME/lab deployment unless a new blocker is found. Any post–release-candidate change should be treated as **blocker-only** remediation, followed by a full re-run of the verification sequence and an update to this document and related checklists.
 
 See also [release-candidate-note.md](release-candidate-note.md).
 
 ## Intended Readiness Level
 
-AegisCore is the **final scoped v1 product** for this project: **single-tenant**, **SME/lab**. It is **not an enterprise commercial SOC platform**. Threat coverage is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** (see `README.md` for explicit out-of-scope items).
+AegisCore is the **MVP** for this project: **single-tenant**, **SME/lab**, **enterprise-inspired** in presentation. Threat coverage is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** (see `README.md` for explicit out-of-scope items).
 
 ## Product Positioning
 
-- **Release readiness**: real backend-owned SOC workflows for those four detections only—dashboard, ingestion/normalization, **ML-capable risk scoring** (baseline + optional model), incidents, responses, reporting/export.
+- **Release readiness**: real backend-owned SOC workflows for those four detections only—dashboard, ingestion/normalization, **AI-assisted risk scoring** (baseline + optional TensorFlow model), incidents, responses, reporting/export.
 - **Live connectors (lab-bounded)**: Wazuh polling and Suricata `file_tail` as documented; not universal vendor coverage or enterprise SOAR.
 - **Validation**: deterministic release checks are fixture- and browser/API-test-backed; **VM/lab simulated-attack validation** is documented and repeatable (`scripts/validate_attack_scenarios.py`, operator guides).
 

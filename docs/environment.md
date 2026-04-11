@@ -52,7 +52,7 @@ For wiring **live Wazuh polling** and **Suricata `file_tail`** on an **Ubuntu Se
 - `DEV_SEED_ANALYST_PASSWORD`: seeded local analyst password
 - `SCORING_STRATEGY`: runtime scoring mode, either `baseline` or `model`
 - `SCORING_BASELINE_VERSION`: deterministic baseline version identifier stored with scores
-- `SCORING_MODEL_PATH`: model artifact path used when `SCORING_STRATEGY=model`
+- `SCORING_MODEL_PATH`: TensorFlow Keras model file (`.keras`) used when `SCORING_STRATEGY=model`
 - `SCORING_MODEL_METADATA_PATH`: metadata JSON path paired with the model artifact
 - `SCORING_MODEL_VERSION`: fallback runtime model version label for local development
 - `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE`: safety gate for live destructive adapters such as `block_ip` and `disable_user`; keep `false` for local development

@@ -1,11 +1,13 @@
 # AegisCore Risk Model Artifacts
 
-This directory stores locally trained scikit-learn artifacts for AegisCore risk scoring.
+This directory stores locally trained TensorFlow (Keras) artifacts for AegisCore risk scoring.
 
 Expected files:
 
-- `aegiscore-risk-priority-model.joblib`
+- `aegiscore-risk-priority-model.keras`
 - `aegiscore-risk-priority-model.metadata.json`
+
+Retrain with `ai/training/train_risk_model.py` if metadata is missing fields required by the current API loader (for example `feature_column_names`, `numeric_means`, `numeric_stds`).
 
 Artifacts are intentionally local-development friendly and should be recreated through the
 training script instead of edited by hand.

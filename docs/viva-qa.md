@@ -2,7 +2,7 @@
 
 ## 1-Minute Positioning
 
-AegisCore is the **final scoped v1 product** for this project: **single-tenant**, **SME/lab**, **not an enterprise commercial SOC platform**. It monitors **logs** (Wazuh) and **network traffic** (Suricata), detects only **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`**, provides a **centralized dashboard**, **ML-capable risk scores** (baseline + optional model), **basic automated response**, and full **incident/response recording**, validated in VM/lab with **simulated attacks**. It does not claim ransomware/phishing/APT/zero-day coverage or large-scale enterprise SOC features.
+AegisCore is an **enterprise-inspired commercial SOC platform MVP** for this project: **single-tenant**, **SME/lab**, with **truthful** scope—it monitors **logs** (Wazuh) and **network traffic** (Suricata), detects only **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`**, provides a **centralized dashboard**, **AI-assisted risk scores** (baseline + optional **TensorFlow** model), **basic automated response**, and full **incident/response recording**, validated in VM/lab with **simulated attacks**. It does not claim ransomware/phishing/APT/zero-day coverage or full global-enterprise SOC maturity.
 
 ## Concise Viva Defense
 
@@ -10,7 +10,7 @@ AegisCore is the **final scoped v1 product** for this project: **single-tenant**
 
 - event ingestion from Wazuh and Suricata
 - normalized alert lifecycle and investigation workflow
-- risk scoring with explainable baseline logic (optional ML path available)
+- risk scoring with explainable baseline logic (optional TensorFlow trainable path)
 - incident tracking, timeline, notes, audit evidence
 - policy-driven response execution with persisted outcome history
 - practical reporting and export for local operations
@@ -36,7 +36,7 @@ The core SOC pipeline is fully implemented and demonstrable within declared scop
 ## Likely Examiner Questions (Top 10)
 
 1. **Why do you call this a product and not just a prototype?**  
-   It is positioned as the **final scoped v1 product** for this project: persistent data model, real APIs, role enforcement, operational docs, and repeatable validation—including VM/lab simulated-attack scenarios. The boundary is narrow (four detections, SME/lab), but the pipeline is implemented end-to-end, not a mock-up.
+   It is positioned as an **enterprise-inspired commercial SOC MVP** for this project: persistent data model, real APIs, role enforcement, operational docs, and repeatable validation—including VM/lab simulated-attack scenarios. The boundary is narrow (four detections, SME/lab), but the pipeline is implemented end-to-end, not a mock-up.
 
 2. **Why only four detections?**  
    The project intentionally enforces a bounded threat scope (`brute_force`, `file_integrity_violation`, `port_scan`, `unauthorized_user_creation`) to stay defensible, testable, and aligned with stated requirements.

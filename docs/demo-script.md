@@ -1,10 +1,10 @@
 # AegisCore Demo Script
 
-**AegisCore is the final scoped v1 product for single-tenant SME/lab deployment.**
+**AegisCore** is an **enterprise-inspired commercial SOC platform MVP** for this final-year project (**single-tenant**, **SME/lab**).
 
 ## Demo Goal
 
-Present AegisCore as the **final scoped v1 product** for this project (**single-tenant**, **SME/lab**; **not** an enterprise commercial SOC), with honest boundaries and a real end-to-end workflow for **only** these detections:
+Present AegisCore as that **commercial-style MVP**, with **honest academic boundaries** and a real end-to-end workflow for **only** these detections:
 
 - `brute_force`
 - `file_integrity_violation`
@@ -69,7 +69,7 @@ Use this for tight viva time windows.
 Use this when examiners want evidence depth.
 
 1. **Open with positioning (20-30s)**
-   - say: "AegisCore is a final scoped v1 SME/lab SOC product, not enterprise SaaS."
+   - say: "AegisCore is an enterprise-inspired SOC MVP for this project—single-tenant, four detections only, lab-bounded—not unlimited enterprise SaaS."
 2. **Login and role model (`/login`)**
    - sign in as admin
    - note admin/analyst split and backend enforcement

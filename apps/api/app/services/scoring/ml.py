@@ -5,12 +5,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-import joblib
+import numpy as np
 import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+import tensorflow as tf
 
 from app.models.enums import ScoreMethod
 from app.services.scoring.baseline import priority_from_score
@@ -25,6 +22,11 @@ from app.services.scoring.types import AlertRiskFeatures, ScoringResult
 
 class ModelArtifactUnavailableError(RuntimeError):
     pass
+
+
+def _set_deterministic_seed(seed: int = 42) -> None:
+    tf.random.set_seed(seed)
+    np.random.seed(seed)
 
 
 def _normalize_training_frame(dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -48,34 +50,83 @@ def _normalize_training_frame(dataframe: pd.DataFrame) -> pd.DataFrame:
     return frame
 
 
-def build_training_pipeline() -> Pipeline:
-    preprocessor = ColumnTransformer(
-        transformers=[
-            (
-                "categorical",
-                OneHotEncoder(handle_unknown="ignore"),
-                MODEL_CATEGORICAL_FEATURES,
-            ),
-            (
-                "numeric",
-                StandardScaler(),
-                MODEL_NUMERIC_FEATURES,
-            ),
-        ]
+def _build_design_matrices(
+    frame: pd.DataFrame,
+    *,
+    numeric_means: dict[str, float] | None = None,
+    numeric_stds: dict[str, float] | None = None,
+    feature_column_names: list[str] | None = None,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """One-hot categoricals + z-scored numerics; returns X and preprocessing metadata for inference."""
+    cats = pd.get_dummies(
+        frame[MODEL_CATEGORICAL_FEATURES].astype(str),
+        prefix=MODEL_CATEGORICAL_FEATURES,
+        prefix_sep="__",
     )
+    numeric = frame[MODEL_NUMERIC_FEATURES].astype(float)
+    if numeric_means is None or numeric_stds is None:
+        means = numeric.mean()
+        stds = numeric.std().replace(0, 1.0)
+        numeric_means = {k: float(v) for k, v in means.items()}
+        numeric_stds = {k: float(v) if float(v) != 0 else 1.0 for k, v in stds.items()}
+    means_series = pd.Series(numeric_means)
+    stds_series = pd.Series(numeric_stds)
+    numeric_norm = (numeric - means_series) / stds_series.replace(0, 1.0)
+    design = pd.concat([cats.reset_index(drop=True), numeric_norm.reset_index(drop=True)], axis=1)
 
-    return Pipeline(
-        steps=[
-            ("preprocess", preprocessor),
-            (
-                "classifier",
-                LogisticRegression(
-                    max_iter=2000,
-                    class_weight="balanced",
-                ),
-            ),
-        ]
+    if feature_column_names is not None:
+        design = design.reindex(columns=feature_column_names, fill_value=0.0)
+    else:
+        feature_column_names = list(design.columns)
+
+    meta = {
+        "feature_column_names": feature_column_names,
+        "numeric_means": numeric_means,
+        "numeric_stds": numeric_stds,
+    }
+    return design.values.astype(np.float32), meta
+
+
+def _build_training_matrix(frame: pd.DataFrame) -> tuple[np.ndarray, dict[str, Any]]:
+    return _build_design_matrices(frame, numeric_means=None, numeric_stds=None, feature_column_names=None)
+
+
+def _frame_from_model_input(row: dict[str, Any]) -> pd.DataFrame:
+    """Single alert feature row for inference (no priority_label)."""
+    frame = pd.DataFrame([row])
+    for column in MODEL_NUMERIC_FEATURES:
+        frame[column] = pd.to_numeric(frame[column], errors="coerce").fillna(0)
+    for column in MODEL_CATEGORICAL_FEATURES:
+        frame[column] = frame[column].fillna("unknown").astype(str)
+    return frame
+
+
+def _row_from_features(
+    features: AlertRiskFeatures,
+    preprocessing: dict[str, Any],
+) -> np.ndarray:
+    frame = _frame_from_model_input(features.to_model_input())
+    x_matrix, _ = _build_design_matrices(
+        frame,
+        numeric_means=preprocessing["numeric_means"],
+        numeric_stds=preprocessing["numeric_stds"],
+        feature_column_names=preprocessing["feature_column_names"],
     )
+    return x_matrix
+
+
+def _build_keras_classifier(input_dim: int, num_classes: int) -> tf.keras.Model:
+    inputs = tf.keras.Input(shape=(input_dim,), name="risk_features")
+    x = tf.keras.layers.Dense(64, activation="relu", name="dense_1")(inputs)
+    x = tf.keras.layers.Dropout(0.1, name="dropout")(x)
+    outputs = tf.keras.layers.Dense(num_classes, activation="softmax", name="priority_probs")(x)
+    model = tf.keras.Model(inputs=inputs, outputs=outputs, name="aegiscore_risk_priority")
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+    )
+    return model
 
 
 def train_priority_model(
@@ -85,28 +136,50 @@ def train_priority_model(
     metadata_output_path: Path,
     requested_version: str | None = None,
 ) -> dict[str, Any]:
+    _set_deterministic_seed(42)
     dataset = pd.read_csv(dataset_path)
     frame = _normalize_training_frame(dataset)
-    pipeline = build_training_pipeline()
-    pipeline.fit(frame[MODEL_FEATURE_COLUMNS], frame["priority_label"])
+    x_train, prep_meta = _build_training_matrix(frame)
+
+    label_classes = sorted(frame["priority_label"].unique().tolist())
+    if len(label_classes) < 2:
+        raise ValueError("Training dataset needs at least two distinct priority_label values.")
+    label_to_index = {label: idx for idx, label in enumerate(label_classes)}
+    y_train = frame["priority_label"].map(label_to_index).astype(np.int32).values
+
+    input_dim = int(x_train.shape[1])
+    num_classes = len(label_classes)
+    model = _build_keras_classifier(input_dim, num_classes)
+
+    model.fit(
+        x_train,
+        y_train,
+        epochs=60,
+        batch_size=min(32, len(frame)),
+        verbose=0,
+    )
+
+    _, train_accuracy = model.evaluate(x_train, y_train, verbose=0)
 
     model_output_path.parent.mkdir(parents=True, exist_ok=True)
     metadata_output_path.parent.mkdir(parents=True, exist_ok=True)
-    joblib.dump(pipeline, model_output_path)
+    model.save(model_output_path)
 
     model_version = requested_version or datetime.now(UTC).strftime("risk_model_%Y%m%d_%H%M%S")
     metadata = {
         "model_version": model_version,
         "trained_at": datetime.now(UTC).isoformat(),
         "training_rows": int(len(frame)),
-        "train_accuracy": round(
-            float(pipeline.score(frame[MODEL_FEATURE_COLUMNS], frame["priority_label"])),
-            4,
-        ),
+        "train_accuracy": round(float(train_accuracy), 4),
         "feature_columns": MODEL_FEATURE_COLUMNS,
         "categorical_columns": MODEL_CATEGORICAL_FEATURES,
         "numeric_columns": MODEL_NUMERIC_FEATURES,
-        "label_classes": [str(label) for label in pipeline.classes_],
+        "label_classes": label_classes,
+        "label_to_index": label_to_index,
+        "ml_framework": "tensorflow",
+        "feature_column_names": prep_meta["feature_column_names"],
+        "numeric_means": prep_meta["numeric_means"],
+        "numeric_stds": prep_meta["numeric_stds"],
     }
     metadata_output_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     return metadata
@@ -116,7 +189,7 @@ def load_priority_model(
     *,
     model_path: str | Path,
     metadata_path: str | Path,
-) -> tuple[Pipeline, dict[str, Any]]:
+) -> tuple[tf.keras.Model, dict[str, Any]]:
     resolved_model_path = Path(model_path)
     resolved_metadata_path = Path(metadata_path)
     if not resolved_model_path.exists():
@@ -128,23 +201,41 @@ def load_priority_model(
             f"Risk model metadata does not exist at {resolved_metadata_path}."
         )
 
-    pipeline = joblib.load(resolved_model_path)
     metadata = json.loads(resolved_metadata_path.read_text(encoding="utf-8"))
-    return pipeline, metadata
+    required_keys = ("feature_column_names", "numeric_means", "numeric_stds", "label_classes")
+    missing = [key for key in required_keys if key not in metadata]
+    if missing:
+        raise ModelArtifactUnavailableError(
+            f"Model metadata is missing TensorFlow preprocessing keys: {', '.join(missing)}. "
+            "Retrain with ai/training/train_risk_model.py."
+        )
+
+    suffix = resolved_model_path.suffix.lower()
+    if suffix not in (".keras", ".h5"):
+        raise ModelArtifactUnavailableError(
+            f"Expected TensorFlow Keras model file (.keras or .h5); got {suffix!r}."
+        )
+
+    model = tf.keras.models.load_model(resolved_model_path, compile=False)
+    return model, metadata
 
 
 def score_with_model(
     *,
     features: AlertRiskFeatures,
-    pipeline: Pipeline,
+    model: tf.keras.Model,
     metadata: dict[str, Any],
 ) -> ScoringResult:
-    frame = pd.DataFrame([features.to_model_input()])
-    probabilities = pipeline.predict_proba(frame)[0]
-    classes = [str(label) for label in getattr(pipeline, "classes_", metadata.get("label_classes", []))]
+    x_row = _row_from_features(features, metadata)
+    probabilities = model.predict(x_row, verbose=0)[0]
+    classes = [str(label) for label in metadata.get("label_classes", [])]
+    if len(classes) != len(probabilities):
+        raise ModelArtifactUnavailableError(
+            "Model output size does not match label_classes in metadata."
+        )
     class_probabilities = {
         label: round(float(probability), 4)
-        for label, probability in zip(classes, probabilities, strict=False)
+        for label, probability in zip(classes, probabilities, strict=True)
     }
 
     weighted_score = sum(
@@ -180,14 +271,14 @@ def score_with_model(
             f"{priority_label.value} priority at {rounded_score}/100."
         ),
         "rationale": (
-            "The scikit-learn model evaluates categorical detection context and "
-            "numeric recurrence features from normalized alert telemetry."
+            "The TensorFlow (Keras) classifier evaluates one-hot categorical detection context "
+            "and z-scored numeric recurrence features from normalized alert telemetry."
         ),
         "factors": factors,
         "class_probabilities": class_probabilities,
         "score": rounded_score,
         "priority_label": priority_label.value,
-        "scoring_method": ScoreMethod.SKLEARN_MODEL.value,
+        "scoring_method": ScoreMethod.TENSORFLOW_MODEL.value,
         "model_version": metadata.get("model_version"),
     }
 
@@ -195,7 +286,7 @@ def score_with_model(
         score=rounded_score,
         confidence=confidence,
         priority_label=priority_label,
-        scoring_method=ScoreMethod.SKLEARN_MODEL,
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
         reasoning=(
             f"Model version {metadata.get('model_version', 'unknown')} predicted "
             f"{priority_label.value} priority with {round(confidence * 100)}% confidence."

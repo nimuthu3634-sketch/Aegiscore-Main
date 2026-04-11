@@ -28,7 +28,7 @@ def main() -> None:
     model_output_path = Path(
         os.getenv(
             "AI_MODEL_PATH",
-            repo_root / "ai" / "models" / "aegiscore-risk-priority-model.joblib",
+            repo_root / "ai" / "models" / "aegiscore-risk-priority-model.keras",
         )
     )
     metadata_output_path = Path(

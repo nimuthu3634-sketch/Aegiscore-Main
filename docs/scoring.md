@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Within the **final scoped v1** product boundary (four supported detections only; SME/lab, single-tenant), AegisCore risk scoring is a prioritization layer that runs after those detections are created.
+Within the **MVP** product boundary (four supported detections only; SME/lab, single-tenant), AegisCore risk scoring is a prioritization layer that runs after those detections are created.
+
+**Dependency note:** `tensorflow-cpu` currently constrains **NumPy** to a range below 2.2; the API package pins NumPy/Pandas accordingly so installs resolve cleanly (including Windows).
 It does not replace the detector. The scoring runtime converts normalized alert context into a
 0-100 risk score, a priority label, and an explanation payload that the API exposes to the
 dashboard, list pages, and detail views.
@@ -33,15 +35,17 @@ The baseline uses explainable additive rules over approved SME SOC context:
 - recurrence history
 - destination port context
 
-### Trainable scikit-learn model
+### Trainable TensorFlow (Keras) model
 
 The trainable model is optional and can be enabled by setting `SCORING_STRATEGY=model`.
 
 - Runtime loader: `apps/api/app/services/scoring/ml.py`
 - Training script: `ai/training/train_risk_model.py`
 - Inference utility: `ai/inference/predict_risk.py`
-- Default model path: `/srv/ai/models/aegiscore-risk-priority-model.joblib`
+- Default model path: `/srv/ai/models/aegiscore-risk-priority-model.keras`
 - Default metadata path: `/srv/ai/models/aegiscore-risk-priority-model.metadata.json`
+
+Legacy databases may still contain scores with method `sklearn_model` from earlier builds; new training persists `tensorflow_model`.
 
 If the runtime is configured for model scoring but no model artifact is available, AegisCore
 falls back to the deterministic baseline and records the fallback reason in the explanation
@@ -98,7 +102,7 @@ The default training dataset is:
 
 The generated artifacts land in:
 
-- `ai/models/aegiscore-risk-priority-model.joblib`
+- `ai/models/aegiscore-risk-priority-model.keras`
 - `ai/models/aegiscore-risk-priority-model.metadata.json`
 
 ## Manual Model Inference

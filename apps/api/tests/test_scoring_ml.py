@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from pathlib import Path
 
-from app.models.enums import IncidentPriority
+from app.models.enums import IncidentPriority, ScoreMethod
 from app.services.scoring.ml import (
     load_priority_model,
     score_with_model,
@@ -13,7 +13,7 @@ from app.services.scoring.types import AlertRiskFeatures
 def test_train_priority_model_and_score_fixture(tmp_path: Path) -> None:
     repo_root = Path(__file__).resolve().parents[3]
     dataset_path = repo_root / "ai" / "datasets" / "risk_training_fixture.csv"
-    model_path = tmp_path / "risk-model.joblib"
+    model_path = tmp_path / "risk-model.keras"
     metadata_path = tmp_path / "risk-model.metadata.json"
 
     metadata = train_priority_model(
@@ -28,7 +28,7 @@ def test_train_priority_model_and_score_fixture(tmp_path: Path) -> None:
     assert metadata["model_version"] == "test_model_v1"
     assert metadata["training_rows"] >= 16
 
-    pipeline, loaded_metadata = load_priority_model(
+    model, loaded_metadata = load_priority_model(
         model_path=model_path,
         metadata_path=metadata_path,
     )
@@ -52,10 +52,11 @@ def test_train_priority_model_and_score_fixture(tmp_path: Path) -> None:
             username="svc-shadow",
             asset_hostname="acct-windows-01",
         ),
-        pipeline=pipeline,
+        model=model,
         metadata=loaded_metadata,
     )
 
+    assert result.scoring_method == ScoreMethod.TENSORFLOW_MODEL
     assert result.model_version == "test_model_v1"
     assert result.priority_label in {
         IncidentPriority.HIGH,

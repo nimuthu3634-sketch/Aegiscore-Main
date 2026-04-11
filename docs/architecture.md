@@ -2,14 +2,14 @@
 
 ## Product Direction
 
-AegisCore is the **final scoped v1 product** for this project: a **single-tenant** SOC for **SME/lab** deployment. It centralizes alert review (from **system logs** and **network traffic**), incident investigation, explainable risk scoring, safe automated response, and practical reporting. It is **not an enterprise commercial SOC platform** and does not target large-scale or multi-tenant deployment. Threat scope is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** only.
+AegisCore is an **enterprise-inspired commercial SOC platform MVP** for this **final-year project**: **single-tenant**, **SME/lab** deployment. It centralizes alert review (from **system logs** and **network traffic**), incident investigation, explainable risk scoring, safe automated response, and practical reporting. **This build** does not target full global-enterprise production maturity or large-scale multi-tenant SaaS. Threat scope is limited to **`brute_force`**, **`file_integrity_violation`**, **`port_scan`**, and **`unauthorized_user_creation`** only.
 
 ## Runtime Boundaries
 
 - `apps/web` is the analyst-facing frontend and communicates only with backend APIs.
 - `apps/api` owns ingestion, normalization, scoring, incident behavior, policies, reporting, and auditability.
 - `apps/worker` remains available for background execution or replay workflows that should not block API requests.
-- `ai` contains the deterministic baseline scorer, the scikit-learn training pipeline, and inference helpers used by the API.
+- `ai` contains training data, the TensorFlow (Keras) training entrypoint, inference helpers, and local model artifacts consumed by the API scoring layer.
 - `postgres` stores users, assets, alerts, incidents, scores, notes, responses, policies, reports, and audit history.
 - `nginx` is the local reverse-proxy entrypoint for `/` and `/api`.
 
@@ -69,7 +69,7 @@ AegisCore is the **final scoped v1 product** for this project: a **single-tenant
 - Supported detection scope remains limited to `brute_force`, `file_integrity_violation`, `port_scan`, and `unauthorized_user_creation`.
 - Risk scoring is a prioritization layer after detection, not the detector itself.
 - The deterministic baseline is the production-safe default.
-- The optional scikit-learn model stays loadable and auditable through stored model metadata.
+- The optional TensorFlow model stays loadable and auditable through stored model metadata (legacy rows may still reference `sklearn_model`).
 - Safe internal actions such as `notify_admin`, `create_manual_review`, and `quarantine_host_flag` can complete without an external script.
 - `block_ip` and `disable_user` now have built-in lab adapters with safe `ledger` backends by default; destructive backends require explicit safety flags.
 - Destructive live actions remain blocked by default in development.

@@ -44,13 +44,13 @@ def score_alert(
     strategy = settings.scoring_strategy.lower().strip()
     if strategy == "model":
         try:
-            pipeline, metadata = load_priority_model(
+            model, metadata = load_priority_model(
                 model_path=settings.scoring_model_path,
                 metadata_path=settings.scoring_model_metadata_path,
             )
             result = score_with_model(
                 features=features,
-                pipeline=pipeline,
+                model=model,
                 metadata=metadata,
             )
         except ModelArtifactUnavailableError as exc:
