@@ -26,15 +26,21 @@ def priority_from_score(score: float | int | None):
 
 
 def incident_priority_from_three_class_tier(tier: str) -> IncidentPriority:
-    """Map TensorFlow alert-prioritization softmax label to IncidentPriority.
-
-    The 3-class model never emits ``critical``; this mapping never returns CRITICAL.
-    """
+    """Legacy 3-class mapping — kept for backward compatibility."""
     key = (tier or "low").strip().lower()
     if key == "medium":
         return IncidentPriority.MEDIUM
     if key == "high":
         return IncidentPriority.HIGH
+    return IncidentPriority.LOW
+
+
+def incident_priority_from_model_tier(tier: str) -> IncidentPriority:
+    """Map enterprise 4-class model output to IncidentPriority."""
+    key = (tier or "low").strip().lower()
+    if key == "critical": return IncidentPriority.CRITICAL
+    if key == "high":     return IncidentPriority.HIGH
+    if key == "medium":   return IncidentPriority.MEDIUM
     return IncidentPriority.LOW
 
 

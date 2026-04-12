@@ -1,352 +1,145 @@
 """
-Synthetic SOC alert feature rows for TensorFlow **alert_prioritization_v1** training
-(`ai/datasets/alerts_dataset.csv`).
+AegisCore Enterprise — Alert Priority Training Dataset Generator
+================================================================
+10,000 rows | 4 classes: critical / high / medium / low
+Features designed for production generalisation — no synthetic IP/username/hostname.
 
-`threat_type` includes **normal** plus **brute_force**, **port_scan**, **file_integrity**
-(API `file_integrity_violation`), **unauthorized_user_creation**. Labels are **Low** /
-**Medium** / **High** only (CSV casing). Not used for raw threat detection.
-
-Regenerates the CSV with a fixed random seed for reproducibility.
-Uses only the Python standard library (no NumPy/Pandas required).
-
-Usage (repo root):
-  python ai/datasets/generate_alerts_dataset.py
-  python ai/datasets/generate_alerts_dataset.py --rows 2000 --seed 99
+Label distribution target:
+  critical ~12%  high ~28%  medium ~38%  low ~22%
 """
-
 from __future__ import annotations
-
-import argparse
-import csv
-import random
-from datetime import datetime, timedelta, timezone
+import csv, random
 from pathlib import Path
+from collections import Counter
 
-DEFAULT_SEED = 42
-DEFAULT_ROWS = 1240
-OUTPUT_REL = Path("ai/datasets/alerts_dataset.csv")
+SEED = 42
+random.seed(SEED)
 
+LABEL_RANGES = {"critical":(85,100),"high":(70,84.9),"medium":(45,69.9),"low":(0,44.9)}
+PRIORITY_THRESHOLDS = [(85,"critical"),(70,"high"),(45,"medium"),(0,"low")]
 
-def _random_ip(rng: random.Random) -> str:
-    return f"10.{rng.randint(0, 254)}.{rng.randint(0, 254)}.{rng.randint(1, 253)}"
+# Mirrors production scoring
+DET_W  = {"unauthorized_user_creation":28,"file_integrity":24,"brute_force":18,"port_scan":12,"normal":0}
+SRC_W  = {"wazuh":6,"suricata":3}
+CRIT_W = {"critical":18,"high":12,"medium":6,"low":0}
+IC_W   = {"critical":12,"important":7,"minor":3,"none":0}
+SENS_P = {22,3389,3306,5432,5985,5986}
 
+def calc_score(d):
+    s = 10
+    s += DET_W.get(d["threat_type"], 0)
+    s += SRC_W.get(d["source_type"], 0)
+    s += CRIT_W.get(d["asset_criticality"], 0)
+    s += IC_W.get(d["integrity_change"], 0)
+    s += min(d["wazuh_rule_level"] * 0.9, 13)
+    s += min(d["suricata_severity"] * 2.5, 10)
+    s += min(d["failed_logins_1m"] * 0.4, 6)
+    s += min(d["failed_logins_5m"] * 0.2, 6)
+    s += min(d["unique_ports_1m"] * 0.15, 6)
+    s += min(d["repeated_event_count"] * 0.4, 5)
+    s += min(d["time_window_density"] * 0.3, 4)
+    s += min(d["recurrence_history"] * 0.5, 3)
+    if d["privileged_account"]: s += 5
+    if d["blacklisted_ip"]:     s += 6
+    if d["off_hours"]:          s += 3
+    if d["new_user_created"]:   s += 4
+    return min(s, 100.0)
 
-def _random_host(rng: random.Random) -> str:
-    names = ("web-01", "db-02", "dc01", "srv-app", "mail", "vpn", "file", "api")
-    return f"{rng.choice(names)}.corp.local"
+def get_label(sc):
+    for t, l in PRIORITY_THRESHOLDS:
+        if sc >= t: return l
+    return "low"
 
+R = random.randint
+C = random.choice
 
-def _random_ts(rng: random.Random) -> str:
-    base = datetime(2025, 1, 1, tzinfo=timezone.utc)
-    delta = timedelta(seconds=rng.randint(0, 90 * 24 * 3600 - 1))
-    return (base + delta).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def _label_normal(rng: random.Random) -> str:
-    x = rng.random()
-    if x < 0.88:
-        return "Low"
-    if x < 0.98:
-        return "Medium"
-    return "High"
-
-
-def _label_brute_force(failed_5m: int) -> str:
-    if 1 <= failed_5m <= 4:
-        return "Low"
-    if 5 <= failed_5m <= 9:
-        return "Medium"
-    return "High"
-
-
-def _label_port_scan(unique_ports: int) -> str:
-    if 5 <= unique_ports <= 9:
-        return "Low"
-    if 10 <= unique_ports <= 19:
-        return "Medium"
-    return "High"
-
-
-def _label_file_integrity(integrity_change: str, off_hours: int, privileged: int) -> str:
-    if integrity_change in ("none", "minor"):
-        return "Low"
-    if integrity_change == "important":
-        return "Medium"
-    if integrity_change == "critical" and (off_hours == 1 or privileged == 1):
-        return "High"
-    return "Medium"
-
-
-def _harmless_username(name: str) -> bool:
-    n = name.lower()
-    prefixes = ("test_", "guest", "demo_", "readonly_", "svc_deploy")
-    if n in ("guest", "nobody"):
-        return True
-    return any(n.startswith(p) for p in prefixes)
-
-
-def _label_unauthorized(username: str, privileged: int, off_hours: int, crit: str) -> str:
-    if privileged == 1 or (off_hours == 1 and crit in ("high", "critical")):
-        return "High"
-    if privileged == 0 and (_harmless_username(username) or crit == "low"):
-        return "Low"
-    return "Medium"
-
-
-COLUMNS = [
-    "timestamp",
-    "threat_type",
-    "source_ip",
-    "target_host",
-    "username",
-    "failed_logins_1m",
-    "failed_logins_5m",
-    "unique_ports_1m",
-    "integrity_change",
-    "new_user_created",
-    "off_hours",
-    "privileged_account",
-    "asset_criticality",
-    "wazuh_rule_level",
-    "suricata_severity",
-    "blacklisted_ip",
+FIELDS = [
+    "source_type","threat_type","asset_criticality","integrity_change",
+    "wazuh_rule_level","suricata_severity",
+    "failed_logins_1m","failed_logins_5m","unique_ports_1m",
+    "repeated_event_count","time_window_density","recurrence_history",
+    "new_user_created","off_hours","privileged_account","blacklisted_ip",
     "label",
 ]
 
+def mk(src,det,crit,ic,wrl,suri,fl1,fl5,up,rc,td,rh,nu,oh,priv,bl):
+    return {"source_type":src,"threat_type":det,"asset_criticality":crit,
+            "integrity_change":ic,"wazuh_rule_level":wrl,"suricata_severity":suri,
+            "failed_logins_1m":fl1,"failed_logins_5m":fl5,"unique_ports_1m":up,
+            "repeated_event_count":rc,"time_window_density":td,"recurrence_history":rh,
+            "new_user_created":nu,"off_hours":oh,"privileged_account":priv,"blacklisted_ip":bl}
 
-def build_rows(n_rows: int, seed: int) -> list[dict[str, object]]:
-    rng = random.Random(seed)
-    counts = {
-        "normal": int(n_rows * 0.42),
-        "brute_force": int(n_rows * 0.22),
-        "port_scan": int(n_rows * 0.18),
-        "file_integrity": int(n_rows * 0.10),
-        "unauthorized_user_creation": int(n_rows * 0.08),
-    }
-    counts["normal"] += n_rows - sum(counts.values())
+# ── brute_force ────────────────────────────────────────────────────────────
+def bf_critical(): return mk("wazuh","brute_force",C(["critical","critical","high"]),  "none",R(12,15),0, R(30,60),R(50,120),R(0,2),  R(8,20),R(6,10),R(4,8), 0,C([0,1]),1,C([0,0,1]))
+def bf_high():     return mk("wazuh","brute_force",C(["high","high","critical","medium"]),"none",R(8,13),0, R(10,35),R(18,60), R(0,2),  R(4,10),R(3,7), R(1,4), 0,C([0,1]),C([0,1]),C([0,1]))
+def bf_medium():   return mk("wazuh","brute_force",C(["medium","medium","low","high"]),  "none",R(5,9), 0, R(3,12), R(5,20),  R(0,2),  R(2,6), R(1,4), R(0,2), 0,C([0,1]),0,0)
+def bf_low():      return mk("wazuh","brute_force",C(["low","low","medium"]),            "none",R(1,6), 0, R(1,5),  R(1,8),   0,        R(1,3), R(0,2), 0,      0,0,       0,0)
 
-    rows: list[dict[str, object]] = []
+# ── file_integrity ─────────────────────────────────────────────────────────
+def fi_critical(): return mk("wazuh","file_integrity",C(["critical","critical","high"]),  C(["critical","critical","important"]),R(11,15),0, 0,0,0, R(3,8), R(3,6), R(4,8), 0,C([0,1]),C([0,1]),0)
+def fi_high():     return mk("wazuh","file_integrity",C(["high","high","critical","medium"]),C(["important","important","critical"]),R(7,12),0, 0,0,0, R(2,5), R(2,4), R(1,4), 0,C([0,1]),0,0)
+def fi_medium():   return mk("wazuh","file_integrity",C(["medium","medium","low","high"]),  C(["important","minor","important"]),   R(4,9), 0, 0,0,0, R(1,3), R(1,3), R(0,2), 0,C([0,1]),0,0)
+def fi_low():      return mk("wazuh","file_integrity",C(["low","low","medium"]),            C(["minor","none","minor"]),            R(1,6), 0, 0,0,0, R(1,2), R(0,2), 0,      0,0,       0,0)
 
-    crit_choices = ("low", "medium", "high", "critical")
-    crit_weights = (0.35, 0.35, 0.2, 0.1)
+# ── port_scan ──────────────────────────────────────────────────────────────
+def ps_critical(): return mk("suricata","port_scan",C(["critical","critical","high"]),   "none",0,C([3,4]),0,0,R(80,200),R(15,40),R(10,20),R(4,8), 0,C([0,1]),0,C([0,1]))
+def ps_high():     return mk("suricata","port_scan",C(["high","high","critical","medium"]),"none",0,C([2,3]),0,0,R(25,90), R(8,20), R(6,12), R(1,4), 0,C([0,1]),0,C([0,1]))
+def ps_medium():   return mk("suricata","port_scan",C(["medium","medium","low","high"]),  "none",0,C([1,2]),0,0,R(8,30),  R(3,10), R(2,7),  R(0,2), 0,0,       0,0)
+def ps_low():      return mk("suricata","port_scan",C(["low","low","medium"]),            "none",0,C([1,2]),0,0,R(2,10),  R(1,5),  R(1,4),  0,      0,0,       0,0)
 
-    def pick_crit() -> str:
-        return rng.choices(crit_choices, weights=crit_weights, k=1)[0]
+# ── unauthorized_user_creation ─────────────────────────────────────────────
+def uu_critical(): return mk("wazuh","unauthorized_user_creation",C(["critical","critical","high"]),   "none",R(12,15),0, 0,0,0, R(3,6), R(2,5), R(4,8), 1,C([0,1]),1,C([0,1]))
+def uu_high():     return mk("wazuh","unauthorized_user_creation",C(["high","high","critical","medium"]),"none",R(8,13),0, 0,0,0, R(2,4), R(1,4), R(1,4), 1,C([0,1]),C([0,1]),C([0,1]))
+def uu_medium():   return mk("wazuh","unauthorized_user_creation",C(["medium","medium","low","high"]),  "none",R(5,9), 0, 0,0,0, R(1,3), R(0,3), R(0,2), 1,C([0,1]),0,0)
+def uu_low():      return mk("wazuh","unauthorized_user_creation",C(["low","low","medium"]),            "none",R(2,6), 0, 0,0,0, 1,      0,      0,      1,0,       0,0)
 
-    # --- normal ---
-    for _ in range(counts["normal"]):
-        label = _label_normal(rng)
-        wl = rng.randint(3, 7) if label == "Low" else rng.randint(5, 11)
-        rows.append(
-            {
-                "threat_type": "normal",
-                "source_ip": _random_ip(rng),
-                "target_host": _random_host(rng),
-                "username": rng.choice(["", "alice", "bob", "svc_backup"]),
-                "failed_logins_1m": rng.randint(0, 1),
-                "failed_logins_5m": rng.randint(0, 2),
-                "unique_ports_1m": rng.randint(0, 3),
-                "integrity_change": "none",
-                "new_user_created": 0,
-                "off_hours": rng.randint(0, 1),
-                "privileged_account": rng.randint(0, 1),
-                "asset_criticality": pick_crit(),
-                "wazuh_rule_level": wl,
-                "suricata_severity": rng.randint(0, 1),
-                "blacklisted_ip": 1 if rng.random() < 0.02 else 0,
-                "label": label,
-            }
-        )
+# ── normal traffic (noise class) ──────────────────────────────────────────
+def nm_low():    return mk(C(["wazuh","suricata"]),"normal",C(["low","low","medium"]),     "none",R(0,3),C([0,1]),R(0,2),R(0,3), R(0,5), R(0,3), R(0,2), 0,0,0,0,0)
+def nm_medium(): return mk(C(["wazuh","suricata"]),"normal",C(["medium","high","critical"]),"none",R(3,7),C([1,2]),R(0,3),R(0,5), R(0,10),R(1,4), R(0,2), 0,C([0,1]),C([0,1]),0,0)
 
-    # --- brute_force ---
-    for _ in range(counts["brute_force"]):
-        band = rng.choices(["low", "med", "high"], weights=[0.34, 0.33, 0.33], k=1)[0]
-        if band == "low":
-            f5 = rng.randint(1, 4)
-        elif band == "med":
-            f5 = rng.randint(5, 9)
-        else:
-            f5 = rng.randint(10, 39)
-        f1 = max(0, min(f5 - rng.randint(0, 3), f5))
-        label = _label_brute_force(f5)
-        rows.append(
-            {
-                "threat_type": "brute_force",
-                "source_ip": _random_ip(rng),
-                "target_host": _random_host(rng),
-                "username": rng.choice(["admin", "root", "azureuser", "jdoe"]),
-                "failed_logins_1m": f1,
-                "failed_logins_5m": f5,
-                "unique_ports_1m": rng.randint(0, 2),
-                "integrity_change": "none",
-                "new_user_created": 0,
-                "off_hours": rng.randint(0, 1),
-                "privileged_account": rng.randint(0, 1),
-                "asset_criticality": rng.choice(crit_choices),
-                "wazuh_rule_level": rng.randint(5, 13),
-                "suricata_severity": rng.randint(0, 1),
-                "blacklisted_ip": 1 if rng.random() < 0.15 else 0,
-                "label": label,
-            }
-        )
+# ── generation plan (fn, intended_label, count) ───────────────────────────
+PLAN = [
+    # brute_force: 2500
+    (bf_critical,"critical",350),(bf_high,"high",700),(bf_medium,"medium",900),(bf_low,"low",550),
+    # file_integrity: 2500
+    (fi_critical,"critical",350),(fi_high,"high",700),(fi_medium,"medium",900),(fi_low,"low",550),
+    # port_scan: 2500
+    (ps_critical,"critical",300),(ps_high,"high",700),(ps_medium,"medium",1000),(ps_low,"low",500),
+    # unauthorized_user_creation: 2000
+    (uu_critical,"critical",300),(uu_high,"high",600),(uu_medium,"medium",750),(uu_low,"low",350),
+    # normal traffic noise: 500
+    (nm_low,"low",350),(nm_medium,"medium",150),
+]
 
-    # --- port_scan ---
-    for _ in range(counts["port_scan"]):
-        band = rng.choices(["low", "med", "high"], weights=[0.34, 0.33, 0.33], k=1)[0]
-        if band == "low":
-            ports = rng.randint(5, 9)
-        elif band == "med":
-            ports = rng.randint(10, 19)
-        else:
-            ports = rng.randint(20, 79)
-        label = _label_port_scan(ports)
-        rows.append(
-            {
-                "threat_type": "port_scan",
-                "source_ip": _random_ip(rng),
-                "target_host": _random_host(rng),
-                "username": "",
-                "failed_logins_1m": 0,
-                "failed_logins_5m": 0,
-                "unique_ports_1m": ports,
-                "integrity_change": "none",
-                "new_user_created": 0,
-                "off_hours": rng.randint(0, 1),
-                "privileged_account": 0,
-                "asset_criticality": rng.choice(crit_choices),
-                "wazuh_rule_level": rng.randint(0, 5),
-                "suricata_severity": rng.randint(2, 4),
-                "blacklisted_ip": 1 if rng.random() < 0.2 else 0,
-                "label": label,
-            }
-        )
+def gen_row(fn, intended, max_tries=500):
+    lo, hi = LABEL_RANGES[intended]
+    for _ in range(max_tries):
+        d = fn()
+        sc = calc_score(d)
+        if lo <= sc <= hi:
+            if random.random() < 0.06:
+                sc = max(0, min(100, sc + random.uniform(-5, 5)))
+            d["label"] = get_label(sc)
+            return d
+    d = fn(); d["label"] = get_label(calc_score(d)); return d
 
-    # --- file_integrity ---
-    ic_weights = [0.15, 0.35, 0.35, 0.15]
-    ic_vals = ("none", "minor", "important", "critical")
-    for _ in range(counts["file_integrity"]):
-        ic = rng.choices(ic_vals, weights=ic_weights, k=1)[0]
-        off_f = rng.randint(0, 1)
-        pr_f = rng.randint(0, 1)
-        if ic == "critical":
-            if rng.random() < 0.55:
-                off_f = 1
-            if rng.random() < 0.45:
-                pr_f = 1
-        label = _label_file_integrity(ic, off_f, pr_f)
-        rows.append(
-            {
-                "threat_type": "file_integrity",
-                "source_ip": _random_ip(rng),
-                "target_host": _random_host(rng),
-                "username": rng.choice(["root", "SYSTEM", "deploy"]),
-                "failed_logins_1m": 0,
-                "failed_logins_5m": 0,
-                "unique_ports_1m": 0,
-                "integrity_change": ic,
-                "new_user_created": 0,
-                "off_hours": off_f,
-                "privileged_account": pr_f,
-                "asset_criticality": rng.choices(
-                    ("medium", "high", "critical"), weights=[0.3, 0.4, 0.3], k=1
-                )[0],
-                "wazuh_rule_level": rng.randint(7, 14),
-                "suricata_severity": rng.randint(0, 1),
-                "blacklisted_ip": 1 if rng.random() < 0.05 else 0,
-                "label": label,
-            }
-        )
+rows = []
+for fn, intended, n in PLAN:
+    for _ in range(n):
+        rows.append(gen_row(fn, intended))
+random.shuffle(rows)
 
-    # --- unauthorized_user_creation ---
-    for _ in range(counts["unauthorized_user_creation"]):
-        if rng.random() < 0.35:
-            user = rng.choice(["test_user1", "guest", "demo_account", "readonly_svc"])
-        else:
-            user = f"u_{rng.randint(1000, 9999)}"
-        pr_u = rng.randint(0, 1)
-        off_u = rng.randint(0, 1)
-        if rng.random() < 0.25:
-            pr_u = 1
-        if rng.random() < 0.2:
-            off_u = 1
-        crit_u = rng.choices(crit_choices, weights=[0.2, 0.3, 0.3, 0.2], k=1)[0]
-        label = _label_unauthorized(user, pr_u, off_u, crit_u)
-        rows.append(
-            {
-                "threat_type": "unauthorized_user_creation",
-                "source_ip": _random_ip(rng),
-                "target_host": _random_host(rng),
-                "username": user,
-                "failed_logins_1m": 0,
-                "failed_logins_5m": 0,
-                "unique_ports_1m": 0,
-                "integrity_change": "none",
-                "new_user_created": 1,
-                "off_hours": off_u,
-                "privileged_account": pr_u,
-                "asset_criticality": crit_u,
-                "wazuh_rule_level": rng.randint(8, 14),
-                "suricata_severity": 0,
-                "blacklisted_ip": 1 if rng.random() < 0.03 else 0,
-                "label": label,
-            }
-        )
+labels = Counter(r["label"] for r in rows)
+dets   = Counter(r["threat_type"] for r in rows)
+total  = len(rows)
+print(f"Total rows        : {total}")
+print("Label distribution:")
+for l in ["critical","high","medium","low"]:
+    c = labels.get(l,0)
+    print(f"  {l:10s}: {c:5d}  ({c/total*100:.1f}%)")
+print(f"Threat type dist  : {dict(sorted(dets.items()))}")
 
-    rng.shuffle(rows)
-    for r in rows:
-        r["timestamp"] = _random_ts(rng)
-
-    ordered: list[dict[str, object]] = []
-    for r in rows:
-        ordered.append({c: r[c] for c in COLUMNS})
-    return ordered
-
-
-def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=COLUMNS)
-        w.writeheader()
-        w.writerows(rows)
-
-
-def summarize(rows: list[dict[str, object]]) -> None:
-    threat: dict[str, int] = {}
-    labels: dict[str, int] = {}
-    for r in rows:
-        t = str(r["threat_type"])
-        threat[t] = threat.get(t, 0) + 1
-        lb = str(r["label"])
-        labels[lb] = labels.get(lb, 0) + 1
-    print("shape:", (len(rows), len(COLUMNS)))
-    print("\nthreat_type counts:")
-    for k in sorted(threat):
-        print(f"  {k}: {threat[k]}")
-    print("\nlabel counts:")
-    for k in sorted(labels):
-        print(f"  {k}: {labels[k]}")
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate synthetic alerts_dataset.csv")
-    parser.add_argument("--rows", type=int, default=DEFAULT_ROWS, help="Total rows (default 1240)")
-    parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="RNG seed (default 42)")
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=None,
-        help="Output CSV path (default: ai/datasets/alerts_dataset.csv from repo root)",
-    )
-    args = parser.parse_args()
-    repo_root = Path(__file__).resolve().parents[2]
-    out = args.output if args.output is not None else repo_root / OUTPUT_REL
-
-    rows = build_rows(args.rows, args.seed)
-    write_csv(out, rows)
-
-    print(f"Wrote {out} (seed={args.seed}, rows={len(rows)})")
-    summarize(rows)
-
-
-if __name__ == "__main__":
-    main()
+out = Path("/home/claude/enterprise_alerts_dataset.csv")
+with open(out,"w",newline="") as f:
+    w = csv.DictWriter(f, fieldnames=FIELDS); w.writeheader(); w.writerows(rows)
+print(f"\nWritten: {out}")

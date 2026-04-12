@@ -74,6 +74,7 @@ ALERT_PRIORITY_ANCHORS: dict[str, int] = {
     IncidentPriority.LOW.value: 25,
     IncidentPriority.MEDIUM.value: 55,
     IncidentPriority.HIGH.value: 80,
+    IncidentPriority.CRITICAL.value: 95,
 }
 
 # LEGACY: `risk_training_fixture.csv` TensorFlow path (MODEL_* schema); tests / optional lab only.

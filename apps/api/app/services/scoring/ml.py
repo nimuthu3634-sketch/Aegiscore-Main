@@ -19,7 +19,7 @@ import pandas as pd
 import tensorflow as tf
 
 from app.models.enums import ScoreMethod
-from app.services.scoring import alert_prioritization as ap
+from app.services.scoring import alert_prioritization as ap  # enterprise v2 schema
 from app.services.scoring.baseline import priority_from_score
 from app.services.scoring.constants import (
     MODEL_CATEGORICAL_FEATURES,
