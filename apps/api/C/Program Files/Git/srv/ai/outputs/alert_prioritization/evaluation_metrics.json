@@ -1,0 +1,44 @@
+{
+  "train_accuracy": 0.966398,
+  "validation_accuracy": 0.927419,
+  "test_accuracy": 0.899194,
+  "class_distribution": {
+    "train": {
+      "high": 162,
+      "low": 418,
+      "medium": 164
+    },
+    "validation": {
+      "high": 54,
+      "low": 139,
+      "medium": 55
+    },
+    "test": {
+      "high": 54,
+      "low": 139,
+      "medium": 55
+    }
+  },
+  "confusion_matrix": {
+    "low": {
+      "low": 138,
+      "medium": 1,
+      "high": 0
+    },
+    "medium": {
+      "low": 17,
+      "medium": 38,
+      "high": 0
+    },
+    "high": {
+      "low": 4,
+      "medium": 3,
+      "high": 47
+    }
+  },
+  "label_classes": [
+    "low",
+    "medium",
+    "high"
+  ]
+}

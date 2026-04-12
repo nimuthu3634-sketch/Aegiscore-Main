@@ -1,22 +1,22 @@
 {
   "model_name": "aegiscore_alert_prioritization_v1",
   "training_schema": "alert_prioritization_v1",
-  "model_version": "alert_model_20260412_162704",
-  "trained_at": "2026-04-12T16:27:04.092776+00:00",
-  "generated_at": "2026-04-12T16:27:04.092776+00:00",
+  "model_version": "alert_prioritization_v1_20260412",
+  "trained_at": "2026-04-12T17:46:20.044746+00:00",
+  "generated_at": "2026-04-12T17:46:20.044746+00:00",
   "framework": "tensorflow",
   "ml_framework": "tensorflow",
   "training_rows": 1240,
   "train_rows": 744,
   "validation_rows": 248,
   "test_rows": 248,
-  "train_accuracy": 0.985215,
+  "train_accuracy": 0.966398,
   "validation_accuracy": 0.927419,
-  "test_accuracy": 0.891129,
+  "test_accuracy": 0.899194,
   "metrics": {
-    "train_accuracy": 0.985215,
+    "train_accuracy": 0.966398,
     "validation_accuracy": 0.927419,
-    "test_accuracy": 0.891129
+    "test_accuracy": 0.899194
   },
   "label_classes": [
     "low",
@@ -386,20 +386,20 @@
       "unknown"
     ]
   },
-  "evaluation_artifacts_dir": "ai/outputs/alert_prioritization",
-  "confusion_matrix_path": "ai/outputs/alert_prioritization/confusion_matrix.csv",
-  "classification_report_path": "ai/outputs/alert_prioritization/classification_report.txt",
-  "evaluation_metrics_path": "ai/outputs/alert_prioritization/evaluation_metrics.json",
+  "evaluation_artifacts_dir": "apps/api/C:/Program Files/Git/srv/ai/outputs/alert_prioritization",
+  "confusion_matrix_path": "apps/api/C:/Program Files/Git/srv/ai/outputs/alert_prioritization/confusion_matrix.csv",
+  "classification_report_path": "apps/api/C:/Program Files/Git/srv/ai/outputs/alert_prioritization/classification_report.txt",
+  "evaluation_metrics_path": "apps/api/C:/Program Files/Git/srv/ai/outputs/alert_prioritization/evaluation_metrics.json",
   "confusion_matrix": {
     "low": {
-      "low": 137,
-      "medium": 2,
+      "low": 138,
+      "medium": 1,
       "high": 0
     },
     "medium": {
-      "low": 16,
-      "medium": 37,
-      "high": 2
+      "low": 17,
+      "medium": 38,
+      "high": 0
     },
     "high": {
       "low": 4,
