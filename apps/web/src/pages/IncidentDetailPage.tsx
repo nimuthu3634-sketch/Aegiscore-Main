@@ -7,6 +7,7 @@ import { EvidencePanel } from "../components/data-display/EvidencePanel";
 import { KeyValueGrid, type KeyValueItem } from "../components/data-display/KeyValueGrid";
 import { LinkedAlertsTable } from "../components/data-display/LinkedAlertsTable";
 import { RelatedResponsesPanel } from "../components/data-display/RelatedResponsesPanel";
+import { AUTOMATED_BLOCK_SCOPE_NOTE } from "../lib/aiPrioritization";
 import { ScoreExplanationCard } from "../components/data-display/ScoreExplanationCard";
 import { EmptyState } from "../components/feedback/EmptyState";
 import { ErrorState } from "../components/feedback/ErrorState";
@@ -271,6 +272,7 @@ export function IncidentDetailPage() {
           <RelatedResponsesPanel
             responses={incident.relatedResponses}
             title="Response action history"
+            automationScopeFootnote={AUTOMATED_BLOCK_SCOPE_NOTE}
           />
 
           <AnalystNotesPanel

@@ -73,6 +73,7 @@ def score_alert(
     risk_score = RiskScoresRepository(session).upsert_for_alert(alert, result)
     session.flush()
 
+    # Automated responses (including built-in ML brute-force block) read ``alert.risk_score``.
     evaluate_alert_policies(session, alert)
 
     if alert.incident is not None:

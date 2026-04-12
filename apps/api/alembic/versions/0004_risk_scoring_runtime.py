@@ -11,6 +11,7 @@ down_revision = "0003_incident_alert_refactor"
 branch_labels = None
 depends_on = None
 
+# Enum value `sklearn_model` is historical naming only; runtime never shipped scikit-learn scoring.
 score_method_enum = postgresql.ENUM(
     "baseline_rules",
     "sklearn_model",

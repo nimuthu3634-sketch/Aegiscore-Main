@@ -1,7 +1,10 @@
-"""TensorFlow risk scoring: ``alert_prioritization_v1`` (3-class) or legacy fixture schema.
+"""TensorFlow (Keras) alert prioritization: ``alert_prioritization_v1`` (primary) or legacy fixture schema.
 
-Threat / detection context is produced by ingestion and :mod:`app.services.scoring.features`;
-the trainable head assigns **low / medium / high** only for ``alert_prioritization_v1``.
+Threat / detection context comes from ingestion and :mod:`app.services.scoring.features`.
+The **primary** trainable head (``alert_prioritization_v1``) uses a **3-class** softmax
+(**low / medium / high** only — no critical class). A separate **LEGACY** TensorFlow path
+supports ``risk_training_fixture.csv`` (``legacy_risk_fixture``) for regression tests;
+it is not the product default. **There is no scikit-learn or joblib model path.**
 """
 from __future__ import annotations
 
@@ -26,7 +29,7 @@ from app.services.scoring.constants import (
 )
 from app.services.scoring.types import AlertRiskFeatures, ScoringResult
 
-# LEGACY: TensorFlow path for `risk_training_fixture.csv` (MODEL_* schema). Not sklearn.
+# LEGACY: second TensorFlow training schema (`risk_training_fixture.csv`, MODEL_* columns).
 LEGACY_TRAINING_SCHEMA = "legacy_risk_fixture"
 
 

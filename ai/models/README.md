@@ -1,6 +1,6 @@
-# AegisCore Risk Model Artifacts
+# AegisCore alert prioritization artifacts
 
-This directory stores locally trained TensorFlow (Keras) artifacts for AegisCore risk scoring.
+This directory stores locally trained **TensorFlow (Keras)** `.keras` weights plus paired **JSON metadata** for **alert prioritization** (see [docs/ai-alert-prioritization.md](../../docs/ai-alert-prioritization.md)). **No joblib or sklearn artifacts** are used.
 
 Expected files:
 

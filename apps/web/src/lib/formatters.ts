@@ -15,8 +15,9 @@ export function formatScoreMethodLabel(value: string | null | undefined) {
   switch (value) {
     case "baseline_rules":
       return "Baseline rules";
+    // Historical persisted enum value; runtime trainable path is TensorFlow.
     case "sklearn_model":
-      return "Legacy trainable model";
+      return "Legacy score method (historical)";
     case "tensorflow_model":
       return "TensorFlow model";
     default:

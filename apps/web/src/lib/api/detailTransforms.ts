@@ -107,11 +107,15 @@ export function toRelatedResponses(
     executedAt: formatUtcDateTime(response.executed_at ?? response.created_at),
     resultSummary:
       response.result_summary ??
-      toDisplayValue(response.details.result) ??
+      toDisplayValue(response.details["result"]) ??
       "No response summary available.",
     resultMessage: response.result_message ?? null,
     attemptCount: response.attempt_count ?? 0,
     requestedBy: toActorLabel(response.requested_by),
+    details:
+      response.details && typeof response.details === "object"
+        ? (response.details as Record<string, unknown>)
+        : undefined,
     relatedNotifications: (response.related_notifications ?? []).map((event) => ({
       id: event.id,
       recipient: event.recipient,

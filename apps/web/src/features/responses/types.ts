@@ -30,6 +30,8 @@ export type ResponseRecord = {
   attemptCount: number;
   /** Short summary of persisted notification deliveries tied to this response (if any). */
   notificationSummary: string | null;
+  /** Human-readable line when this row is the built-in ML brute-force IP block. */
+  mlBruteBlockSummary: string | null;
 };
 
 export type ResponsesListResponse = {
@@ -59,6 +61,7 @@ export type ResponsesListApiResponse = {
     result_summary: string | null;
     result_message: string | null;
     attempt_count: number;
+    details: Record<string, unknown>;
     created_at: string;
     executed_at: string | null;
     related_notifications?: Array<{

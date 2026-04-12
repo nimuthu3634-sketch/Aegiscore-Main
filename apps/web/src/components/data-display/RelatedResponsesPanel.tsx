@@ -3,6 +3,7 @@ import { ModeBadge, ExecutionStatusBadge } from "../../features/responses/compon
 import type { ResponseExecutionStatus, ResponseMode } from "../../features/responses/types";
 import { Badge } from "../ui/Badge";
 import { formatTokenLabel } from "../../lib/formatters";
+import { summarizeMlBruteForceBlock } from "../../lib/aiPrioritization";
 
 export type ResponseRelatedNotification = {
   id: string;
@@ -26,16 +27,21 @@ export type RelatedResponseItem = {
   attemptCount?: number;
   requestedBy?: string | null;
   relatedNotifications?: ResponseRelatedNotification[];
+  /** Raw execution details from the API (used for built-in ML brute-force block copy). */
+  details?: Record<string, unknown>;
 };
 
 type RelatedResponsesPanelProps = {
   responses: RelatedResponseItem[];
   title?: string;
+  /** Optional scope note (e.g. brute_force-only built-in block) shown once above the list. */
+  automationScopeFootnote?: string | null;
 };
 
 export function RelatedResponsesPanel({
   responses,
-  title = "Related response actions"
+  title = "Related response actions",
+  automationScopeFootnote
 }: RelatedResponsesPanelProps) {
   return (
     <EvidencePanel
@@ -43,9 +49,16 @@ export function RelatedResponsesPanel({
       title={title}
       description="What ran against this alert or incident: policy name, target, dry-run vs live, outcome, and any linked notification deliveries."
     >
+      {automationScopeFootnote ? (
+        <p className="type-body-sm text-content-muted mb-3 rounded-panel border border-dashed border-border-subtle bg-surface-base/30 px-4 py-3">
+          {automationScopeFootnote}
+        </p>
+      ) : null}
       {responses.length ? (
         <div className="space-y-3">
-          {responses.map((response) => (
+          {responses.map((response) => {
+            const mlBlockWhy = summarizeMlBruteForceBlock(response.details);
+            return (
             <div
               key={response.id}
               className="rounded-panel border border-border-subtle bg-surface-subtle/65 p-4"
@@ -58,6 +71,9 @@ export function RelatedResponsesPanel({
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <p className="type-mono-sm">{response.id}</p>
                     {response.policyName ? <Badge tone="brand">{response.policyName}</Badge> : null}
+                    {!response.policyName && response.actionType === "block_ip" ? (
+                      <Badge tone="outline">built-in automation</Badge>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -68,6 +84,15 @@ export function RelatedResponsesPanel({
               <div className="mt-3 space-y-2">
                 <p className="type-mono-sm">target: {response.target}</p>
                 <p className="type-mono-sm">executed_at: {response.executedAt}</p>
+                {mlBlockWhy ? (
+                  <div
+                    className="rounded-panel border border-brand-primary/30 bg-surface-accentSoft/40 px-4 py-3"
+                    data-testid="ml-brute-block-why"
+                  >
+                    <p className="type-label-sm">Why this IP was blocked</p>
+                    <p className="type-body-sm mt-2 text-content-secondary">{mlBlockWhy}</p>
+                  </div>
+                ) : null}
                 <p className="type-body-sm">{response.resultSummary}</p>
                 {response.resultMessage && response.resultMessage !== response.resultSummary ? (
                   <p className="type-body-sm text-content-muted">{response.resultMessage}</p>
@@ -113,7 +138,8 @@ export function RelatedResponsesPanel({
                 ) : null}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="rounded-panel border border-dashed border-border-subtle bg-surface-base/30 p-4">

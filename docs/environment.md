@@ -55,6 +55,7 @@ For wiring **live Wazuh polling** and **Suricata `file_tail`** on an **Ubuntu Se
 - `SCORING_MODEL_PATH`: TensorFlow Keras model file (`.keras`) used when `SCORING_STRATEGY=model`
 - `SCORING_MODEL_METADATA_PATH`: metadata JSON path paired with the model artifact
 - `SCORING_MODEL_VERSION`: fallback runtime model version label for local development
+- `AUTOMATED_RESPONSE_ML_BRUTE_FORCE_ENABLED`: when `true`, allows the **built-in** TensorFlow brute-force auto `block_ip` path (strict gates: `brute_force` only, TF scoring, high tier, failed-login window, source IP); see [ai-alert-prioritization.md](ai-alert-prioritization.md)
 - `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE`: safety gate for live destructive adapters such as `block_ip` and `disable_user`; keep `false` for local development
 - `AUTOMATED_RESPONSE_MAX_RETRIES`: maximum automated execution attempts before a response action is marked failed
 - `AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED`: enables first-party backend adapters for response actions

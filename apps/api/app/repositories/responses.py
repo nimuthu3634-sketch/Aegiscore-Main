@@ -107,6 +107,22 @@ class ResponsesRepository:
         paged_statement = statement.offset(offset).limit(query.page_size)
         return list(self.session.scalars(paged_statement)), total
 
+    def find_existing_automation_action(
+        self,
+        *,
+        incident_id: UUID,
+        normalized_alert_id: UUID,
+        automation_rule: str,
+    ) -> ResponseAction | None:
+        statement = select(ResponseAction).where(
+            ResponseAction.incident_id == incident_id,
+            ResponseAction.normalized_alert_id == normalized_alert_id,
+        )
+        for row in self.session.scalars(statement):
+            if (row.details or {}).get("automation_rule") == automation_rule:
+                return row
+        return None
+
     def find_existing_policy_action(
         self,
         *,

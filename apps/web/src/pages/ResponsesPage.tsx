@@ -132,7 +132,7 @@ export function ResponsesPage() {
 
       <SearchFilterToolbar
         title="Response execution filters"
-        description="Filter executions from policies tied to brute force, FIM, port scan, and unauthorized user creation—by action, mode, and outcome."
+        description="Filter executions from policies across validated detections. Built-in ML IP blocks appear only for brute_force (TensorFlow High + login-density gates); other types use policies only."
         search={
           <SearchInput
             value={search}

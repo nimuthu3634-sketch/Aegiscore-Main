@@ -105,6 +105,7 @@ def _settings(**overrides: object) -> SimpleNamespace:
         "smtp_use_starttls": False,
         "smtp_timeout_seconds": 10.0,
     }
+    defaults.setdefault("automated_response_ml_brute_force_enabled", True)
     defaults.update(overrides)
     return SimpleNamespace(**defaults)
 
@@ -117,6 +118,10 @@ def _build_alert(
     severity: int = 9,
     raw_payload: dict | None = None,
     normalized_payload: dict | None = None,
+    scoring_method: ScoreMethod = ScoreMethod.BASELINE_RULES,
+    priority_label: IncidentPriority | None = None,
+    explanation: dict | None = None,
+    feature_snapshot: dict | None = None,
 ) -> NormalizedAlert:
     now = datetime.now(UTC)
     asset = Asset(
@@ -151,16 +156,19 @@ def _build_alert(
         normalized_payload=normalized_payload or {},
         created_at=now,
     )
+    pl = priority_label or (
+        IncidentPriority.CRITICAL if score >= 85 else IncidentPriority.HIGH
+    )
     alert.risk_score = RiskScore(
         id=uuid4(),
         normalized_alert=alert,
         score=score,
         confidence=0.93,
-        priority_label=IncidentPriority.CRITICAL if score >= 85 else IncidentPriority.HIGH,
-        scoring_method=ScoreMethod.BASELINE_RULES,
+        priority_label=pl,
+        scoring_method=scoring_method,
         reasoning="Synthetic scoring fixture for automated response tests.",
-        explanation={"summary": "Scored for automated response testing."},
-        feature_snapshot={"repeated_event_count": 5},
+        explanation=explanation or {"summary": "Scored for automated response testing."},
+        feature_snapshot=feature_snapshot or {"repeated_event_count": 5},
         calculated_at=now,
     )
     return alert
@@ -539,3 +547,219 @@ def test_evaluate_alert_policies_records_live_admin_notification_for_user_creati
     assert "built-in notification service" in (response.result_summary or "")
     assert response.details["delivered"] == 1
     assert "response.execution_completed" in _audit_actions(session)
+
+
+def test_ml_brute_force_auto_block_executes_when_all_gates_met(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=80,
+        raw_payload={"source_ip": "198.51.100.50"},
+        normalized_payload={"source_ip": "198.51.100.50"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high", "summary": "TF"},
+        feature_snapshot={
+            "source_ip": "198.51.100.50",
+            "failed_logins_5m": 12,
+            "detection_type": "brute_force",
+        },
+    )
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(automated_response_block_ip_backend="ledger"),
+    )
+    monkeypatch.setattr(
+        PoliciesRepository,
+        "find_matching_policies",
+        lambda self, **kwargs: [],
+    )
+    monkeypatch.setattr(
+        ResponsesRepository,
+        "find_existing_automation_action",
+        lambda self, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        ResponsesRepository,
+        "find_existing_policy_action",
+        lambda self, **kwargs: None,
+    )
+
+    responses = execution.evaluate_alert_policies(session, alert)
+
+    assert len(responses) == 1
+    r = responses[0]
+    assert r.policy_id is None
+    assert r.action_type == ResponseActionType.BLOCK_IP.value
+    assert r.target_value == "198.51.100.50"
+    assert (r.details or {}).get("automation_rule") == "ml_brute_force_auto_block_v1"
+    ev = (r.details or {}).get("ml_brute_force_evaluation") or {}
+    assert ev.get("thresholds", {}).get("required_failed_logins_5m") == 10
+    assert ev.get("checks", {}).get("failed_logins_5m_meets_threshold") is True
+    assert "response.builtin_automation_matched" in _audit_actions(session)
+
+
+def test_ml_brute_force_auto_block_skipped_when_failed_logins_below_threshold(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=80,
+        raw_payload={"source_ip": "198.51.100.50"},
+        normalized_payload={"source_ip": "198.51.100.50"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={"source_ip": "198.51.100.50", "failed_logins_5m": 5},
+    )
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
+
+    assert execution.evaluate_alert_policies(session, alert) == []
+
+
+def test_ml_brute_force_auto_block_skipped_for_non_brute_high_risk(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.PORT_SCAN,
+        score=80,
+        raw_payload={"source_ip": "198.51.100.51"},
+        normalized_payload={"source_ip": "198.51.100.51"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={"source_ip": "198.51.100.51", "failed_logins_5m": 25},
+    )
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
+
+    assert execution.evaluate_alert_policies(session, alert) == []
+
+
+def test_ml_brute_force_auto_block_skipped_for_file_integrity_high_even_with_failed_logins(
+    monkeypatch,
+) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.FILE_INTEGRITY_VIOLATION,
+        score=80,
+        raw_payload={"source_ip": "198.51.100.60"},
+        normalized_payload={"source_ip": "198.51.100.60"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={
+            "source_ip": "198.51.100.60",
+            "failed_logins_5m": 15,
+            "detection_type": "file_integrity_violation",
+        },
+    )
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
+
+    assert execution.evaluate_alert_policies(session, alert) == []
+
+
+def test_ml_brute_force_auto_block_skipped_for_unauthorized_user_creation_high(
+    monkeypatch,
+) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.UNAUTHORIZED_USER_CREATION,
+        score=80,
+        raw_payload={"source_ip": "198.51.100.61"},
+        normalized_payload={"source_ip": "198.51.100.61"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={
+            "source_ip": "198.51.100.61",
+            "failed_logins_5m": 12,
+            "detection_type": "unauthorized_user_creation",
+        },
+    )
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
+
+    assert execution.evaluate_alert_policies(session, alert) == []
+
+
+def test_ml_brute_force_auto_block_skipped_when_source_ip_missing(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=80,
+        raw_payload={},
+        normalized_payload={},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={"failed_logins_5m": 15},
+    )
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
+
+    assert execution.evaluate_alert_policies(session, alert) == []
+
+
+def test_ml_brute_force_not_duplicated_when_policy_already_blocks_ip(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=95,
+        raw_payload={"source_ip": "198.51.100.50"},
+        normalized_payload={"source_ip": "198.51.100.50"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={"source_ip": "198.51.100.50", "failed_logins_5m": 12},
+    )
+    policy = _build_policy(
+        target=ResponsePolicyTarget.ALERT,
+        detection_type=DetectionType.BRUTE_FORCE,
+        action_type=ResponseActionType.BLOCK_IP,
+        mode=ResponseMode.DRY_RUN,
+        min_risk_score=70,
+    )
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(automated_response_block_ip_backend="ledger"),
+    )
+    monkeypatch.setattr(
+        PoliciesRepository,
+        "find_matching_policies",
+        lambda self, **kwargs: [policy],
+    )
+    monkeypatch.setattr(
+        ResponsesRepository,
+        "find_existing_policy_action",
+        lambda self, **kwargs: None,
+    )
+
+    responses = execution.evaluate_alert_policies(session, alert)
+    assert len(responses) == 1
+    assert (responses[0].details or {}).get("automation_rule") is None
+    assert (responses[0].details or {}).get("policy_snapshot") is not None
+
+
+def test_ml_brute_force_auto_block_skipped_when_disabled(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=80,
+        raw_payload={"source_ip": "198.51.100.50"},
+        normalized_payload={"source_ip": "198.51.100.50"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={"source_ip": "198.51.100.50", "failed_logins_5m": 12},
+    )
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(automated_response_ml_brute_force_enabled=False),
+    )
+    monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
+
+    assert execution.evaluate_alert_policies(session, alert) == []

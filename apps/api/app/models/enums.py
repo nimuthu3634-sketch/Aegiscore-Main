@@ -82,7 +82,8 @@ class NoteTargetType(str, enum.Enum):
 
 class ScoreMethod(str, enum.Enum):
     BASELINE_RULES = "baseline_rules"
-    SKLEARN_MODEL = "sklearn_model"  # legacy persisted rows only; new training uses TensorFlow
+    # Historical DB/API string only — no scikit-learn inference in this codebase.
+    SKLEARN_MODEL = "sklearn_model"
     TENSORFLOW_MODEL = "tensorflow_model"
 
 

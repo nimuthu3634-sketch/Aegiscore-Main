@@ -672,6 +672,28 @@ def to_notification_event_response(
     )
 
 
+def _class_probabilities_from_explanation(raw: object) -> dict[str, float] | None:
+    if not isinstance(raw, dict):
+        return None
+    out: dict[str, float] = {}
+    for key, value in raw.items():
+        if key is None:
+            continue
+        try:
+            out[str(key)] = float(value)
+        except (TypeError, ValueError):
+            continue
+    return out or None
+
+
+def _model_priority_tier_from_explanation(explanation: dict[str, Any]) -> str | None:
+    tier = explanation.get("model_priority_tier") or explanation.get("predicted_class")
+    if tier is None:
+        return None
+    text = str(tier).strip().lower()
+    return text or None
+
+
 def _build_alert_score_explanation(
     alert: NormalizedAlert,
     priority_label: AlertSeverityLabel | None,
@@ -700,6 +722,11 @@ def _build_alert_score_explanation(
         model_version=alert.risk_score.model_version,
         drivers=drivers if isinstance(drivers, list) else None,
         feature_snapshot=alert.risk_score.feature_snapshot,
+        reasoning=alert.risk_score.reasoning,
+        model_priority_tier=_model_priority_tier_from_explanation(explanation),
+        class_probabilities=_class_probabilities_from_explanation(
+            explanation.get("class_probabilities"),
+        ),
     )
 
 

@@ -30,8 +30,8 @@ export function RecentResponsesPanel({
           <p className="type-label-md">Most recent responses</p>
           <CardTitle>Execution history</CardTitle>
           <CardDescription>
-            Policy-driven actions for the four validated threat categories (block IP, notify admin, manual
-            review, and related controls)—see mode and outcome at a glance.
+            Wazuh/Suricata detect events; AI prioritizes alerts. Policy-driven actions and optional
+            brute_force ML IP blocks appear here—see mode and outcome at a glance.
           </CardDescription>
         </div>
         <Button variant="ghost" size="sm" onClick={onViewResponses}>
@@ -58,6 +58,11 @@ export function RecentResponsesPanel({
                     <p className="type-body-sm">{response.resultSummary}</p>
                     {response.resultMessage && response.resultMessage !== response.resultSummary ? (
                       <p className="type-body-sm text-content-muted">{response.resultMessage}</p>
+                    ) : null}
+                    {response.mlBruteBlockSummary ? (
+                      <p className="type-body-sm text-content-secondary mt-2 rounded-panel border border-brand-primary/20 bg-surface-accentSoft/25 px-3 py-2">
+                        {response.mlBruteBlockSummary}
+                      </p>
                     ) : null}
                   </div>
                 </div>

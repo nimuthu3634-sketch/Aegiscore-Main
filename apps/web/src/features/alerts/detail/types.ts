@@ -1,6 +1,7 @@
 import type { AnalystNote } from "../../../components/data-display/AnalystNotesPanel";
 import type { RelatedResponseItem } from "../../../components/data-display/RelatedResponsesPanel";
 import type { KeyValueItem } from "../../../components/data-display/KeyValueGrid";
+import type { AiPriorityTier } from "../../../lib/aiPrioritization";
 import type { Severity, StatusTone } from "../../../lib/theme/tokens";
 import type { IncidentNotificationItem } from "../../incidents/detail/types";
 
@@ -12,8 +13,13 @@ export type AlertScoreExplanation = {
   factors: string[];
   drivers: string[];
   scoringMethod?: string | null;
+  /** Raw API enum value (e.g. `tensorflow_model`) for client-side branching. */
+  scoringMethodValue?: string | null;
   version?: string | null;
   confidence?: number | null;
+  reasoning?: string | null;
+  modelPriorityTier?: AiPriorityTier | null;
+  classProbabilitiesSummary?: string | null;
 };
 
 export type AlertAuditHistoryItem = {
@@ -121,6 +127,9 @@ export type AlertDetailApiResponse = {
     scoring_method?: string | null;
     baseline_version?: string | null;
     model_version?: string | null;
+    reasoning?: string | null;
+    model_priority_tier?: string | null;
+    class_probabilities?: Record<string, number> | null;
     drivers?: Array<{
       label?: string;
       contribution?: number;

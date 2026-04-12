@@ -9,6 +9,7 @@ from app.models.audit_log import AuditLog
 from app.models.enums import (
     IncidentStatus,
     ResponseActionType,
+    ResponseMode,
     ResponsePolicyTarget,
     ResponseStatus,
 )
@@ -32,7 +33,21 @@ from app.services.scoring.features import (
     extract_source_ip,
     extract_username,
 )
+from app.services.response_automation.ml_brute_force_automation import (
+    AUTOMATION_RULE_ID,
+    ml_brute_force_auto_block_evaluation,
+)
 from app.services.scoring.rollup import incident_rollup_score, refresh_incident_priority
+
+
+def _response_adapter_policy_name(response_action: ResponseAction) -> str:
+    details = response_action.details or {}
+    named = str(details.get("adapter_policy_name") or "").strip()
+    if named:
+        return named
+    if response_action.policy is not None:
+        return response_action.policy.name
+    return "Unnamed policy"
 
 
 def _create_audit_log(
@@ -175,6 +190,45 @@ def _build_execution_payload(
     }
 
 
+def _build_builtin_ml_brute_force_payload(
+    *,
+    alert: NormalizedAlert,
+    incident: Incident,
+    target_value: str | None,
+    reason: str,
+    evaluation_detail: dict,
+) -> dict:
+    primary_alert = alert
+    return {
+        "policy": None,
+        "built_in_automation": {
+            "rule": AUTOMATION_RULE_ID,
+            "name": "TensorFlow brute-force IP auto-block",
+            "evaluation": evaluation_detail,
+        },
+        "incident": {
+            "id": str(incident.id),
+            "title": incident.title,
+            "priority": incident.priority.value,
+            "status": incident.status.value,
+        },
+        "alert": {
+            "id": str(primary_alert.id) if primary_alert else None,
+            "detection_type": primary_alert.detection_type.value if primary_alert else None,
+            "risk_score": round(primary_alert.risk_score.score)
+            if primary_alert and primary_alert.risk_score
+            else None,
+            "source_ip": extract_source_ip(primary_alert) if primary_alert else None,
+            "destination_ip": extract_destination_ip(primary_alert) if primary_alert else None,
+            "destination_port": extract_destination_port(primary_alert) if primary_alert else None,
+            "username": extract_username(primary_alert) if primary_alert else None,
+        },
+        "target_value": target_value,
+        "evaluation_reason": reason,
+        "config": {},
+    }
+
+
 def _upsert_response_action(
     session: Session,
     *,
@@ -234,6 +288,61 @@ def _upsert_response_action(
     return response_action
 
 
+def _upsert_builtin_automation_action(
+    session: Session,
+    *,
+    incident: Incident,
+    alert: NormalizedAlert,
+    target_value: str | None,
+    reason: str,
+    evaluation_detail: dict,
+) -> ResponseAction:
+    responses_repository = ResponsesRepository(session)
+    existing = responses_repository.find_existing_automation_action(
+        incident_id=incident.id,
+        normalized_alert_id=alert.id,
+        automation_rule=AUTOMATION_RULE_ID,
+    )
+    if existing is not None:
+        return existing
+
+    response_action = responses_repository.create(
+        ResponseAction(
+            incident=incident,
+            normalized_alert=alert,
+            policy=None,
+            action_type=ResponseActionType.BLOCK_IP.value,
+            status=ResponseStatus.QUEUED,
+            mode=ResponseMode.LIVE,
+            target_value=target_value,
+            attempt_count=0,
+            details={
+                "automation_rule": AUTOMATION_RULE_ID,
+                "adapter_policy_name": "Built-in: TensorFlow brute-force IP block (v1)",
+                "policy_snapshot": None,
+                "ml_brute_force_evaluation": evaluation_detail,
+                "evaluation_reason": reason,
+                "thresholds": evaluation_detail.get("thresholds", {}),
+            },
+        )
+    )
+    session.flush()
+    _create_audit_log(
+        session,
+        entity_type="response",
+        entity_id=str(response_action.id),
+        action="response.builtin_automation_matched",
+        details={
+            "automation_rule": AUTOMATION_RULE_ID,
+            "incident_id": str(incident.id),
+            "alert_id": str(alert.id),
+            "summary": "Built-in TensorFlow brute-force auto-block matched and queued execution.",
+            "evaluation": evaluation_detail,
+        },
+    )
+    return response_action
+
+
 def _execute_response_action(
     session: Session,
     *,
@@ -275,7 +384,7 @@ def _execute_response_action(
                 action_type=ResponseActionType(response_action.action_type),
                 mode=response_action.mode,
                 target_value=response_action.target_value,
-                policy_name=response_action.policy.name if response_action.policy else "Unnamed policy",
+                policy_name=_response_adapter_policy_name(response_action),
                 payload=payload,
             ),
             settings=settings,
@@ -349,6 +458,57 @@ def _evaluate_policy(
     )
 
 
+def _evaluate_builtin_ml_brute_force_auto_block(
+    session: Session,
+    alert: NormalizedAlert,
+) -> list[ResponseAction]:
+    settings = get_settings()
+    if not settings.automated_response_ml_brute_force_enabled:
+        return []
+    if not settings.automated_response_builtin_adapters_enabled:
+        return []
+
+    passed, evaluation_detail = ml_brute_force_auto_block_evaluation(alert)
+    if not passed:
+        return []
+
+    incident = alert.incident or _ensure_incident_for_alert(session, alert)
+    target_ip = evaluation_detail.get("resolved_source_ip") or extract_source_ip(alert)
+    if not target_ip:
+        return []
+
+    thr = evaluation_detail.get("thresholds", {})
+    failed_5m = (evaluation_detail.get("checks") or {}).get("failed_logins_5m")
+    reason = (
+        "Built-in TensorFlow brute-force auto-block: detection_type is brute_force, "
+        f"scoring_method is tensorflow_model, AI tier is high, failed_logins_5m is {failed_5m} "
+        f"(required >= {thr.get('required_failed_logins_5m')}), and source_ip is present."
+    )
+
+    response_action = _upsert_builtin_automation_action(
+        session,
+        incident=incident,
+        alert=alert,
+        target_value=target_ip,
+        reason=reason,
+        evaluation_detail=evaluation_detail,
+    )
+    payload = _build_builtin_ml_brute_force_payload(
+        alert=alert,
+        incident=incident,
+        target_value=target_ip,
+        reason=reason,
+        evaluation_detail=evaluation_detail,
+    )
+    executed = _execute_response_action(
+        session,
+        response_action=response_action,
+        payload=payload,
+    )
+    refresh_incident_priority(incident)
+    return [executed]
+
+
 def evaluate_alert_policies(
     session: Session,
     alert: NormalizedAlert,
@@ -361,33 +521,36 @@ def evaluate_alert_policies(
         detection_type=alert.detection_type,
         risk_score=alert.risk_score.score,
     )
-    if not policies:
-        return []
-
-    incident = _ensure_incident_for_alert(session, alert)
     responses: list[ResponseAction] = []
-    for policy in policies:
-        reason = (
-            f"Alert matched policy {policy.name} because {alert.detection_type.value} "
-            f"scored {round(alert.risk_score.score)} and met the threshold of "
-            f"{policy.min_risk_score}."
-        )
-        responses.append(
-            _evaluate_policy(
-                session,
-                policy=policy,
-                incident=incident,
-                alert=alert,
-                risk_score=alert.risk_score.score,
-                reason=reason,
+    policy_blocks_ip = False
+    if policies:
+        incident = _ensure_incident_for_alert(session, alert)
+        policy_blocks_ip = any(p.action_type == ResponseActionType.BLOCK_IP for p in policies)
+        for policy in policies:
+            reason = (
+                f"Alert matched policy {policy.name} because {alert.detection_type.value} "
+                f"scored {round(alert.risk_score.score)} and met the threshold of "
+                f"{policy.min_risk_score}."
             )
+            responses.append(
+                _evaluate_policy(
+                    session,
+                    policy=policy,
+                    incident=incident,
+                    alert=alert,
+                    risk_score=alert.risk_score.score,
+                    reason=reason,
+                )
+            )
+        notify_for_high_risk_incident(
+            session,
+            incident=incident,
+            risk_score=alert.risk_score.score,
         )
-    notify_for_high_risk_incident(
-        session,
-        incident=incident,
-        risk_score=alert.risk_score.score,
-    )
-    refresh_incident_priority(incident)
+        refresh_incident_priority(incident)
+
+    if not policy_blocks_ip:
+        responses.extend(_evaluate_builtin_ml_brute_force_auto_block(session, alert))
     return responses
 
 

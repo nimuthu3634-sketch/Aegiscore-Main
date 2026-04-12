@@ -1,3 +1,10 @@
+"""Scoring constants: baseline weights, priority thresholds, and feature bundles.
+
+``ALERT_PRIORITY_ANCHORS`` supports the **3-class** TensorFlow alert prioritization model.
+``MODEL_*`` / ``RISK_PRIORITY_ANCHORS`` support the **legacy** small fixture schema only
+(see :data:`LEGACY_TRAINING_SCHEMA` in ``ml.py``) — not the primary product path.
+"""
+
 from app.models.enums import IncidentPriority
 
 MAX_RISK_SCORE = 100
@@ -69,7 +76,7 @@ ALERT_PRIORITY_ANCHORS: dict[str, int] = {
     IncidentPriority.HIGH.value: 80,
 }
 
-# LEGACY: columns for the small `risk_training_fixture.csv` TensorFlow path (pre-alert-ML schema).
+# LEGACY: `risk_training_fixture.csv` TensorFlow path (MODEL_* schema); tests / optional lab only.
 MODEL_CATEGORICAL_FEATURES = [
     "source_type",
     "detection_type",

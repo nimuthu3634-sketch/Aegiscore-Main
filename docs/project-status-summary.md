@@ -2,7 +2,7 @@
 
 ## Final product
 
-**AegisCore** is the **final submitted product**: a **centralized SOC platform MVP** (web console + backend + database) covering **monitoring**, **alert handling**, **incident workflows**, **explainable AI-assisted risk scoring** (baseline + optional **TensorFlow**), **reporting**, and **controlled automated response**. The **academic release** implements **only** **`brute_force`**, **`port_scan`**, **`file_integrity_violation`**, and **`unauthorized_user_creation`**. Full definition: **[final-product.md](final-product.md)**.
+**AegisCore** is the **final submitted product**: a **centralized SOC platform MVP** (web console + backend + database) covering **monitoring**, **alert handling**, **incident workflows**, **explainable AI-assisted alert prioritization** (baseline + optional **TensorFlow**), **reporting**, and **controlled automated response**. The **academic release** implements **only** **`brute_force`**, **`port_scan`**, **`file_integrity_violation`**, and **`unauthorized_user_creation`**. Full definition: **[final-product.md](final-product.md)**.
 
 ## 1. System overview
 

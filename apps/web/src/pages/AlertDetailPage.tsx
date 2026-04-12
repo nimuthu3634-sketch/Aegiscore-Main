@@ -8,11 +8,14 @@ import { RawPayloadViewer } from "../components/data-display/RawPayloadViewer";
 import { RelatedResponsesPanel } from "../components/data-display/RelatedResponsesPanel";
 import { ScoreExplanationCard } from "../components/data-display/ScoreExplanationCard";
 import { EmptyState } from "../components/feedback/EmptyState";
+import { AlertAiContextBanner } from "../components/data-display/AlertAiContextBanner";
+import { AUTOMATED_BLOCK_SCOPE_NOTE, formatAiTierTitleCase } from "../lib/aiPrioritization";
 import { formatTokenLabel } from "../lib/formatters";
 import { ErrorState } from "../components/feedback/ErrorState";
 import { LoadingCard, LoadingTable } from "../components/feedback/LoadingState";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
+import { AiPriorityBadge } from "../components/ui/AiPriorityBadge";
 import { SeverityChip } from "../components/ui/SeverityChip";
 import { StatusChip } from "../components/ui/StatusChip";
 import { LinkIncidentModal } from "../features/alerts/detail/LinkIncidentModal";
@@ -226,6 +229,9 @@ export function AlertDetailPage() {
             <Badge tone="outline">{alert.id}</Badge>
             <Badge tone="outline">{alert.sourceType}</Badge>
             <SeverityChip severity={alert.severity} />
+            {alert.scoreExplanation?.modelPriorityTier ? (
+              <AiPriorityBadge tier={alert.scoreExplanation.modelPriorityTier} />
+            ) : null}
             <StatusChip status={alert.status} />
             <Badge tone={(alert.riskScore ?? 0) >= 70 ? "warning" : "brand"}>
               risk {alert.riskScore ?? "n/a"}
@@ -256,6 +262,41 @@ export function AlertDetailPage() {
         <KeyValueGrid items={metadataItems} columns={4} />
       </DetailHeader>
 
+      <AlertAiContextBanner
+        sourceType={alert.sourceType}
+        detectionType={alert.detectionType}
+        scoringMethodLabel={alert.scoreExplanation?.scoringMethod ?? null}
+        rawScoringMethod={alert.scoreExplanation?.scoringMethodValue ?? null}
+        aiTier={alert.scoreExplanation?.modelPriorityTier ?? null}
+      />
+
+      {alert.detectionType === "brute_force" ? (
+        <EvidencePanel
+          eyebrow="Automated response"
+          title="Brute-force automation status"
+          description="Only brute_force alerts may trigger the built-in ML IP block when TensorFlow prioritization is High and login-density gates pass. Review execution rows below."
+        >
+          {alert.relatedResponses.length ? (
+            <ul className="space-y-2">
+              {alert.relatedResponses.map((r) => (
+                <li
+                  key={r.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-panel border border-border-subtle bg-surface-subtle/50 px-3 py-2 type-body-sm"
+                >
+                  <span className="type-mono-sm">{r.actionType}</span>
+                  <span className="text-content-muted">{r.executionStatus}</span>
+                  <span className="type-mono-sm text-content-secondary">{r.mode}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="type-body-sm text-content-muted">
+              No automated response executions are recorded for this alert yet.
+            </p>
+          )}
+        </EvidencePanel>
+      ) : null}
+
       <section className="grid gap-4 2xl:grid-cols-[1.35fr_0.65fr]">
         <div className="space-y-4">
           <EvidencePanel
@@ -268,7 +309,14 @@ export function AlertDetailPage() {
 
           <RawPayloadViewer payload={alert.rawPayload} />
 
-          <RelatedResponsesPanel responses={alert.relatedResponses} />
+          <RelatedResponsesPanel
+            responses={alert.relatedResponses}
+            automationScopeFootnote={
+              alert.detectionType === "brute_force"
+                ? AUTOMATED_BLOCK_SCOPE_NOTE
+                : "Built-in ML IP auto-blocking does not apply to this detection type; policy-driven actions may still appear below."
+            }
+          />
 
           <EvidencePanel
             dataTestId="alert-notifications-panel"
@@ -361,6 +409,8 @@ export function AlertDetailPage() {
               label={alert.scoreExplanation.label}
               summary={alert.scoreExplanation.summary}
               rationale={alert.scoreExplanation.rationale}
+              reasoning={alert.scoreExplanation.reasoning}
+              classProbabilitiesSummary={alert.scoreExplanation.classProbabilitiesSummary}
               scoreValue={<Badge tone="brand">risk {alert.scoreExplanation.score ?? "n/a"}</Badge>}
               factors={alert.scoreExplanation.factors}
               drivers={alert.scoreExplanation.drivers}
@@ -369,6 +419,14 @@ export function AlertDetailPage() {
                   label: "Scoring method",
                   value: alert.scoreExplanation.scoringMethod ?? "n/a"
                 },
+                ...(alert.scoreExplanation.modelPriorityTier
+                  ? [
+                      {
+                        label: "AI priority tier",
+                        value: formatAiTierTitleCase(alert.scoreExplanation.modelPriorityTier)
+                      }
+                    ]
+                  : []),
                 ...(alert.scoreExplanation.version
                   ? [
                       {

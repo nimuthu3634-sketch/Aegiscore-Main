@@ -51,6 +51,18 @@ class AlertScoreExplanationResponse(APIModel):
     model_version: str | None = None
     drivers: list[dict[str, Any]] | None = None
     feature_snapshot: dict[str, Any] | None = None
+    reasoning: str | None = Field(
+        default=None,
+        description="Persisted risk score reasoning (may align with rationale text).",
+    )
+    model_priority_tier: str | None = Field(
+        default=None,
+        description="TensorFlow 3-class tier: low / medium / high only.",
+    )
+    class_probabilities: dict[str, float] | None = Field(
+        default=None,
+        description="Softmax class probabilities when returned by the trainable model.",
+    )
 
 
 class AlertDetailResponse(APIModel):

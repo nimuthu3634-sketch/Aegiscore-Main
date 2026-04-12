@@ -2,6 +2,7 @@ import type { AlertsListApiResponse, AlertsListResponse } from "../../features/a
 import type { AssetsListApiResponse, AssetsListResponse } from "../../features/assets/types";
 import type { IncidentsListApiResponse, IncidentsListResponse } from "../../features/incidents/types";
 import type { ResponsesListApiResponse, ResponsesListResponse } from "../../features/responses/types";
+import { summarizeMlBruteForceBlock } from "../aiPrioritization";
 import { formatUtcDateTime } from "../api";
 import { mapListQueryMeta } from "./query";
 
@@ -113,7 +114,8 @@ export function mapResponsesListResponse(
         resultSummary: response.result_summary ?? "No response summary available.",
         resultMessage: response.result_message,
         attemptCount: response.attempt_count,
-        notificationSummary
+        notificationSummary,
+        mlBruteBlockSummary: summarizeMlBruteForceBlock(response.details)
       };
     }),
     total: payload.meta.total,

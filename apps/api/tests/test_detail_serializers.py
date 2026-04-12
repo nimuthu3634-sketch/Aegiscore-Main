@@ -212,6 +212,83 @@ def _build_fixture() -> tuple[NormalizedAlert, Incident, list[AuditLog], list[An
     return alert, incident, audit_logs, analyst_notes
 
 
+def test_alert_detail_tensorflow_score_explanation_includes_scoring_method() -> None:
+    now = datetime.now(UTC)
+    asset = Asset(
+        id=uuid4(),
+        hostname="edge-ssh",
+        ip_address="10.5.0.1",
+        operating_system="Linux",
+        criticality=AssetCriticality.HIGH,
+        created_at=now,
+        updated_at=now,
+    )
+    raw = RawAlert(
+        id=uuid4(),
+        asset=asset,
+        source="wazuh",
+        external_id="wazuh-tf-detail",
+        detection_type=DetectionType.BRUTE_FORCE,
+        severity=10,
+        raw_payload={"source_ip": "203.0.113.9"},
+        received_at=now,
+    )
+    alert = NormalizedAlert(
+        id=uuid4(),
+        raw_alert=raw,
+        asset=asset,
+        source="wazuh",
+        title="SSH brute force",
+        description="Repeated failures.",
+        detection_type=DetectionType.BRUTE_FORCE,
+        severity=10,
+        status=AlertStatus.NEW,
+        normalized_payload={"source_ip": "203.0.113.9", "failed_attempts": 40},
+        created_at=now,
+    )
+    alert.risk_score = RiskScore(
+        id=uuid4(),
+        normalized_alert=alert,
+        score=68.0,
+        confidence=0.55,
+        priority_label=IncidentPriority.MEDIUM,
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        model_version="tf_unit",
+        reasoning="TensorFlow 3-class tier: medium with 55% confidence.",
+        explanation={
+            "label": "Trainable alert prioritization model",
+            "summary": "Model predicted medium priority at 68.0/100 (3-class TensorFlow output: medium).",
+            "rationale": "TensorFlow (Keras) MLP on normalized telemetry (alert_prioritization_v1).",
+            "factors": [
+                "Model probability for medium class: 55.0%",
+                "Model probability for high class: 30.0%",
+            ],
+            "class_probabilities": {"low": 0.15, "medium": 0.55, "high": 0.30},
+            "model_priority_tier": "medium",
+            "scoring_method": ScoreMethod.TENSORFLOW_MODEL.value,
+        },
+        feature_snapshot={"failed_logins_5m": 11},
+        calculated_at=now,
+    )
+    alert.response_actions = []
+
+    response = to_alert_detail_response(alert, [], [])
+
+    assert response.score_explanation is not None
+    assert response.score_explanation.scoring_method == ScoreMethod.TENSORFLOW_MODEL
+    assert response.score_explanation.model_version == "tf_unit"
+    assert response.score_explanation.confidence == 0.55
+    assert "TensorFlow" in response.score_explanation.rationale
+    assert response.score_explanation.factors
+    assert response.score_explanation.model_priority_tier == "medium"
+    assert response.score_explanation.class_probabilities == {"low": 0.15, "medium": 0.55, "high": 0.30}
+    assert response.score_explanation.reasoning == "TensorFlow 3-class tier: medium with 55% confidence."
+    dumped = response.model_dump(mode="json")
+    assert dumped["score_explanation"]["scoring_method"] == ScoreMethod.TENSORFLOW_MODEL.value
+    assert dumped["score_explanation"]["model_priority_tier"] == "medium"
+    assert dumped["score_explanation"]["class_probabilities"]["high"] == 0.30
+
+
 def test_alert_detail_response_includes_observables_and_related_workflow() -> None:
     alert, _, audit_logs, analyst_notes = _build_fixture()
 

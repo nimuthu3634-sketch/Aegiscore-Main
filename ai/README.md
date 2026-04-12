@@ -1,49 +1,47 @@
 # AegisCore AI
 
-The AI workspace supports **risk prioritization** (post-detection scoring), not raw threat detection. The trainable path uses **TensorFlow / Keras**; see `docs/scoring.md` for runtime behavior and env vars.
+Utilities for **TensorFlow / Keras alert prioritization** (post-detection scoring). **Canonical documentation:** [docs/ai-alert-prioritization.md](../docs/ai-alert-prioritization.md) — product role, threat taxonomy, labels, backend wiring, and brute-force ML automation.
 
-## Synthetic alert prioritization dataset (academic prototype)
+## Synthetic dataset (`alert_prioritization_v1`)
 
-`ai/datasets/alerts_dataset.csv` is a **synthetic, structured** CSV used to prototype **AI alert prioritization** (labels `Low` / `Medium` / `High`). It is **not** production telemetry; it exists for reproducible experiments and teaching-style model training. Regenerate it anytime (same columns, fixed default seed) with:
+`ai/datasets/alerts_dataset.csv` is a **synthetic** CSV for reproducible training. Labels are **`Low` / `Medium` / `High`**. Rows include **`normal`** (non-attack baseline) plus **`brute_force`**, **`port_scan`**, **`file_integrity`**, and **`unauthorized_user_creation`** in the `threat_type` column (aligned with the prioritization feature spec; the live API uses `file_integrity_violation` as the `DetectionType` enum).
+
+Regenerate from repo root:
 
 ```powershell
 py -3 ai/datasets/generate_alerts_dataset.py
 ```
 
-Optional: `--rows 2000 --seed 99 --output path/to/out.csv`. The generator lives at `ai/datasets/generate_alerts_dataset.py`. For runtime detections, the product maps integrity events to `file_integrity_violation`; this CSV uses `file_integrity` as the `threat_type` value for that class so the training file stays aligned with the prioritization spec.
+Options: `--rows 2000 --seed 99 --output path/to/out.csv` · Script: `ai/datasets/generate_alerts_dataset.py`
 
 ## Layout
 
-- `datasets`: fixture and future training datasets
-- `models`: locally generated TensorFlow Keras **`.keras`** weights plus **`*.metadata.json`** (preprocessing + label map)
-- `training/train_risk_model.py`: training entrypoint (calls shared logic in `apps/api/.../scoring/ml.py`)
-- `inference/predict_risk.py`: CLI to score a JSON feature snapshot with a trained model
+- `datasets/` — training CSVs and small JSON samples for the inference CLI
+- `models/` — generated `.keras` + `.metadata.json` (see `ai/models/README.md`)
+- `training/train_risk_model.py` — training entrypoint (shared logic in `apps/api/app/services/scoring/ml.py`)
+- `inference/predict_risk.py` — score a JSON snapshot from the command line
 
 ## Runtime split
 
-- Production scoring runtime: `apps/api/app/services/scoring`
-- Training and manual inference utilities: `ai/...`
+- **Production scoring:** `apps/api/app/services/scoring/`
+- **This folder:** offline train/inference and datasets
 
-## Train the model (Docker)
-
-From repo root:
+## Train (Docker)
 
 ```powershell
 docker compose run --rm --no-deps api python /srv/ai/training/train_risk_model.py
 ```
 
-Outputs default to `ai/models/aegiscore-risk-priority-model.keras` and `ai/models/aegiscore-risk-priority-model.metadata.json`. Overrides: `AI_MODEL_PATH`, `AI_MODEL_METADATA_PATH`, `AI_DATASET_PATH` (defaults to `alerts_dataset.csv`), `AI_MODEL_VERSION`. Training the alert dataset also writes evaluation files under `ai/outputs/alert_prioritization/` unless `AI_EVAL_OUTPUT_DIR` is set.
+Defaults: `ai/models/aegiscore-risk-priority-model.keras` and `...metadata.json`. Overrides: `AI_DATASET_PATH`, `AI_MODEL_PATH`, `AI_MODEL_METADATA_PATH`, `AI_MODEL_VERSION`, optional `AI_EVAL_OUTPUT_DIR`.
 
-## Test scoring (API unit test)
-
-With API dev dependencies installed:
+## Unit test (TensorFlow path)
 
 ```powershell
 cd apps/api
 python -m pytest tests/test_scoring_ml.py -q
 ```
 
-In Docker, override the API entrypoint (otherwise the container waits for Postgres and never runs pytest):
+Docker (override entrypoint so pytest runs without waiting for Postgres):
 
 ```powershell
 docker compose run --rm --no-deps --entrypoint python api -m pytest tests/test_scoring_ml.py -q
@@ -51,15 +49,17 @@ docker compose run --rm --no-deps --entrypoint python api -m pytest tests/test_s
 
 ## Manual inference (CLI)
 
-After training, with defaults or `AI_MODEL_PATH` / `AI_MODEL_METADATA_PATH` set:
-
 ```powershell
 docker compose run --rm --no-deps api python /srv/ai/inference/predict_risk.py --features-file /srv/ai/datasets/sample_features.json
 docker compose run --rm --no-deps api python /srv/ai/inference/predict_risk.py --features-file /srv/ai/datasets/sample_alert_row.json
 ```
 
-With `alert_prioritization_v1` metadata, the CLI prints `predicted_label`, `confidence`, and per-class `probabilities`. API-shaped JSON (`detection_type`, …) is accepted and mapped automatically.
+With `alert_prioritization_v1` metadata, output includes `predicted_label`, `confidence`, and per-class `probabilities`.
 
 ## Enable model mode in the API
 
-Set `SCORING_STRATEGY=model` and point `SCORING_MODEL_PATH` / `SCORING_MODEL_METADATA_PATH` at the `.keras` file and paired JSON. If artifacts are missing or invalid, the API **falls back to the deterministic baseline** (see `apps/api/app/services/scoring/service.py`).
+Set `SCORING_STRATEGY=model` and `SCORING_MODEL_PATH` / `SCORING_MODEL_METADATA_PATH` to the `.keras` file and paired JSON. Missing artifacts → **baseline fallback** with `fallback_reason` in the explanation (`apps/api/app/services/scoring/service.py`).
+
+## Legacy fixture (engineering only)
+
+`risk_training_fixture.csv` + metadata schema **`legacy_risk_fixture`** remain for **tests and optional lab retrains** of an older small TensorFlow feature layout. They are **not** the primary product narrative; see [docs/ai-alert-prioritization.md](../docs/ai-alert-prioritization.md).

@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { ApiRequestError, fetchApiJson, formatUtcDateTime } from "../../../lib/api";
 import {
+  formatClassProbabilitiesLine,
+  normalizeAiTier
+} from "../../../lib/aiPrioritization";
+import {
   formatDriverLabel,
   formatScoreMethodLabel,
   toActorLabel,
@@ -66,14 +70,22 @@ function mapAlertDetailResponse(payload: AlertDetailApiResponse): AlertDetailRes
             rationale: payload.score_explanation.rationale,
             factors: payload.score_explanation.factors,
             drivers: (payload.score_explanation.drivers ?? [])
-              .slice(0, 3)
+              .slice(0, 5)
               .map((driver) => formatDriverLabel(driver)),
             scoringMethod: formatScoreMethodLabel(payload.score_explanation.scoring_method),
+            scoringMethodValue: payload.score_explanation.scoring_method ?? null,
             version:
               payload.score_explanation.model_version ??
               payload.score_explanation.baseline_version ??
               null,
-            confidence: payload.score_explanation.confidence
+            confidence: payload.score_explanation.confidence,
+            reasoning: payload.score_explanation.reasoning ?? null,
+            modelPriorityTier: normalizeAiTier(
+              payload.score_explanation.model_priority_tier ?? undefined
+            ),
+            classProbabilitiesSummary: formatClassProbabilitiesLine(
+              payload.score_explanation.class_probabilities ?? undefined
+            )
           }
         : null,
       relatedResponses: toRelatedResponses(payload.related_responses),

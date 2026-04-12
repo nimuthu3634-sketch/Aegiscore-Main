@@ -174,3 +174,74 @@ def test_incident_summary_response_includes_assigned_user_and_alert() -> None:
     assert response.assigned_user.username == "analyst"
     assert response.alert.title == "Protected config changed"
     assert response.linked_alerts_count == 2
+
+
+def test_alert_summary_tensorflow_risk_score_serializes_explanation_payload() -> None:
+    """Nested ``risk_score.explanation`` keeps ML fields for API clients."""
+    now = datetime.now(UTC)
+    asset = Asset(
+        id=uuid4(),
+        hostname="auth-01",
+        ip_address="10.0.0.5",
+        operating_system="Linux",
+        criticality=AssetCriticality.HIGH,
+        created_at=now,
+        updated_at=now,
+    )
+    raw_alert = RawAlert(
+        id=uuid4(),
+        asset=asset,
+        source="wazuh",
+        external_id="wazuh-tf-1",
+        detection_type=DetectionType.BRUTE_FORCE,
+        severity=9,
+        raw_payload={"source_ip": "198.51.100.10"},
+        received_at=now,
+    )
+    normalized_alert = NormalizedAlert(
+        id=uuid4(),
+        raw_alert=raw_alert,
+        asset=asset,
+        source="wazuh",
+        title="Brute force (TF scored)",
+        description="Model-assigned tier.",
+        detection_type=DetectionType.BRUTE_FORCE,
+        severity=9,
+        status=AlertStatus.NEW,
+        normalized_payload={"source_ip": "198.51.100.10"},
+        created_at=now,
+    )
+    explanation = {
+        "label": "Trainable alert prioritization model",
+        "summary": "Model version v1 predicted high priority at 72.5/100 (3-class TensorFlow output: high).",
+        "rationale": "TensorFlow (Keras) MLP on normalized telemetry (alert_prioritization_v1).",
+        "factors": ["Model probability for high class: 61.0%"],
+        "class_probabilities": {"low": 0.12, "medium": 0.27, "high": 0.61},
+        "model_priority_tier": "high",
+        "predicted_class": "high",
+        "scoring_method": ScoreMethod.TENSORFLOW_MODEL.value,
+        "model_version": "alert_prioritization_v1",
+    }
+    normalized_alert.risk_score = RiskScore(
+        id=uuid4(),
+        normalized_alert=normalized_alert,
+        score=72.5,
+        confidence=0.61,
+        priority_label=IncidentPriority.HIGH,
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        model_version="alert_prioritization_v1",
+        reasoning="TensorFlow 3-class tier: high with 61% confidence.",
+        explanation=explanation,
+        feature_snapshot={"failed_logins_5m": 14, "detection_type": "brute_force"},
+        calculated_at=now,
+    )
+    normalized_alert.response_actions = []
+
+    response = to_alert_summary_response(normalized_alert)
+    dumped = response.model_dump(mode="json")
+
+    assert dumped["risk_score"]["scoring_method"] == ScoreMethod.TENSORFLOW_MODEL.value
+    assert dumped["risk_score"]["explanation"]["scoring_method"] == ScoreMethod.TENSORFLOW_MODEL.value
+    assert dumped["risk_score"]["explanation"]["class_probabilities"]["high"] == 0.61
+    assert dumped["risk_score"]["explanation"]["model_priority_tier"] == "high"
+    assert dumped["risk_score"]["model_version"] == "alert_prioritization_v1"

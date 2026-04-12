@@ -2,6 +2,10 @@ import os
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
+
+pytest.importorskip("tensorflow")
+
 from app.models.enums import IncidentPriority, ScoreMethod
 from app.services.scoring import alert_prioritization as ap
 from app.services.scoring.ml import (
@@ -69,12 +73,20 @@ def test_train_alert_prioritization_model_and_score(tmp_path: Path) -> None:
 
     assert result.scoring_method == ScoreMethod.TENSORFLOW_MODEL
     assert result.model_version == "test_alert_model_v1"
+    assert result.priority_label != IncidentPriority.CRITICAL
     assert result.priority_label in {
         IncidentPriority.LOW,
         IncidentPriority.MEDIUM,
         IncidentPriority.HIGH,
     }
     assert 0 <= result.score <= 100
+    exp = result.explanation or {}
+    assert exp.get("scoring_method") == ScoreMethod.TENSORFLOW_MODEL.value
+    assert exp.get("model_priority_tier") in {"low", "medium", "high"}
+    probs = exp.get("class_probabilities") or {}
+    assert set(probs.keys()) == {"low", "medium", "high"}
+    assert abs(sum(float(probs[k]) for k in probs) - 1.0) < 0.02
+    assert "TensorFlow" in (exp.get("rationale") or "")
 
     out = ap.predict_alert_model_json(
         model=model,
@@ -105,7 +117,7 @@ def test_train_alert_prioritization_model_and_score(tmp_path: Path) -> None:
 
 
 def test_train_legacy_fixture_tensorflow_model(tmp_path: Path) -> None:
-    """LEGACY: small fixture CSV with priority_label + MODEL_* columns (4-class softmax)."""
+    """LEGACY: small fixture CSV with priority_label + MODEL_* columns (legacy 4-tier TensorFlow head)."""
     repo_root = Path(__file__).resolve().parents[3]
     dataset_path = repo_root / "ai" / "datasets" / "risk_training_fixture.csv"
     model_path = tmp_path / "risk-model.keras"

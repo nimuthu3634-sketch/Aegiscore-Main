@@ -2,27 +2,28 @@
 
 **Final product context:** Risk scoring is a component of the **AegisCore** SOC platform MVP (see **[final-product.md](final-product.md)**).
 
+**AI scope:** Machine learning performs **alert prioritization** after detections exist — not raw detection. Canonical end-to-end description: **[ai-alert-prioritization.md](ai-alert-prioritization.md)** (dataset, train, inference, API wiring, brute-force automation).
+
 ## Purpose
 
-Within the **MVP** product boundary of the **current academic release** (the four core threat categories in [final-product.md](final-product.md); **single-tenant** deployment), AegisCore risk scoring is a prioritization layer that runs after those detections are created.
+Within the **MVP** boundary (four validated `DetectionType` values in [final-product.md](final-product.md); single-tenant deployment), AegisCore risk scoring is a **prioritization layer** that runs after alerts are normalized.
 
-**Dependency note:** `tensorflow-cpu` currently constrains **NumPy** to a range below 2.2; the API package pins NumPy/Pandas accordingly so installs resolve cleanly (including Windows).
-It does not replace the detector. The scoring runtime converts normalized alert context into a
-0-100 risk score, a priority label, and an explanation payload that the API exposes to the
-dashboard, list pages, and detail views.
+**Dependency note:** `tensorflow-cpu` constrains **NumPy** to a range below 2.2; the API package pins NumPy/Pandas so installs resolve cleanly (including Windows).
+
+The scoring runtime produces a **0–100** style numeric score, a **priority label**, confidence, and an **explanation** payload for list/detail/dashboard views. It does **not** replace Wazuh/Suricata detectors.
 
 ## Runtime Responsibilities
 
 ### Deterministic baseline
 
-The backend baseline engine is the production-safe default.
+The baseline engine is the **production-safe default**.
 
 - Location: `apps/api/app/services/scoring/baseline.py`
 - Method id: `baseline_rules`
 - Version source: `SCORING_BASELINE_VERSION`
 - Output: score, confidence, priority label, explanation, feature snapshot
 
-The baseline uses explainable additive rules over **standard tier-1 SOC-style** context fields:
+The baseline uses explainable additive rules over normalized context:
 
 - source type
 - detection type
@@ -37,35 +38,48 @@ The baseline uses explainable additive rules over **standard tier-1 SOC-style** 
 - recurrence history
 - destination port context
 
+Baseline scores map through **numeric thresholds** (see below) and may label an alert **`critical`** when the score is high enough.
+
 ### Trainable TensorFlow (Keras) model
 
-The trainable model is optional and can be enabled by setting `SCORING_STRATEGY=model`.
+Optional; enable with `SCORING_STRATEGY=model`.
 
-- Runtime loader: `apps/api/app/services/scoring/ml.py`
-- Training script: `ai/training/train_risk_model.py`
-- Inference utility: `ai/inference/predict_risk.py`
+- Runtime loader + training helpers: `apps/api/app/services/scoring/ml.py`, `alert_prioritization.py`
+- Training entrypoint: `ai/training/train_risk_model.py`
+- Inference CLI: `ai/inference/predict_risk.py`
 - Default model path: `/srv/ai/models/aegiscore-risk-priority-model.keras`
 - Default metadata path: `/srv/ai/models/aegiscore-risk-priority-model.metadata.json`
 
-Legacy databases may still contain scores with method `sklearn_model` from earlier builds; new training persists `tensorflow_model`.
+The **primary** trainable schema is **`alert_prioritization_v1`**: softmax classes **`low` / `medium` / `high`** only (no “critical” class). Outputs map to **`LOW` / `MEDIUM` / `HIGH`** incident priorities.
 
-If the runtime is configured for model scoring but no model artifact is available, AegisCore
-falls back to the deterministic baseline and records the fallback reason in the explanation
-payload. That keeps scoring safe and available during local development.
+If `SCORING_STRATEGY=model` but artifacts are missing or invalid, the API **falls back to the baseline** and records **`fallback_reason`** in the explanation.
 
-## Priority Labels
+### Persistence enum: `sklearn_model`
 
-- `low`
-- `medium`
-- `high`
-- `critical`
+The value **`sklearn_model`** exists only as a **historical `ScoreMethod` enum / DB string** on migrated rows. The product stack uses **TensorFlow** for trainable scoring; **no `.joblib` artifacts** and **no scikit-learn inference path** are shipped. New scores are stored as **`tensorflow_model`** or **`baseline_rules`**.
 
-Thresholds are applied over the normalized 0-100 score:
+## Priority labels
 
-- `0-44`: low
-- `45-69`: medium
-- `70-84`: high
-- `85-100`: critical
+### From the deterministic baseline
+
+Baseline maps **rounded 0–100 score** to incident priority:
+
+| Score range | Priority |
+|-------------|----------|
+| 0–44 | `low` |
+| 45–69 | `medium` |
+| 70–84 | `high` |
+| 85–100 | `critical` |
+
+### From the TensorFlow alert prioritization model (`alert_prioritization_v1`)
+
+The model emits **three** classes only. Mapping never produces **`critical`** from ML:
+
+| Model class | Incident priority |
+|-------------|-------------------|
+| `low` | `low` |
+| `medium` | `medium` |
+| `high` | `high` |
 
 ## Persistence
 
@@ -82,39 +96,39 @@ Scores are stored in `risk_scores` with:
 - `feature_snapshot`
 - `calculated_at`
 
-This keeps the current score auditable without adding heavy multi-version scoring history.
+## Incident rollup
 
-## Incident Rollup
+Incident priority on the incident record is refreshed from linked-alert scores when alerts are linked or rescored. Rollup uses max/avg linked scores plus a small multi-alert bonus (see `apps/api/app/services/scoring/rollup.py`).
 
-Incident priority remains persisted on the incident record, but it is refreshed from linked-alert
-scores when alerts are linked or rescored. The rollup uses the highest linked score, the average
-linked score, and a small correlation bonus for multi-alert incidents.
+## Training and inference (quick links)
 
-## Training
+Full commands and environment variables: **[ai-alert-prioritization.md](ai-alert-prioritization.md)** and **[ai/README.md](../ai/README.md)**.
 
-Run a local training pass from the repo root:
+Training (Docker):
 
 ```powershell
 docker compose run --rm --no-deps api python /srv/ai/training/train_risk_model.py
 ```
 
-The default training dataset is:
-
-- `ai/datasets/alerts_dataset.csv` (synthetic **alert prioritization** rows: `label` is `low` / `medium` / `high` only; metadata `training_schema` is `alert_prioritization_v1`)
-
-To train the **legacy** small fixture instead (four `priority_label` classes on the old `MODEL_*` feature schema), set `AI_DATASET_PATH=/srv/ai/datasets/risk_training_fixture.csv`.
-
-Optional: `AI_EVAL_OUTPUT_DIR` (directory for confusion matrix CSV, classification report, and `evaluation_metrics.json` when training the alert dataset).
-
-The generated artifacts land in:
+Default outputs:
 
 - `ai/models/aegiscore-risk-priority-model.keras`
 - `ai/models/aegiscore-risk-priority-model.metadata.json`
 
-## Manual Model Inference
+Optional evaluation outputs when training the alert dataset: set **`AI_EVAL_OUTPUT_DIR`**.
 
-- **Alert prioritization model** (`alert_prioritization_v1` in metadata): pass either JSON with **CSV-style** fields (`threat_type`, `timestamp`, …) or the same **API snapshot** shape as `sample_features.json` (the CLI maps it through `AlertRiskFeatures` into the training schema).
-- **Legacy fixture model** (`legacy_risk_fixture`): pass JSON shaped like the persisted `feature_snapshot` / `sample_features.json`.
+### Legacy fixture schema (tests / lab only)
+
+To train the **small** `risk_training_fixture.csv` (metadata `legacy_risk_fixture`, older `MODEL_*` column layout used only for regression tests), set:
+
+`AI_DATASET_PATH=/srv/ai/datasets/risk_training_fixture.csv`
+
+That path is **not** the product’s primary scoring story; keep it internal to engineering unless you explicitly label it legacy in a viva.
+
+## Manual model inference
+
+- **`alert_prioritization_v1`**: JSON may use CSV-style fields (`threat_type`, `timestamp`, …) or API-style snapshots; the CLI maps into the training schema.
+- **`legacy_risk_fixture`**: JSON shaped like persisted **`feature_snapshot`** rows (see `sample_features.json`).
 
 Examples:
 
@@ -123,9 +137,9 @@ docker compose run --rm --no-deps api python /srv/ai/inference/predict_risk.py -
 docker compose run --rm --no-deps api python /srv/ai/inference/predict_risk.py --features-file /srv/ai/datasets/sample_alert_row.json
 ```
 
-## API Exposure
+## API exposure
 
-Real risk scoring data now flows through:
+Risk scoring surfaces through:
 
 - `GET /alerts`
 - `GET /alerts/{id}`
@@ -133,5 +147,4 @@ Real risk scoring data now flows through:
 - `GET /incidents/{id}`
 - `GET /dashboard/summary`
 
-The alert list/detail responses expose persisted risk score metadata, while incident detail uses
-linked-alert rollup context in the priority explanation.
+Alert list/detail return persisted risk score metadata; incident detail includes rollup context in the priority explanation.

@@ -159,6 +159,14 @@ class Settings(BaseSettings):
         default=False,
         alias="AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED",
     )
+    automated_response_ml_brute_force_enabled: bool = Field(
+        default=True,
+        alias="AUTOMATED_RESPONSE_ML_BRUTE_FORCE_ENABLED",
+        description=(
+            "When true, TensorFlow-scored brute_force alerts may trigger the built-in "
+            "block_ip automation if failed_logins_5m and AI high-tier preconditions pass."
+        ),
+    )
     automated_response_block_ip_backend: str = Field(
         default="ledger",
         alias="AUTOMATED_RESPONSE_BLOCK_IP_BACKEND",

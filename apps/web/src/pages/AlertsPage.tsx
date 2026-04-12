@@ -140,7 +140,7 @@ export function AlertsPage() {
 
       <SearchFilterToolbar
         title="Alert triage filters"
-        description="Search by ID, asset, IP, username, or event ID. Filter by severity, status, one of the four validated threat categories, source, asset, and time window."
+        description="Search by ID, asset, IP, username, or event ID. Wazuh/Suricata raise detections; optional TensorFlow AI ranks them (Low/Medium/High). Filter by severity, status, validated threat categories, source, asset, and time window."
         search={
           <SearchInput
             value={search}
@@ -318,10 +318,11 @@ export function AlertsPage() {
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="type-body-sm">
-              Open a row for detection context, evidence, score rationale, responses, and
-              notifications.
+              Open a row for detection context, evidence, prioritization rationale, responses, and
+              notifications. Built-in ML IP blocks apply only to brute_force when AI tier is High
+              and thresholds pass.
             </p>
-            <Badge tone="outline">risk 70+ = priority review</Badge>
+            <Badge tone="outline">risk 70+ = review soon</Badge>
           </div>
           <AlertsTable
             alerts={alerts}

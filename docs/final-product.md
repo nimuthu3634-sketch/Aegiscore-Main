@@ -11,7 +11,7 @@ The product provides:
 - **Monitoring and ingestion** — Wazuh (host/log) and Suricata (network) telemetry into a normalized alert model, with raw payload retention for auditability.
 - **Alert handling** — triage, acknowledgement, closure, analyst notes, and linkage to incidents over authenticated APIs.
 - **Incident workflows** — incident queue, state transitions, timelines, and investigation surfaces in the console.
-- **Explainable AI-assisted risk scoring** — deterministic baseline prioritization by default; optional **TensorFlow (Keras)** trainable model when artifacts and configuration are present, with persisted score metadata and explanations.
+- **Explainable AI-assisted alert prioritization** — deterministic baseline by default; optional **TensorFlow (Keras)** trainable ranker when artifacts and configuration are present (post-detection only), with persisted score metadata and explanations.
 - **Reporting and export** — operational summaries and exports for alerts, incidents, and responses.
 - **Controlled automated response** — policy-driven actions (including safe defaults and explicit gates for destructive paths), with auditable execution history.
 

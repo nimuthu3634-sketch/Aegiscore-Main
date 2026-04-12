@@ -182,7 +182,7 @@ export const pageBlueprints: Record<
     eyebrow: "Normalized alerts",
     title: "Alerts",
     description:
-      "Triage normalized Wazuh and Suricata signals (brute force, FIM, port scan, unauthorized user creation). Sort by risk when the queue is busy."
+      "Wazuh and Suricata detect in-scope threats; optional AI prioritizes (Low/Medium/High). Triage brute force, FIM, port scan, and unauthorized user creation—sort by risk when the queue is busy."
   },
   incidents: {
     eyebrow: "Investigation queue",

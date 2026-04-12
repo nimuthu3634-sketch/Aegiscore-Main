@@ -2,7 +2,7 @@
 
 ## Final product (proposal deliverable)
 
-**AegisCore** is the **final application product** for this project: a **centralized SOC platform MVP**—a **single-tenant web system** (React + TypeScript analyst console, FastAPI backend, PostgreSQL, optional **TensorFlow/Keras** model artifacts for trainable risk scoring). It delivers **monitoring** (Wazuh and Suricata), **alert handling**, **incident investigation workflows**, **explainable AI-assisted risk scoring** (deterministic baseline by default; optional TensorFlow path when enabled), **reporting and export**, and **policy-driven, controlled automated response** with audit trails. The **academic release** implements **only** four **validated** threat detections, listed below.
+**AegisCore** is the **final application product** for this project: a **centralized SOC platform MVP**—a **single-tenant web system** (React + TypeScript analyst console, FastAPI backend, PostgreSQL, optional **TensorFlow/Keras** artifacts for **trainable alert prioritization** after detection). It delivers **monitoring** (Wazuh and Suricata), **alert handling**, **incident investigation workflows**, **explainable risk scoring** (deterministic baseline by default; optional TensorFlow path when enabled), **reporting and export**, and **policy-driven, controlled automated response** with audit trails. The **academic release** implements **only** four **validated** threat detections, listed below.
 
 Canonical wording for reports and panels: **[docs/final-product.md](docs/final-product.md)**.
 
@@ -59,7 +59,7 @@ If you are reviewing AegisCore for final academic submission, use this quick flo
 - `apps/web`: React + TypeScript + Tailwind SOC console
 - `apps/api`: FastAPI + SQLAlchemy + Alembic backend
 - `apps/worker`: worker shell for future background execution
-- `ai`: training, inference, datasets, and model artifacts
+- `ai`: training, inference, datasets, and TensorFlow model artifacts (see [docs/ai-alert-prioritization.md](docs/ai-alert-prioritization.md))
 - `infra/nginx`: local reverse proxy config
 - `infra/docker`: Dockerfiles for the local stack
 - `scripts`: validation and local helper scripts
@@ -209,10 +209,22 @@ Operational health endpoints:
 - Destructive live actions remain blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.
 - This MVP is **intentionally single-tenant** and optimized for **transparent evaluation**; **multi-tenant SaaS** and **full SOAR-class orchestration** are **out of scope** for the **current academic release** and documented as future-scale directions.
 
+## AI and ML (alert prioritization)
+
+ML ranks **already-detected** alerts; it does not replace Wazuh/Suricata. The training CSV includes **`normal`** rows plus **`brute_force`**, **`port_scan`**, **`file_integrity`**, and **`unauthorized_user_creation`** (API uses `file_integrity_violation` — see mapping in [docs/ai-alert-prioritization.md](docs/ai-alert-prioritization.md)). Model tiers are **Low / Medium / High**; optional **built-in IP block** automation applies **only** to **brute_force** under strict gates.
+
+**Quick commands** (full detail: [docs/ai-alert-prioritization.md](docs/ai-alert-prioritization.md)):
+
+1. **Generate dataset:** `py -3 ai/datasets/generate_alerts_dataset.py`
+2. **Train:** `docker compose run --rm --no-deps api python /srv/ai/training/train_risk_model.py`
+3. **Inference (CLI):** `docker compose run --rm --no-deps api python /srv/ai/inference/predict_risk.py --features-file /srv/ai/datasets/sample_alert_row.json`
+4. **API model mode:** set `SCORING_STRATEGY=model` plus `SCORING_MODEL_PATH` / `SCORING_MODEL_METADATA_PATH` (fallback to baseline if artifacts are missing).
+
 ## Documentation Map
 
 - [Final product definition](docs/final-product.md)
 - [Architecture](docs/architecture.md)
+- [AI / ML — alert prioritization](docs/ai-alert-prioritization.md) (dataset, train, inference, API, brute-force ML block)
 - [Environment Reference](docs/environment.md)
 - [Scoring](docs/scoring.md)
 - [Operator Guide](docs/setup/operator-guide.md)
