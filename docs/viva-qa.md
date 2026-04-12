@@ -14,7 +14,7 @@
 
 - event ingestion from Wazuh and Suricata
 - normalized alert lifecycle and investigation workflow
-- risk scoring with explainable baseline logic (optional TensorFlow trainable path)
+- risk scoring with explainable baseline logic (optional TensorFlow/Keras `.keras` prioritization: Low/Medium/High from ML only)
 - incident tracking, timeline, notes, audit evidence
 - policy-driven response execution with persisted outcome history
 - practical reporting and export for local operations
@@ -46,7 +46,7 @@ The core SOC pipeline is fully implemented and demonstrable within declared scop
    The project intentionally enforces the academic MVP four-category scope (`brute_force`, `port_scan`, `file_integrity_violation`, `unauthorized_user_creation`); broader detection families are roadmap-only, to stay defensible, testable, and aligned with stated requirements.
 
 3. **How is AI used in the system?**  
-   AI/risk scoring is used for prioritization after detection. Baseline scoring is always available; optional ML scoring is supported when model artifacts are present.
+   **After** Wazuh/Suricata normalize an alert, **TensorFlow/Keras** (when `SCORING_STRATEGY=model` and `.keras` + metadata are present) performs **alert prioritization** only — softmax **Low / Medium / High**, not threat discovery and **not** a Critical class from ML. **Baseline** (`SCORING_STRATEGY=baseline`, the default) is always available and may still assign **Critical** from numeric rules. The **built-in ML auto-block** applies **only** to **`brute_force`** under documented gates.
 
 4. **How does automated response work safely?**  
    Responses are policy-driven, auditable, and split between dry-run/live modes. Destructive live actions require explicit flags, so they are not enabled by default.
@@ -80,6 +80,7 @@ npm run lint:web
 npm run build:web
 npm run test:web:e2e
 py -3 scripts/validate_attack_scenarios.py
+py -3 scripts/validate_ai_ml_readiness.py
 ```
 
 ## Companion Docs

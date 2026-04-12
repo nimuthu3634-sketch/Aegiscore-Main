@@ -1,3 +1,8 @@
+"""Train TensorFlow/Keras alert prioritization (default: `alert_prioritization_v1` → `.keras` + metadata).
+
+Legacy fixture training (`risk_training_fixture.csv`) remains for tests only.
+"""
+
 from __future__ import annotations
 
 import json

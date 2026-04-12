@@ -21,7 +21,7 @@ The **current academic release** delivers the capabilities above on a **modular,
 
 1. Wazuh-style or Suricata-style events enter the backend ingestion routes.
 2. The backend preserves the raw payload and normalizes supported detections into the shared alert schema.
-3. Alert scoring runs through the backend-owned deterministic baseline or optional ML scorer.
+3. Alert scoring runs through the backend-owned deterministic baseline or optional TensorFlow/Keras alert prioritization (`.keras` + metadata; Low/Medium/High only from ML).
 4. Matching response policies evaluate alert or incident context and create auditable response actions.
 5. Alerts can remain standalone or link into multi-alert incidents.
 6. Frontend list, detail, dashboard, rules, response-history, and reporting pages consume only the normalized backend contracts.

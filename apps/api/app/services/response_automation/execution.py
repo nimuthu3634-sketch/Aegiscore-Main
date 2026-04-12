@@ -481,8 +481,9 @@ def _evaluate_builtin_ml_brute_force_auto_block(
     failed_5m = (evaluation_detail.get("checks") or {}).get("failed_logins_5m")
     reason = (
         "Built-in TensorFlow brute-force auto-block: detection_type is brute_force, "
-        f"scoring_method is tensorflow_model, AI tier is high, failed_logins_5m is {failed_5m} "
-        f"(required >= {thr.get('required_failed_logins_5m')}), and source_ip is present."
+        f"scoring_method is tensorflow_model, incident priority High and model tier high, "
+        f"failed_logins_5m is {failed_5m} (required >= {thr.get('required_failed_logins_5m')}), "
+        "and source_ip is present."
     )
 
     response_action = _upsert_builtin_automation_action(

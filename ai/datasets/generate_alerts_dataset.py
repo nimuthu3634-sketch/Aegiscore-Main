@@ -1,7 +1,12 @@
 """
-Synthetic SOC alert feature rows for academic / prototype alert-prioritization training.
+Synthetic SOC alert feature rows for TensorFlow **alert_prioritization_v1** training
+(`ai/datasets/alerts_dataset.csv`).
 
-Regenerates `alerts_dataset.csv` with a fixed random seed for reproducibility.
+`threat_type` includes **normal** plus **brute_force**, **port_scan**, **file_integrity**
+(API `file_integrity_violation`), **unauthorized_user_creation**. Labels are **Low** /
+**Medium** / **High** only (CSV casing). Not used for raw threat detection.
+
+Regenerates the CSV with a fixed random seed for reproducibility.
 Uses only the Python standard library (no NumPy/Pandas required).
 
 Usage (repo root):
