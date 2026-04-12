@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This guide is for analysts using **AegisCore**, the **final SOC platform product** (console is `apps/web`)—**single-tenant**, **enterprise-inspired** in workflow. Investigations apply **only** to the four **validated** detections in the **current academic release**; see **[final-product.md](../final-product.md)**.
+This guide is for analysts using **AegisCore**, the **final SOC platform product** (console is `apps/web`)—**single-tenant**, **enterprise-inspired** in workflow. Investigations apply **only** to the four **validated** detections in the **current academic release**; see **[final-product.md](../final-product.md)** and the short scope note **[detection-scope.md](../product/detection-scope.md)**.
 
 ## Sign In
 

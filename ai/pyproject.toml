@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aegiscore-ai"
 version = "0.1.0"
-description = "AegisCore AI utilities"
+description = "AegisCore AI utilities (datasets, training scripts, inference CLI; runtime scoring lives in apps/api)"
 requires-python = ">=3.12"
 dependencies = [
   "numpy>=1.26.0,<2.2.0",
@@ -13,5 +13,6 @@ dependencies = [
   "tensorflow-cpu>=2.17.0,<2.20.0"
 ]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+# No importable Python package under ai/src; training/inference run against apps/api on PYTHONPATH.
+[tool.setuptools]
+packages = []

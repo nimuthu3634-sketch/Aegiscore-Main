@@ -13,7 +13,6 @@ import {
   YAxis
 } from "recharts";
 import { ChartCard } from "../components/data-display/ChartCard";
-import { DetectionScopeCallout } from "../components/data-display/DetectionScopeCallout";
 import { MetricCard } from "../components/data-display/MetricCard";
 import { EmptyState } from "../components/feedback/EmptyState";
 import { ErrorState } from "../components/feedback/ErrorState";
@@ -145,8 +144,6 @@ export function DashboardPage() {
           </Button>
         }
       />
-
-      <DetectionScopeCallout />
 
       {error && data ? (
         <ErrorState

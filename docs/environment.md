@@ -91,6 +91,7 @@ For wiring **live Wazuh polling** and **Suricata `file_tail`** on an **Ubuntu Se
 ## App-Specific Files
 
 - `apps/web/.env.example`: frontend runtime variables
+- **Frontend dependencies:** the repo root is an **npm workspace** (`package.json` workspaces → `apps/web`). Install and lockfile live at the **repository root** (`npm install` / `package-lock.json`); do not rely on a separate `apps/web/package-lock.json`.
 - `apps/api/.env.example`: API settings, auth values, seed credentials, and integration URLs
 - `apps/worker/.env.example`: worker polling and database settings
 - `ai/.env.example`: AI dataset and model artifact settings for training/inference scripts

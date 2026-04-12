@@ -74,6 +74,7 @@ If you are reviewing AegisCore for final academic submission, use this quick flo
 
 ## Submission Docs
 
+- [Supported detection scope (four categories)](docs/product/detection-scope.md)
 - [Final product definition](docs/final-product.md)
 - [Project Status Summary](docs/project-status-summary.md)
 - [Demo Script](docs/demo-script.md)
