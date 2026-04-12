@@ -139,7 +139,7 @@ for l in ["critical","high","medium","low"]:
     print(f"  {l:10s}: {c:5d}  ({c/total*100:.1f}%)")
 print(f"Threat type dist  : {dict(sorted(dets.items()))}")
 
-out = Path("/home/claude/enterprise_alerts_dataset.csv")
+out = Path(__file__).parent / "alerts_dataset.csv"
 with open(out,"w",newline="") as f:
     w = csv.DictWriter(f, fieldnames=FIELDS); w.writeheader(); w.writerows(rows)
 print(f"\nWritten: {out}")
