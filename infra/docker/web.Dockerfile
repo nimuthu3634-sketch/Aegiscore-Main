@@ -4,7 +4,7 @@ WORKDIR /srv/apps/web
 
 COPY apps/web/package.json ./package.json
 COPY apps/web/package-lock.json ./package-lock.json
-RUN npm ci --no-fund --no-audit
+RUN npm install --no-fund --no-audit
 
 COPY apps/web ./
 COPY infra/docker/web-entrypoint.sh /usr/local/bin/web-entrypoint.sh

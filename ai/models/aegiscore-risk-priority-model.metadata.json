@@ -1,0 +1,159 @@
+{
+  "model_name": "aegiscore_enterprise_alert_prioritization_v2",
+  "training_schema": "alert_prioritization_v2",
+  "model_version": "enterprise_model_20260412_203846",
+  "model_architecture": "MLP_4layer_BatchNorm_Enterprise",
+  "layers": "Dense(256)+BN+Drop(0.3)->Dense(128)+BN+Drop(0.2)->Dense(64)+BN+Drop(0.1)->Dense(32)->Dense(4,softmax)",
+  "trained_at": "2026-04-12T20:39:21.423047+00:00",
+  "framework": "tensorflow",
+  "ml_framework": "tensorflow",
+  "training_rows": 6000,
+  "validation_rows": 2000,
+  "test_rows": 2000,
+  "epochs_trained": 45,
+  "training_time_seconds": 30.2,
+  "train_accuracy": 0.988333,
+  "validation_accuracy": 0.9945,
+  "test_accuracy": 0.9865,
+  "per_class_test_accuracy": {
+    "low": 0.9898,
+    "medium": 0.9784,
+    "high": 0.9913,
+    "critical": 1.0
+  },
+  "label_classes": [
+    "low",
+    "medium",
+    "high",
+    "critical"
+  ],
+  "label_to_index": {
+    "low": 0,
+    "medium": 1,
+    "high": 2,
+    "critical": 3
+  },
+  "feature_column_names": [
+    "source_type__suricata",
+    "source_type__wazuh",
+    "threat_type__brute_force",
+    "threat_type__file_integrity",
+    "threat_type__normal",
+    "threat_type__port_scan",
+    "threat_type__unauthorized_user_creation",
+    "asset_criticality__critical",
+    "asset_criticality__high",
+    "asset_criticality__low",
+    "asset_criticality__medium",
+    "integrity_change__critical",
+    "integrity_change__important",
+    "integrity_change__minor",
+    "integrity_change__none",
+    "wazuh_rule_level",
+    "suricata_severity",
+    "failed_logins_1m",
+    "failed_logins_5m",
+    "unique_ports_1m",
+    "repeated_event_count",
+    "time_window_density",
+    "recurrence_history",
+    "new_user_created",
+    "off_hours",
+    "privileged_account",
+    "blacklisted_ip"
+  ],
+  "numeric_columns": [
+    "wazuh_rule_level",
+    "suricata_severity",
+    "failed_logins_1m",
+    "failed_logins_5m",
+    "unique_ports_1m",
+    "repeated_event_count",
+    "time_window_density",
+    "recurrence_history",
+    "new_user_created",
+    "off_hours",
+    "privileged_account",
+    "blacklisted_ip"
+  ],
+  "categorical_columns": [
+    "source_type",
+    "threat_type",
+    "asset_criticality",
+    "integrity_change"
+  ],
+  "numeric_means": {
+    "wazuh_rule_level": 5.6963333333333335,
+    "suricata_severity": 0.5516666666666666,
+    "failed_logins_1m": 4.002166666666667,
+    "failed_logins_5m": 7.216333333333333,
+    "unique_ports_1m": 10.776333333333334,
+    "repeated_event_count": 5.367,
+    "time_window_density": 3.5808333333333335,
+    "recurrence_history": 1.8236666666666668,
+    "new_user_created": 0.212,
+    "off_hours": 0.36233333333333334,
+    "privileged_account": 0.14483333333333334,
+    "blacklisted_ip": 0.1725
+  },
+  "numeric_stds": {
+    "wazuh_rule_level": 4.669274021610735,
+    "suricata_severity": 1.0038246305450413,
+    "failed_logins_1m": 10.112162411615476,
+    "failed_logins_5m": 18.9305537836471,
+    "unique_ports_1m": 27.97567347814089,
+    "repeated_event_count": 5.744908847550731,
+    "time_window_density": 3.347705578286252,
+    "recurrence_history": 2.081002936620278,
+    "new_user_created": 0.40872484632084705,
+    "off_hours": 0.48067441047853676,
+    "privileged_account": 0.3519327192644766,
+    "blacklisted_ip": 0.37781443858063446
+  },
+  "class_distribution": {
+    "train": {
+      "critical": 601,
+      "high": 1730,
+      "low": 1174,
+      "medium": 2495
+    },
+    "validation": {
+      "critical": 200,
+      "high": 577,
+      "low": 391,
+      "medium": 832
+    },
+    "test": {
+      "critical": 200,
+      "high": 577,
+      "low": 391,
+      "medium": 832
+    }
+  },
+  "confusion_matrix": {
+    "low": {
+      "low": 387,
+      "medium": 4,
+      "high": 0,
+      "critical": 0
+    },
+    "medium": {
+      "low": 7,
+      "medium": 814,
+      "high": 11,
+      "critical": 0
+    },
+    "high": {
+      "low": 0,
+      "medium": 3,
+      "high": 572,
+      "critical": 2
+    },
+    "critical": {
+      "low": 0,
+      "medium": 0,
+      "high": 0,
+      "critical": 200
+    }
+  }
+}
