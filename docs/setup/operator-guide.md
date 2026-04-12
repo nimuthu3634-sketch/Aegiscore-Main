@@ -28,6 +28,7 @@ Primary local URLs:
 ## Safe Default Posture
 
 - Keep `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=false` during local work.
+- **`SCORING_STRATEGY=baseline`** is the default in Compose: deterministic prioritization, **no Keras files required**. Switch to **`model`** only when **`ai/models/*.keras`** and metadata are present and you want TensorFlow **Low/Medium/High** scoring (see [ai-alert-prioritization.md](../ai-alert-prioritization.md)). The **built-in ML brute-force IP block** applies **only** to **`brute_force`** and only when the alert was scored with **`tensorflow_model`** plus the documented gates.
 - Keep `VITE_ENABLE_DEV_AUTH_BOOTSTRAP=false` unless you intentionally need automatic browser auth for a temporary local workflow.
 - For normal VM/lab operation, enable live connectors (`WAZUH_CONNECTOR_ENABLED=true`, `SURICATA_CONNECTOR_ENABLED=true`) and treat manual fixture posting as test/demo-only.
 - Rotate seeded demo passwords through `DEV_SEED_ADMIN_PASSWORD` and `DEV_SEED_ANALYST_PASSWORD` when sharing lab environments.

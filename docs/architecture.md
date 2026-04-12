@@ -72,8 +72,8 @@ The **current academic release** delivers the capabilities above on a **modular,
 
 - Supported detection scope remains limited to `brute_force`, `port_scan`, `file_integrity_violation`, and `unauthorized_user_creation` (see [final-product.md](final-product.md) for standard wording and roadmap note).
 - Risk scoring is a prioritization layer after detection, not the detector itself.
-- The deterministic baseline is the production-safe default.
-- The optional trainable path is **TensorFlow/Keras** (`.keras` + metadata, **3-class** alert prioritization); see **[ai-alert-prioritization.md](ai-alert-prioritization.md)**. Historical DB rows may still show the enum string `sklearn_model` (legacy label only — **no** scikit-learn or joblib runtime; primary artifacts are Keras only).
+- The deterministic **baseline** is the **default** scoring mode (`SCORING_STRATEGY=baseline`); it is production-safe and needs no ML artifacts (may still label **Critical** from score thresholds).
+- The optional trainable path is **TensorFlow/Keras** (`.keras` + metadata, **3-class** Low/Medium/High alert prioritization — **not** detection, **no Critical from ML**); see **[ai-alert-prioritization.md](ai-alert-prioritization.md)**. Built-in **ML-gated** automated **IP block** is **only** for **`brute_force`** when TensorFlow gates pass. Historical DB rows may still show the enum string `sklearn_model` (legacy label only — **no** scikit-learn or joblib runtime; primary artifacts are Keras only).
 - Safe internal actions such as `notify_admin`, `create_manual_review`, and `quarantine_host_flag` can complete without an external script.
 - `block_ip` and `disable_user` now have built-in lab adapters with safe `ledger` backends by default; destructive backends require explicit safety flags.
 - Destructive live actions remain blocked by default in development.

@@ -35,6 +35,10 @@ Expected:
 - `postgres`, `api`, `web`, and `nginx` are `healthy`
 - `worker` is `healthy` after API/database are healthy
 
+### TensorFlow scoring (optional demo)
+
+Default **`SCORING_STRATEGY=baseline`** needs no model files. For **Keras alert prioritization** (Low/Medium/High from ML only) set **`SCORING_STRATEGY=model`**, confirm **`ai/models/aegiscore-risk-priority-model.keras`** + **`.metadata.json`** exist on the host, restart `api`, and read **[../ai-alert-prioritization.md](../ai-alert-prioritization.md)** for the **brute_force-only** ML auto-block gates.
+
 ## 2) Verify Health And Readiness
 
 Core health (via NGINX on the SOC host):

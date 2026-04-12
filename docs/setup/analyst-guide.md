@@ -69,6 +69,6 @@ If a source event does not map to one of those detections, it is out of scope fo
 
 ## Practical Expectations
 
-- scoring is a prioritization aid after detection, not a replacement for analyst judgment
+- scoring is a prioritization aid after detection, not a replacement for analyst judgment; with TensorFlow enabled, model tiers are **Low / Medium / High** only (**Critical** can still come from the **baseline** path, not from the ML softmax)
 - automated response remains conservative and auditable
 - raw payloads are preserved for debugging, but normal investigation should begin with the normalized alert and incident views

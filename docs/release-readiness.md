@@ -88,6 +88,19 @@ docker compose exec api python -m app.db.seed
 py -3 scripts/validate_attack_scenarios.py
 ```
 
+AI/ML contract (dataset, committed `.keras` + metadata, `alert_prioritization_v1` fields — **stdlib only**, no database):
+
+```powershell
+py -3 scripts/validate_ai_ml_readiness.py
+```
+
+Full stack checks (TensorFlow load + joblib rejection + same contract as the script; requires API image dependencies):
+
+```powershell
+docker compose run --rm --no-deps --entrypoint pytest api tests/test_ai_ml_readiness.py -q
+docker compose run --rm --no-deps --entrypoint pytest api tests/test_response_automation.py -k ml_brute_force -q
+```
+
 ### Environment expectations (code vs runtime)
 
 - **Backend tests**: run inside Docker against Compose PostgreSQL; no manual API process needed.

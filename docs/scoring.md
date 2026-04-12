@@ -12,11 +12,19 @@ Within the **MVP** boundary (four validated `DetectionType` values in [final-pro
 
 The scoring runtime produces a **0–100** style numeric score, a **priority label**, confidence, and an **explanation** payload for list/detail/dashboard views. It does **not** replace Wazuh/Suricata detectors.
 
+## `SCORING_STRATEGY` default: baseline vs model
+
+- **Default (`SCORING_STRATEGY=baseline`, including Docker Compose):** deterministic rules only. Works **without** TensorFlow artifacts; appropriate for **safe** local stacks, CI, and demos that focus on ingestion/incidents without ML. Baseline may still label **`critical`** from high numeric scores (see thresholds below).
+- **TensorFlow path (`SCORING_STRATEGY=model`):** loads **`SCORING_MODEL_PATH`** (`.keras`) and **`SCORING_MODEL_METADATA_PATH`**. The **`alert_prioritization_v1`** head outputs **Low / Medium / High** only — **never Critical** from ML. Use this for the **final ML demo** when Keras files are present under `ai/models/`.
+- **Fallback:** if `model` is set but artifacts are missing or invalid, scoring **falls back to baseline** and records **`fallback_reason`** in the explanation.
+
+Full narrative: **[ai-alert-prioritization.md](ai-alert-prioritization.md)**.
+
 ## Runtime Responsibilities
 
 ### Deterministic baseline
 
-The baseline engine is the **production-safe default**.
+The baseline engine is the **Compose / repository default** and remains the **production-safe** path when ML artifacts are absent.
 
 - Location: `apps/api/app/services/scoring/baseline.py`
 - Method id: `baseline_rules`

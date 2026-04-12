@@ -15,6 +15,13 @@ Canonical wording for reports and panels: **[docs/final-product.md](docs/final-p
 
 The current academic MVP validates four core threat categories: brute-force attacks, port scans, file integrity violations, and unauthorized user account creation. Additional detection categories are **future roadmap** items, not part of the current implementation.
 
+### AI / ML (alert prioritization — consistent story)
+
+1. **Wazuh / Suricata** normalize alerts and set **`detection_type`** for the four in-scope threats (`brute_force`, `port_scan`, `file_integrity_violation`, `unauthorized_user_creation`).
+2. **TensorFlow (optional)** **prioritizes** those alerts as **Low / Medium / High** only — **not** threat detection, and **no Critical label from the ML head**. The synthetic training CSV also includes **`normal`** rows and uses `file_integrity` as the training-column alias for file-integrity cases; see **[docs/ai-alert-prioritization.md](docs/ai-alert-prioritization.md)**.
+3. **Deterministic baseline** remains the **default** (`SCORING_STRATEGY=baseline`) for safe, artifact-free runs and can still produce **Critical** from score thresholds; switch to **`SCORING_STRATEGY=model`** with the committed `.keras` + metadata for the **full ML demo**.
+4. **Built-in automated IP block** applies **only** to **`brute_force`**, only when **`AUTOMATED_RESPONSE_ML_BRUTE_FORCE_ENABLED=true`** and **all** gates pass: TensorFlow-scored alert, **High** AI tier, **`failed_logins_5m` ≥ 10**, **source IP** present (see docs).
+
 **Explicitly out of scope** for this project: ransomware-specific pipelines, phishing campaigns, APT hunting, zero-day detection claims, multi-tenant SaaS, and other full commercial-grade SOC features beyond the bounded workflow above.
 
 ## Start Here (Examiner Flow)
@@ -114,6 +121,12 @@ For local demos only, override seeded passwords in `.env` before sharing environ
 - `DEV_SEED_ANALYST_PASSWORD`
 
 ## Local Validation Commands
+
+AI/ML dataset + artifact contract (no Docker; exit 0 = pass):
+
+```powershell
+py -3 scripts/validate_ai_ml_readiness.py
+```
 
 Backend:
 

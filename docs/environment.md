@@ -50,12 +50,12 @@ For wiring **live Wazuh polling** and **Suricata `file_tail`** on an **Ubuntu Se
 - `DEV_SEED_ADMIN_PASSWORD`: seeded local admin password
 - `DEV_SEED_ANALYST_USERNAME`: seeded local analyst username
 - `DEV_SEED_ANALYST_PASSWORD`: seeded local analyst password
-- `SCORING_STRATEGY`: runtime scoring mode, either `baseline` or `model`
+- `SCORING_STRATEGY`: runtime scoring mode — **`baseline`** (default in Compose) or **`model`**. Baseline is deterministic, needs no Keras files, and may label **Critical** from high scores. **`model`** loads TensorFlow **`alert_prioritization_v1`**, which outputs **Low / Medium / High** only (never Critical from ML). Invalid model config falls back to baseline with `fallback_reason`.
 - `SCORING_BASELINE_VERSION`: deterministic baseline version identifier stored with scores
-- `SCORING_MODEL_PATH`: TensorFlow Keras model file (`.keras`) used when `SCORING_STRATEGY=model`
+- `SCORING_MODEL_PATH`: TensorFlow Keras file (`.keras` or `.h5`) used when `SCORING_STRATEGY=model`
 - `SCORING_MODEL_METADATA_PATH`: metadata JSON path paired with the model artifact
 - `SCORING_MODEL_VERSION`: fallback runtime model version label for local development
-- `AUTOMATED_RESPONSE_ML_BRUTE_FORCE_ENABLED`: when `true`, allows the **built-in** TensorFlow brute-force auto `block_ip` path (strict gates: `brute_force` only, TF scoring, high tier, failed-login window, source IP); see [ai-alert-prioritization.md](ai-alert-prioritization.md)
+- `AUTOMATED_RESPONSE_ML_BRUTE_FORCE_ENABLED`: when `true`, allows **evaluation** of the **built-in** brute-force **`block_ip`** automation (**`brute_force` only**); requires **`tensorflow_model`** score, **High** AI tier, **`failed_logins_5m` ≥ 10**, **source IP**, and model tier **high** — see [ai-alert-prioritization.md](ai-alert-prioritization.md) §5. With baseline-only scoring, this path does not fire.
 - `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE`: safety gate for live destructive adapters such as `block_ip` and `disable_user`; keep `false` for local development
 - `AUTOMATED_RESPONSE_MAX_RETRIES`: maximum automated execution attempts before a response action is marked failed
 - `AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED`: enables first-party backend adapters for response actions
@@ -104,7 +104,8 @@ For wiring **live Wazuh polling** and **Suricata `file_tail`** on an **Ubuntu Se
 
 ## Automated Response Safety Notes
 
-- Automated response is policy-driven and scoped to the academic MVP: `brute_force`, `port_scan`, `file_integrity_violation`, and `unauthorized_user_creation` (broader detection families are not implemented in this release).
+- User-defined policies may target the academic MVP detection types: `brute_force`, `port_scan`, `file_integrity_violation`, and `unauthorized_user_creation` (broader detection families are not implemented in this release).
+- The **built-in ML auto-block** is **only** for **`brute_force`** (TensorFlow-scored, gated); it is **not** a generic auto-block across all four types.
 - Built-in adapters are first-party and backend-owned; they do not require external scripts for lab-safe defaults.
 - Live execution still requires `AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true`.
 - Destructive adapters remain blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.

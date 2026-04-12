@@ -52,6 +52,9 @@ def test_alerts_dataset_includes_threat_types_labels_and_counts() -> None:
     for lb in ("Low", "Medium", "High"):
         assert labels[lb] > 0, f"Missing or empty label={lb!r}"
 
+    extra = set(labels) - {"Low", "Medium", "High"}
+    assert not extra, f"label column must be only Low/Medium/High; found {sorted(extra)}"
+
     assert threats["brute_force"] > 0
     assert threats["normal"] > 0
 
@@ -113,3 +116,4 @@ def test_generate_alerts_dataset_script_writes_contract_csv(tmp_path: Path) -> N
         assert threats[t] > 0
     for lb in ("Low", "Medium", "High"):
         assert labels[lb] > 0
+    assert not (set(labels) - {"Low", "Medium", "High"})

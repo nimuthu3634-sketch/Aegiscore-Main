@@ -23,6 +23,18 @@ npm run test:web:e2e
 py -3 scripts/validate_attack_scenarios.py
 ```
 
+### Optional: TensorFlow scoring + ML brute-force story
+
+By default **`SCORING_STRATEGY=baseline`** (see `docker-compose.yml`). That is **intentional**: the stack runs without depending on Keras artifacts.
+
+To narrate **detection → AI prioritization (Low/Medium/High only) → brute-force-only ML auto-block** in line with **[ai-alert-prioritization.md](ai-alert-prioritization.md)**:
+
+1. Ensure **`ai/models/aegiscore-risk-priority-model.keras`** and **`aegiscore-risk-priority-model.metadata.json`** exist (train with `ai/training/train_risk_model.py` if needed).
+2. Set **`SCORING_STRATEGY=model`** for the `api` service (host `.env`, export, or Compose override) and restart **`docker compose up -d api`**.
+3. Keep **`AUTOMATED_RESPONSE_ML_BRUTE_FORCE_ENABLED=true`** (default) if you want the built-in rule **evaluated**; it still fires **only** for **`brute_force`** alerts scored with **`tensorflow_model`**, **High** tier, **`failed_logins_5m` ≥ 10**, and **source IP** present.
+
+Say explicitly: **Wazuh/Suricata detect**; **ML only ranks**; **Critical** can appear from **baseline** thresholds, **not** from the TensorFlow softmax.
+
 If you need fresh events just before demo, rerun:
 
 ```powershell

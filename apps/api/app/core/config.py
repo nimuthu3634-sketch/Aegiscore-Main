@@ -123,8 +123,10 @@ class Settings(BaseSettings):
         default="baseline",
         alias="SCORING_STRATEGY",
         description=(
-            "baseline | model. When model, loads SCORING_MODEL_PATH + metadata; "
-            "alert_prioritization_v1 metadata uses TensorFlow 3-class low/medium/high only."
+            "baseline | model. Default baseline keeps local/demo stacks deterministic without "
+            "requiring Keras artifacts. Use model for TensorFlow alert prioritization "
+            "(SCORING_MODEL_PATH + SCORING_MODEL_METADATA_PATH; 3-class low/medium/high only, "
+            "never critical from ML). Invalid model paths fall back to baseline with fallback_reason."
         ),
     )
     scoring_baseline_version: str = Field(
@@ -165,8 +167,9 @@ class Settings(BaseSettings):
         default=True,
         alias="AUTOMATED_RESPONSE_ML_BRUTE_FORCE_ENABLED",
         description=(
-            "When true, TensorFlow-scored brute_force alerts may trigger the built-in "
-            "block_ip automation if failed_logins_5m and AI high-tier preconditions pass."
+            "When true, allows evaluation of the built-in brute_force block_ip automation. "
+            "It runs only for tensorflow_model scores with High tier, failed_logins_5m>=10, "
+            "source_ip present, and model tier high (see ml_brute_force_automation)."
         ),
     )
     automated_response_block_ip_backend: str = Field(
