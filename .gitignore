@@ -15,3 +15,5 @@ __pycache__/
 .env
 .DS_Store
 ai/outputs/
+# Primary scoring ships TensorFlow .keras only — do not commit sklearn dumps here
+ai/models/*.joblib

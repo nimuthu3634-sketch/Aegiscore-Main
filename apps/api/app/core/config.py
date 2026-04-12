@@ -134,10 +134,12 @@ class Settings(BaseSettings):
     scoring_model_path: str = Field(
         default="/srv/ai/models/aegiscore-risk-priority-model.keras",
         alias="SCORING_MODEL_PATH",
+        description="TensorFlow Keras file (.keras or .h5). Joblib/sklearn artifacts are not loaded.",
     )
     scoring_model_metadata_path: str = Field(
         default="/srv/ai/models/aegiscore-risk-priority-model.metadata.json",
         alias="SCORING_MODEL_METADATA_PATH",
+        description="JSON metadata paired with SCORING_MODEL_PATH (alert_prioritization_v1 or legacy_risk_fixture).",
     )
     scoring_model_version: str = Field(
         default="untrained",

@@ -40,9 +40,9 @@ The baseline uses explainable additive rules over normalized context:
 
 Baseline scores map through **numeric thresholds** (see below) and may label an alert **`critical`** when the score is high enough.
 
-### Trainable TensorFlow (Keras) model
+### Trainable TensorFlow (Keras) model (primary AI path)
 
-Optional; enable with `SCORING_STRATEGY=model`.
+Optional; enable with `SCORING_STRATEGY=model`. **Committed product artifacts are `.keras` + `.metadata.json` only** — not joblib or scikit-learn.
 
 - Runtime loader + training helpers: `apps/api/app/services/scoring/ml.py`, `alert_prioritization.py`
 - Training entrypoint: `ai/training/train_risk_model.py`
@@ -54,7 +54,7 @@ The **primary** trainable schema is **`alert_prioritization_v1`**: softmax class
 
 If `SCORING_STRATEGY=model` but artifacts are missing or invalid, the API **falls back to the baseline** and records **`fallback_reason`** in the explanation.
 
-### Persistence enum: `sklearn_model`
+### Historical DB string: `sklearn_model` (not a runtime stack)
 
 The value **`sklearn_model`** exists only as a **historical `ScoreMethod` enum / DB string** on migrated rows. The product stack uses **TensorFlow** for trainable scoring; **no `.joblib` artifacts** and **no scikit-learn inference path** are shipped. New scores are stored as **`tensorflow_model`** or **`baseline_rules`**.
 

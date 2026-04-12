@@ -24,6 +24,30 @@ from app.services.scoring.types import AlertRiskFeatures, ScoringResult
 
 TRAINING_SCHEMA = "alert_prioritization_v1"
 LABEL_COLUMN = "label"
+
+
+def _eval_paths_for_metadata(repo_root: Path, eval_dir: Path | None) -> tuple[str | None, str | None, str | None, str | None]:
+    """Return portable repo-relative POSIX paths when ``eval_dir`` is under ``repo_root``."""
+    if eval_dir is None:
+        return None, None, None, None
+    try:
+        root = repo_root.resolve()
+        base = eval_dir.resolve()
+        rel_dir = base.relative_to(root).as_posix()
+        return (
+            rel_dir,
+            (base / "confusion_matrix.csv").relative_to(root).as_posix(),
+            (base / "classification_report.txt").relative_to(root).as_posix(),
+            (base / "evaluation_metrics.json").relative_to(root).as_posix(),
+        )
+    except ValueError:
+        base = eval_dir.resolve()
+        return (
+            str(base),
+            str(base / "confusion_matrix.csv"),
+            str(base / "classification_report.txt"),
+            str(base / "evaluation_metrics.json"),
+        )
 REQUIRED_COLUMNS = [
     "timestamp",
     "threat_type",
@@ -299,6 +323,8 @@ def _write_eval_outputs(
     confusion: np.ndarray,
     labels: list[str],
     report_text: str,
+    train_accuracy: float,
+    validation_accuracy: float,
     test_accuracy: float,
     class_dist: dict[str, Any],
 ) -> None:
@@ -310,7 +336,18 @@ def _write_eval_outputs(
         lines.append(row)
     (out_dir / "confusion_matrix.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
     (out_dir / "classification_report.txt").write_text(report_text + "\n", encoding="utf-8")
-    metrics = {"test_accuracy": test_accuracy, "class_distribution": class_dist}
+    confusion_dict = {
+        labels[i]: {labels[j]: int(confusion[i, j]) for j in range(len(labels))}
+        for i in range(len(labels))
+    }
+    metrics: dict[str, Any] = {
+        "train_accuracy": round(float(train_accuracy), 6),
+        "validation_accuracy": round(float(validation_accuracy), 6),
+        "test_accuracy": round(float(test_accuracy), 6),
+        "class_distribution": class_dist,
+        "confusion_matrix": confusion_dict,
+        "label_classes": labels,
+    }
     (out_dir / "evaluation_metrics.json").write_text(
         json.dumps(metrics, indent=2), encoding="utf-8"
     )
@@ -330,6 +367,7 @@ def train_alert_prioritization_model(
 
     raw = pd.read_csv(dataset_path)
     frame = normalize_alerts_dataframe(raw)
+    repo_root = dataset_path.resolve().parents[2]
 
     label_classes = list(CANONICAL_LABELS)
     label_to_index = {lab: i for i, lab in enumerate(label_classes)}
@@ -421,6 +459,8 @@ def train_alert_prioritization_model(
             confusion=conf_mat,
             labels=label_classes,
             report_text=report,
+            train_accuracy=float(train_acc),
+            validation_accuracy=float(val_acc),
             test_accuracy=float(test_acc),
             class_dist=class_dist,
         )
@@ -429,32 +469,62 @@ def train_alert_prioritization_model(
     metadata_output_path.parent.mkdir(parents=True, exist_ok=True)
     model.save(model_output_path)
 
-    model_version = requested_version or datetime.now(UTC).strftime("alert_model_%Y%m%d_%H%M%S")
+    now = datetime.now(UTC)
+    model_version = requested_version or now.strftime("alert_model_%Y%m%d_%H%M%S")
+    train_acc_f = round(float(train_acc), 6)
+    val_acc_f = round(float(val_acc), 6)
+    test_acc_f = round(float(test_acc), 6)
+
+    eval_dir_str: str | None = None
+    confusion_matrix_path: str | None = None
+    classification_report_path: str | None = None
+    evaluation_metrics_path: str | None = None
+    if eval_output_dir is not None:
+        eval_dir_str, confusion_matrix_path, classification_report_path, evaluation_metrics_path = (
+            _eval_paths_for_metadata(repo_root, eval_output_dir)
+        )
+
     metadata: dict[str, Any] = {
+        "model_name": "aegiscore_alert_prioritization_v1",
         "training_schema": TRAINING_SCHEMA,
         "model_version": model_version,
-        "trained_at": datetime.now(UTC).isoformat(),
+        "trained_at": now.isoformat(),
+        "generated_at": now.isoformat(),
         "framework": "tensorflow",
         "ml_framework": "tensorflow",
         "training_rows": int(len(frame)),
         "train_rows": int(len(train_df)),
         "validation_rows": int(len(val_df)),
         "test_rows": int(len(test_df)),
+        "train_accuracy": train_acc_f,
+        "validation_accuracy": val_acc_f,
+        "test_accuracy": test_acc_f,
         "metrics": {
-            "train_accuracy": round(float(train_acc), 4),
-            "validation_accuracy": round(float(val_acc), 4),
-            "test_accuracy": round(float(test_acc), 4),
+            "train_accuracy": train_acc_f,
+            "validation_accuracy": val_acc_f,
+            "test_accuracy": test_acc_f,
         },
         "label_classes": label_classes,
         "label_to_index": label_to_index,
         "feature_column_names": feature_column_names,
+        "feature_columns": list(feature_column_names),
         "numeric_columns": NUMERIC_COLUMNS,
         "categorical_columns": CATEGORICAL_COLUMNS,
         "numeric_means": means,
         "numeric_stds": stds,
         "categorical_allowed_values": categorical_allowed,
-        "evaluation_artifacts_dir": str(eval_output_dir) if eval_output_dir else None,
+        "evaluation_artifacts_dir": eval_dir_str,
+        "confusion_matrix_path": confusion_matrix_path,
+        "classification_report_path": classification_report_path,
+        "evaluation_metrics_path": evaluation_metrics_path,
+        "confusion_matrix": {
+            label_classes[i]: {
+                label_classes[j]: int(conf_mat[i, j]) for j in range(len(label_classes))
+            }
+            for i in range(len(label_classes))
+        },
     }
+
     metadata_output_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     return metadata
 

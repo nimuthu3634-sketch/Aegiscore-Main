@@ -22,7 +22,7 @@ This document is the **canonical reference** for how AegisCore uses machine lear
 - **`ai/training/train_risk_model.py`** — Training entrypoint (delegates to `apps/api/app/services/scoring/ml.py`).
 - **`ai/inference/predict_risk.py`** — Offline scoring from a JSON feature file.
 - **`apps/api/app/services/scoring/`** — Runtime baseline, feature extraction, TensorFlow load/score, service orchestration.
-- **`ai/models/`** — Default output paths for `.keras` weights and `.metadata.json` (gitignored generated files; see `ai/models/README.md`).
+- **`ai/models/`** — **Primary** trainable artifacts: TensorFlow `.keras` weights, paired `.metadata.json`, and optional evaluation companions (see `ai/models/README.md`). Runtime scoring loads **only** these Keras files — not joblib or scikit-learn models.
 
 ## 1. Generate the dataset
 

@@ -269,7 +269,8 @@ def load_priority_model(
     suffix = resolved_model_path.suffix.lower()
     if suffix not in (".keras", ".h5"):
         raise ModelArtifactUnavailableError(
-            f"Expected TensorFlow Keras model file (.keras or .h5); got {suffix!r}."
+            f"Expected TensorFlow Keras model file (.keras or .h5); got {suffix!r}. "
+            "Scikit-learn joblib dumps are not supported; the primary artifact is a .keras file."
         )
 
     model = tf.keras.models.load_model(resolved_model_path, compile=False)

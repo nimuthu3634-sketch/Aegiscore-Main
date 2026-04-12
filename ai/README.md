@@ -1,6 +1,6 @@
 # AegisCore AI
 
-Utilities for **TensorFlow / Keras alert prioritization** (post-detection scoring). **Canonical documentation:** [docs/ai-alert-prioritization.md](../docs/ai-alert-prioritization.md) — product role, threat taxonomy, labels, backend wiring, and brute-force ML automation.
+Utilities for **TensorFlow / Keras alert prioritization** (post-detection scoring): the **primary** trainable artifact is **`ai/models/aegiscore-risk-priority-model.keras`** with paired **`.metadata.json`** (3-class **low / medium / high**). There is **no** scikit-learn or joblib scoring path. **Canonical documentation:** [docs/ai-alert-prioritization.md](../docs/ai-alert-prioritization.md) — product role, threat taxonomy, labels, backend wiring, and brute-force ML automation.
 
 ## Synthetic dataset (`alert_prioritization_v1`)
 
