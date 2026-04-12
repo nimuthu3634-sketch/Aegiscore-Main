@@ -31,6 +31,15 @@ class AlertRiskFeatures:
     asset_id: str | None = None
     alert_id: str | None = None
     external_id: str | None = None
+    # TensorFlow alert_prioritization_v1 row fields (Wazuh/Suricata-derived; not model outputs).
+    failed_logins_1m: int = 0
+    failed_logins_5m: int = 0
+    unique_ports_1m: int = 0
+    integrity_change: str = "none"
+    new_user_created: int = 0
+    off_hours: int = 0
+    blacklisted_ip: int = 0
+    suricata_severity: int = 0
 
     def to_model_input(self) -> dict[str, Any]:
         return {
@@ -62,6 +71,21 @@ class AlertRiskFeatures:
                 "asset_id": self.asset_id,
                 "alert_id": self.alert_id,
                 "external_id": self.external_id,
+                "threat_type": (
+                    "file_integrity"
+                    if self.detection_type == "file_integrity_violation"
+                    else self.detection_type
+                ),
+                "failed_logins_1m": self.failed_logins_1m,
+                "failed_logins_5m": self.failed_logins_5m,
+                "unique_ports_1m": self.unique_ports_1m,
+                "integrity_change": self.integrity_change,
+                "new_user_created": self.new_user_created,
+                "off_hours": self.off_hours,
+                "privileged_account": int(self.privileged_account_flag),
+                "wazuh_rule_level": self.source_rule_level,
+                "suricata_severity": self.suricata_severity,
+                "blacklisted_ip": self.blacklisted_ip,
             }
         )
         return snapshot

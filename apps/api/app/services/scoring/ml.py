@@ -1,6 +1,12 @@
+"""TensorFlow risk scoring: ``alert_prioritization_v1`` (3-class) or legacy fixture schema.
+
+Threat / detection context is produced by ingestion and :mod:`app.services.scoring.features`;
+the trainable head assigns **low / medium / high** only for ``alert_prioritization_v1``.
+"""
 from __future__ import annotations
 
 import json
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -10,6 +16,7 @@ import pandas as pd
 import tensorflow as tf
 
 from app.models.enums import ScoreMethod
+from app.services.scoring import alert_prioritization as ap
 from app.services.scoring.baseline import priority_from_score
 from app.services.scoring.constants import (
     MODEL_CATEGORICAL_FEATURES,
@@ -18,6 +25,9 @@ from app.services.scoring.constants import (
     RISK_PRIORITY_ANCHORS,
 )
 from app.services.scoring.types import AlertRiskFeatures, ScoringResult
+
+# LEGACY: TensorFlow path for `risk_training_fixture.csv` (MODEL_* schema). Not sklearn.
+LEGACY_TRAINING_SCHEMA = "legacy_risk_fixture"
 
 
 class ModelArtifactUnavailableError(RuntimeError):
@@ -30,6 +40,7 @@ def _set_deterministic_seed(seed: int = 42) -> None:
 
 
 def _normalize_training_frame(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """LEGACY: normalize rows for `risk_training_fixture.csv` (MODEL_* columns)."""
     frame = dataframe.copy()
     missing_columns = [column for column in MODEL_FEATURE_COLUMNS if column not in frame.columns]
     if missing_columns:
@@ -57,7 +68,7 @@ def _build_design_matrices(
     numeric_stds: dict[str, float] | None = None,
     feature_column_names: list[str] | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """One-hot categoricals + z-scored numerics; returns X and preprocessing metadata for inference."""
+    """LEGACY: one-hot MODEL_* categoricals + z-scored numerics."""
     cats = pd.get_dummies(
         frame[MODEL_CATEGORICAL_FEATURES].astype(str),
         prefix=MODEL_CATEGORICAL_FEATURES,
@@ -92,7 +103,7 @@ def _build_training_matrix(frame: pd.DataFrame) -> tuple[np.ndarray, dict[str, A
 
 
 def _frame_from_model_input(row: dict[str, Any]) -> pd.DataFrame:
-    """Single alert feature row for inference (no priority_label)."""
+    """LEGACY: single row for MODEL_* inference."""
     frame = pd.DataFrame([row])
     for column in MODEL_NUMERIC_FEATURES:
         frame[column] = pd.to_numeric(frame[column], errors="coerce").fillna(0)
@@ -116,6 +127,7 @@ def _row_from_features(
 
 
 def _build_keras_classifier(input_dim: int, num_classes: int) -> tf.keras.Model:
+    """LEGACY fixture model: smaller MLP."""
     inputs = tf.keras.Input(shape=(input_dim,), name="risk_features")
     x = tf.keras.layers.Dense(64, activation="relu", name="dense_1")(inputs)
     x = tf.keras.layers.Dropout(0.1, name="dropout")(x)
@@ -129,7 +141,7 @@ def _build_keras_classifier(input_dim: int, num_classes: int) -> tf.keras.Model:
     return model
 
 
-def train_priority_model(
+def _train_legacy_fixture_tensorflow_model(
     *,
     dataset_path: Path,
     model_output_path: Path,
@@ -167,6 +179,7 @@ def train_priority_model(
 
     model_version = requested_version or datetime.now(UTC).strftime("risk_model_%Y%m%d_%H%M%S")
     metadata = {
+        "training_schema": LEGACY_TRAINING_SCHEMA,
         "model_version": model_version,
         "trained_at": datetime.now(UTC).isoformat(),
         "training_rows": int(len(frame)),
@@ -177,12 +190,41 @@ def train_priority_model(
         "label_classes": label_classes,
         "label_to_index": label_to_index,
         "ml_framework": "tensorflow",
+        "framework": "tensorflow",
         "feature_column_names": prep_meta["feature_column_names"],
         "numeric_means": prep_meta["numeric_means"],
         "numeric_stds": prep_meta["numeric_stds"],
     }
     metadata_output_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     return metadata
+
+
+def train_priority_model(
+    *,
+    dataset_path: Path,
+    model_output_path: Path,
+    metadata_output_path: Path,
+    requested_version: str | None = None,
+) -> dict[str, Any]:
+    dataset = pd.read_csv(dataset_path)
+    if ap.is_alert_prioritization_dataset(dataset):
+        eval_dir_raw = os.getenv("AI_EVAL_OUTPUT_DIR")
+        default_eval = dataset_path.resolve().parent.parent / "outputs" / "alert_prioritization"
+        eval_output_dir = Path(eval_dir_raw) if eval_dir_raw else default_eval
+        return ap.train_alert_prioritization_model(
+            dataset_path=dataset_path,
+            model_output_path=model_output_path,
+            metadata_output_path=metadata_output_path,
+            requested_version=requested_version,
+            eval_output_dir=eval_output_dir,
+            random_seed=42,
+        )
+    return _train_legacy_fixture_tensorflow_model(
+        dataset_path=dataset_path,
+        model_output_path=model_output_path,
+        metadata_output_path=metadata_output_path,
+        requested_version=requested_version,
+    )
 
 
 def load_priority_model(
@@ -202,7 +244,18 @@ def load_priority_model(
         )
 
     metadata = json.loads(resolved_metadata_path.read_text(encoding="utf-8"))
-    required_keys = ("feature_column_names", "numeric_means", "numeric_stds", "label_classes")
+    schema = metadata.get("training_schema")
+    if schema == ap.TRAINING_SCHEMA:
+        required_keys = (
+            "feature_column_names",
+            "numeric_means",
+            "numeric_stds",
+            "label_classes",
+            "categorical_allowed_values",
+        )
+    else:
+        required_keys = ("feature_column_names", "numeric_means", "numeric_stds", "label_classes")
+
     missing = [key for key in required_keys if key not in metadata]
     if missing:
         raise ModelArtifactUnavailableError(
@@ -220,7 +273,7 @@ def load_priority_model(
     return model, metadata
 
 
-def score_with_model(
+def _score_legacy_tensorflow_model(
     *,
     features: AlertRiskFeatures,
     model: tf.keras.Model,
@@ -239,8 +292,8 @@ def score_with_model(
     }
 
     weighted_score = sum(
-        class_probabilities.get(label, 0.0) * anchor
-        for label, anchor in RISK_PRIORITY_ANCHORS.items()
+        class_probabilities.get(label, 0.0) * RISK_PRIORITY_ANCHORS.get(label, 0)
+        for label in classes
     )
     top_label = max(class_probabilities, key=class_probabilities.get)
     confidence = round(float(class_probabilities[top_label]), 2)
@@ -265,14 +318,14 @@ def score_with_model(
         )
 
     explanation = {
-        "label": "Trainable model score",
+        "label": "Trainable model score (legacy fixture schema)",
         "summary": (
             f"Model version {metadata.get('model_version', 'unknown')} predicted "
             f"{priority_label.value} priority at {rounded_score}/100."
         ),
         "rationale": (
-            "The TensorFlow (Keras) classifier evaluates one-hot categorical detection context "
-            "and z-scored numeric recurrence features from normalized alert telemetry."
+            "LEGACY TensorFlow (Keras) classifier on MODEL_* one-hot categoricals and "
+            "z-scored numerics from risk_training_fixture.csv."
         ),
         "factors": factors,
         "class_probabilities": class_probabilities,
@@ -280,6 +333,7 @@ def score_with_model(
         "priority_label": priority_label.value,
         "scoring_method": ScoreMethod.TENSORFLOW_MODEL.value,
         "model_version": metadata.get("model_version"),
+        "training_schema": metadata.get("training_schema", LEGACY_TRAINING_SCHEMA),
     }
 
     return ScoringResult(
@@ -295,4 +349,23 @@ def score_with_model(
         feature_snapshot=features.to_snapshot(),
         baseline_version=None,
         model_version=metadata.get("model_version"),
+    )
+
+
+def score_with_model(
+    *,
+    features: AlertRiskFeatures,
+    model: tf.keras.Model,
+    metadata: dict[str, Any],
+) -> ScoringResult:
+    if metadata.get("training_schema") == ap.TRAINING_SCHEMA:
+        return ap.score_alert_model_with_features(
+            features=features,
+            model=model,
+            metadata=metadata,
+        )
+    return _score_legacy_tensorflow_model(
+        features=features,
+        model=model,
+        metadata=metadata,
     )

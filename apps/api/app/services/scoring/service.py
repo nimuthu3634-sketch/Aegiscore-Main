@@ -38,6 +38,11 @@ def score_alert(
     session: Session,
     alert: NormalizedAlert,
 ) -> RiskScore:
+    """Score a normalized alert (baseline rules or TensorFlow, with safe fallback).
+
+    Connectors and parsers set ``detection_type`` / threat context; the trainable
+    ``alert_prioritization_v1`` model only emits **low / medium / high** priority tiers.
+    """
     settings = get_settings()
     features = extract_alert_features(session, alert)
 

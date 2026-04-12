@@ -62,6 +62,14 @@ RISK_PRIORITY_ANCHORS: dict[str, int] = {
     IncidentPriority.CRITICAL.value: 93,
 }
 
+# 3-class TensorFlow alert prioritization model (no CRITICAL class in softmax).
+ALERT_PRIORITY_ANCHORS: dict[str, int] = {
+    IncidentPriority.LOW.value: 25,
+    IncidentPriority.MEDIUM.value: 55,
+    IncidentPriority.HIGH.value: 80,
+}
+
+# LEGACY: columns for the small `risk_training_fixture.csv` TensorFlow path (pre-alert-ML schema).
 MODEL_CATEGORICAL_FEATURES = [
     "source_type",
     "detection_type",
@@ -83,3 +91,19 @@ MODEL_NUMERIC_FEATURES = [
 ]
 
 MODEL_FEATURE_COLUMNS = MODEL_CATEGORICAL_FEATURES + MODEL_NUMERIC_FEATURES
+
+# LEGACY alias bundle (same as MODEL_*); kept for documentation grep-ability.
+LEGACY_MODEL_FEATURE_COLUMNS = MODEL_FEATURE_COLUMNS
+
+# Feature extraction for TensorFlow alert prioritization (UTC business hours, simple heuristic).
+SCORING_BUSINESS_HOUR_START_UTC = 8
+SCORING_BUSINESS_HOUR_END_UTC = 18
+SCORING_BLACKLISTED_IP_REPEAT_THRESHOLD = 3
+
+INTEGRITY_CRITICAL_PATH_MARKERS = (
+    "shadow",
+    "passwd",
+    "sudoers",
+    "authorized_keys",
+    ".ssh/",
+)

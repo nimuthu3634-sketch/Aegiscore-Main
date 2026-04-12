@@ -22,7 +22,7 @@ def main() -> None:
     dataset_path = Path(
         os.getenv(
             "AI_DATASET_PATH",
-            repo_root / "ai" / "datasets" / "risk_training_fixture.csv",
+            repo_root / "ai" / "datasets" / "alerts_dataset.csv",
         )
     )
     model_output_path = Path(

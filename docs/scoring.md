@@ -100,7 +100,11 @@ docker compose run --rm --no-deps api python /srv/ai/training/train_risk_model.p
 
 The default training dataset is:
 
-- `ai/datasets/risk_training_fixture.csv`
+- `ai/datasets/alerts_dataset.csv` (synthetic **alert prioritization** rows: `label` is `low` / `medium` / `high` only; metadata `training_schema` is `alert_prioritization_v1`)
+
+To train the **legacy** small fixture instead (four `priority_label` classes on the old `MODEL_*` feature schema), set `AI_DATASET_PATH=/srv/ai/datasets/risk_training_fixture.csv`.
+
+Optional: `AI_EVAL_OUTPUT_DIR` (directory for confusion matrix CSV, classification report, and `evaluation_metrics.json` when training the alert dataset).
 
 The generated artifacts land in:
 
@@ -109,10 +113,14 @@ The generated artifacts land in:
 
 ## Manual Model Inference
 
-Prepare a JSON feature payload shaped like the persisted `feature_snapshot` and run:
+- **Alert prioritization model** (`alert_prioritization_v1` in metadata): pass either JSON with **CSV-style** fields (`threat_type`, `timestamp`, …) or the same **API snapshot** shape as `sample_features.json` (the CLI maps it through `AlertRiskFeatures` into the training schema).
+- **Legacy fixture model** (`legacy_risk_fixture`): pass JSON shaped like the persisted `feature_snapshot` / `sample_features.json`.
+
+Examples:
 
 ```powershell
 docker compose run --rm --no-deps api python /srv/ai/inference/predict_risk.py --features-file /srv/ai/datasets/sample_features.json
+docker compose run --rm --no-deps api python /srv/ai/inference/predict_risk.py --features-file /srv/ai/datasets/sample_alert_row.json
 ```
 
 ## API Exposure

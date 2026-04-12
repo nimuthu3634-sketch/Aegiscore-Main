@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.models.enums import ScoreMethod
+from app.models.enums import IncidentPriority, ScoreMethod
 from app.services.scoring.constants import (
     ASSET_CRITICALITY_WEIGHTS,
     DETECTION_TYPE_WEIGHTS,
@@ -23,6 +23,19 @@ def priority_from_score(score: float | int | None):
         if normalized_score >= minimum:
             return priority
     return PRIORITY_THRESHOLDS[-1][1]
+
+
+def incident_priority_from_three_class_tier(tier: str) -> IncidentPriority:
+    """Map TensorFlow alert-prioritization softmax label to IncidentPriority.
+
+    The 3-class model never emits ``critical``; this mapping never returns CRITICAL.
+    """
+    key = (tier or "low").strip().lower()
+    if key == "medium":
+        return IncidentPriority.MEDIUM
+    if key == "high":
+        return IncidentPriority.HIGH
+    return IncidentPriority.LOW
 
 
 def score_with_baseline(

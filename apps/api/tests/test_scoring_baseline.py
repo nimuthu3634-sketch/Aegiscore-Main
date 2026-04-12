@@ -1,8 +1,19 @@
 from datetime import UTC, datetime
 
 from app.models.enums import IncidentPriority
-from app.services.scoring.baseline import priority_from_score, score_with_baseline
+from app.services.scoring.baseline import (
+    incident_priority_from_three_class_tier,
+    priority_from_score,
+    score_with_baseline,
+)
 from app.services.scoring.types import AlertRiskFeatures
+
+
+def test_incident_priority_from_three_class_tier_never_critical() -> None:
+    assert incident_priority_from_three_class_tier("low") == IncidentPriority.LOW
+    assert incident_priority_from_three_class_tier("medium") == IncidentPriority.MEDIUM
+    assert incident_priority_from_three_class_tier("high") == IncidentPriority.HIGH
+    assert incident_priority_from_three_class_tier("unknown-tier") == IncidentPriority.LOW
 
 
 def test_priority_from_score_thresholds() -> None:

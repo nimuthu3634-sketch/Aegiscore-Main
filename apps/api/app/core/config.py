@@ -119,7 +119,14 @@ class Settings(BaseSettings):
         default="AegisCore123!",
         alias="DEV_SEED_ANALYST_PASSWORD",
     )
-    scoring_strategy: str = Field(default="baseline", alias="SCORING_STRATEGY")
+    scoring_strategy: str = Field(
+        default="baseline",
+        alias="SCORING_STRATEGY",
+        description=(
+            "baseline | model. When model, loads SCORING_MODEL_PATH + metadata; "
+            "alert_prioritization_v1 metadata uses TensorFlow 3-class low/medium/high only."
+        ),
+    )
     scoring_baseline_version: str = Field(
         default="baseline_v1",
         alias="SCORING_BASELINE_VERSION",
