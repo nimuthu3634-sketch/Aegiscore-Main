@@ -7,10 +7,7 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { authenticateOperator } from "../features/auth/service";
 import { hasStoredAccessToken, isDevAuthBootstrapEnabled } from "../lib/api";
-import {
-  ACADEMIC_THREAT_SCOPE_DESCRIPTION,
-  ACADEMIC_THREAT_SCOPE_ROADMAP_NOTE
-} from "../lib/supportedDetections";
+import {ACADEMIC_THREAT_SCOPE_DESCRIPTION,ACADEMIC_THREAT_SCOPE_ROADMAP_NOTE} from "../lib/supportedDetections";
 
 const devAuthBootstrapEnabled = isDevAuthBootstrapEnabled();
 const defaultUsername = devAuthBootstrapEnabled
