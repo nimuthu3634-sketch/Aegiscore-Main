@@ -1,25 +1,25 @@
 {
   "model_name": "aegiscore_enterprise_alert_prioritization_v2",
   "training_schema": "alert_prioritization_v2",
-  "model_version": "enterprise_model_20260412_203846",
+  "model_version": "enterprise_model_20260413_051740",
   "model_architecture": "MLP_4layer_BatchNorm_Enterprise",
   "layers": "Dense(256)+BN+Drop(0.3)->Dense(128)+BN+Drop(0.2)->Dense(64)+BN+Drop(0.1)->Dense(32)->Dense(4,softmax)",
-  "trained_at": "2026-04-12T20:39:21.423047+00:00",
+  "trained_at": "2026-04-13T05:18:08.924035+00:00",
   "framework": "tensorflow",
   "ml_framework": "tensorflow",
   "training_rows": 6000,
   "validation_rows": 2000,
   "test_rows": 2000,
-  "epochs_trained": 45,
-  "training_time_seconds": 30.2,
-  "train_accuracy": 0.988333,
-  "validation_accuracy": 0.9945,
-  "test_accuracy": 0.9865,
+  "epochs_trained": 40,
+  "training_time_seconds": 23.9,
+  "train_accuracy": 0.9875,
+  "validation_accuracy": 0.994,
+  "test_accuracy": 0.986,
   "per_class_test_accuracy": {
     "low": 0.9898,
     "medium": 0.9784,
     "high": 0.9913,
-    "critical": 1.0
+    "critical": 0.995
   },
   "label_classes": [
     "low",
@@ -138,22 +138,22 @@
       "critical": 0
     },
     "medium": {
-      "low": 7,
+      "low": 6,
       "medium": 814,
-      "high": 11,
+      "high": 12,
       "critical": 0
     },
     "high": {
       "low": 0,
-      "medium": 3,
+      "medium": 4,
       "high": 572,
-      "critical": 2
+      "critical": 1
     },
     "critical": {
       "low": 0,
       "medium": 0,
-      "high": 0,
-      "critical": 200
+      "high": 1,
+      "critical": 199
     }
   }
 }
