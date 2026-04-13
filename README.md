@@ -270,4 +270,5 @@ ML ranks **already-detected** alerts; it does not replace Wazuh/Suricata. The tr
 - add background replay handling for ingestion failures and broaden lab validation coverage for destructive adapter paths
 
 ## Academic Supervision
+
 This project was guided and supervised by Ann Roshanie Appuhamy as part of undergraduate coursework.
