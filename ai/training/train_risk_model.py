@@ -101,16 +101,14 @@ def build_design_matrix(
     computed_stds: dict[str, float]
 
     if means is None or stds is None:
-        computed_means = {
-            k: float(v) for k, v in numeric.mean().items()
-        }
-        computed_stds = {
-            k: max(float(v), 1e-8)
-            for k, v in numeric.std(ddof=0).items()
-        }
+        _means_s = numeric.mean()
+        _stds_s = numeric.std(ddof=0)
+        computed_means = {col: float(_means_s[col]) for col in NUMERIC_COLUMNS}
+        computed_stds = {col: max(float(_stds_s[col]), 1e-8) for col in NUMERIC_COLUMNS}
     else:
-        computed_means = means
-        computed_stds = stds
+        computed_means = {col: float(means[col]) for col in NUMERIC_COLUMNS}
+        computed_stds = {col: float(stds[col]) for col in NUMERIC_COLUMNS}
+
 
     numeric_norm = (numeric - pd.Series(computed_means)) / pd.Series(
         computed_stds
