@@ -94,7 +94,7 @@ If you are reviewing AegisCore for final academic submission, use this quick flo
 docker compose up --build -d
 ```
 
-3. Run migrations and seed local users:
+3.Run migrations and seed local users:
 
 ```powershell
 docker compose exec api alembic upgrade head
