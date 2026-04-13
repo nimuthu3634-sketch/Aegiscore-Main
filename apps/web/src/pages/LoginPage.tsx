@@ -87,7 +87,7 @@ export function LoginPage() {
             <h2 className="type-display-lg text-content-primary">
               Sign in to AegisCore
             </h2>
-            <p className="max-w-xl type-body-md text-orange">
+            <p className="max-w-xl type-body-md" style={{ color: "#f97316" }}>
               Access the operational dashboard, triage queue, incident workspace,
               automated-response policies, and reporting surfaces from one backend-owned
               SOC console.
