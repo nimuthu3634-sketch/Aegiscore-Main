@@ -7,7 +7,11 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { authenticateOperator } from "../features/auth/service";
 import { hasStoredAccessToken, isDevAuthBootstrapEnabled } from "../lib/api";
-import {ACADEMIC_THREAT_SCOPE_DESCRIPTION,ACADEMIC_THREAT_SCOPE_ROADMAP_NOTE} from "../lib/supportedDetections";
+import {
+  ACADEMIC_THREAT_SCOPE_DESCRIPTION,
+  ACADEMIC_THREAT_SCOPE_ROADMAP_NOTE
+} from "../lib/supportedDetections";
+import loginBg from "../assets/login-bg.png";
 
 const devAuthBootstrapEnabled = isDevAuthBootstrapEnabled();
 const defaultUsername = devAuthBootstrapEnabled
@@ -55,15 +59,26 @@ export function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-shell">
+    <div
+      className="relative min-h-screen overflow-hidden bg-shell"
+      style={{
+        backgroundImage: `url(${loginBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center top",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* Brand glow overlays */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            "radial-gradient(circle at top left, rgb(var(--color-brand-glow) / 0.24), transparent 32%), radial-gradient(circle at bottom right, rgb(var(--color-brand-primary) / 0.1), transparent 26%), radial-gradient(circle at 60% 20%, rgb(var(--color-brand-primary) / 0.07), transparent 40%), radial-gradient(circle at 20% 80%, rgb(var(--color-brand-glow) / 0.12), transparent 35%)"
+            "radial-gradient(circle at top left, rgb(var(--color-brand-glow) / 0.18), transparent 32%), radial-gradient(circle at bottom right, rgb(var(--color-brand-primary) / 0.08), transparent 26%)"
         }}
       />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(17,24,39,0.2),transparent_28%,rgba(10,10,10,0.65)_100%)]" />
+      {/* Dark overlay so text remains readable over the background image */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,15,0.55),rgba(5,8,15,0.3)_40%,rgba(5,8,15,0.75)_100%)]" />
+
       <div className="relative mx-auto grid min-h-screen max-w-7xl items-start gap-8 px-4 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8 lg:py-8">
         <section className="space-y-6">
           <AegisCoreLogo titleAs="h1" className="items-start" />
@@ -72,7 +87,7 @@ export function LoginPage() {
             <h2 className="type-display-lg text-content-primary">
               Sign in to AegisCore
             </h2>
-            <p className="max-w-xl type-body-md">
+            <p className="max-w-xl type-body-md text-orange">
               Access the operational dashboard, triage queue, incident workspace,
               automated-response policies, and reporting surfaces from one backend-owned
               SOC console.
