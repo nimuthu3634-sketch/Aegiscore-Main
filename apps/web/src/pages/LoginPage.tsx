@@ -63,15 +63,15 @@ export function LoginPage() {
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            "radial-gradient(circle at top left, rgb(var(--color-brand-glow) / 0.24), transparent 32%), radial-gradient(circle at bottom right, rgb(var(--color-brand-primary) / 0.1), transparent 26%)"
+            "radial-gradient(circle at top left, rgb(var(--color-brand-glow) / 0.24), transparent 32%), radial-gradient(circle at bottom right, rgb(var(--color-brand-primary) / 0.1), transparent 26%), radial-gradient(circle at 60% 20%, rgb(var(--color-brand-primary) / 0.07), transparent 40%), radial-gradient(circle at 20% 80%, rgb(var(--color-brand-glow) / 0.12), transparent 35%)"
         }}
       />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(17,24,39,0.2),transparent_28%,rgba(10,10,10,0.65)_100%)]" />
-      <div className="relative mx-auto grid min-h-screen max-w-7xl items-center gap-8 px-4 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
+      <div className="relative mx-auto grid min-h-screen max-w-7xl items-start gap-8 px-4 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8 lg:py-8">
         <section className="space-y-6">
           <AegisCoreLogo titleAs="h1" className="items-start" />
           <div className="max-w-2xl space-y-4">
-            <Badge tone="brand">Centralized SOC platform MVP</Badge>
+            <Badge tone="brand">Centralized SOC Platform</Badge>
             <h2 className="type-display-lg text-content-primary">
               Sign in to AegisCore
             </h2>
