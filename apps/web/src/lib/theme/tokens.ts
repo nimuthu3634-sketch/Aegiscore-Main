@@ -176,7 +176,7 @@ export const pageBlueprints: Record<
     eyebrow: "SOC overview",
     title: "Overview Dashboard",
     description:
-      "At-a-glance posture for the academic MVP threat scope (four core categories): volume, risk, incidents, responses, and affected assets—built for a centralized SOC platform MVP console."
+      "At-a-glance posture across all threat categories: volume, risk, incidents, responses, and affected assets."
   },
   alerts: {
     eyebrow: "Normalized alerts",
@@ -206,13 +206,13 @@ export const pageBlueprints: Record<
     eyebrow: "Detection scope",
     title: "Rules / Policies",
     description:
-      "Automation rules for the academic MVP four-category scope only—tune enablement and modes; broader detections are roadmap-only."
+      "Automation rules for the four validated threat categories—tune enablement and modes."
   },
   reports: {
     eyebrow: "Operational reporting",
     title: "Reports",
     description:
-      "Summaries and exports for the same four-category activity you see in the queues—ideal for demos and handoffs."
+      "Summaries and exports for the four-category activity you see in the queues."
   },
   settings: {
     eyebrow: "Platform configuration",

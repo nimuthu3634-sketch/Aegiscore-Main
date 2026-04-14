@@ -114,7 +114,7 @@ export function AlertsPage() {
             <MetricCard
               label="Matching alerts"
               value={String(meta?.total ?? 0)}
-              detail="Alerts matching filters in the four validated threat categories (academic MVP scope)."
+              detail="Alerts matching filters in the four validated threat categories."
               tone="highlight"
             />
             <MetricCard
@@ -318,9 +318,7 @@ export function AlertsPage() {
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="type-body-sm">
-              Open a row for detection context, evidence, prioritization rationale, responses, and
-              notifications. Built-in ML IP blocks apply only to brute_force when AI tier is High
-              and thresholds pass.
+              Open a row for detection context, evidence, prioritization rationale, responses, and notifications.
             </p>
             <Badge tone="outline">risk 70+ = review soon</Badge>
           </div>
@@ -345,7 +343,7 @@ export function AlertsPage() {
         <EmptyState
           iconName="alerts"
           title="No alerts match the current filters"
-          description="Broaden the time window or clear filters to see alerts again. The academic MVP only surfaces the four validated threat categories."
+          description="Broaden the time window or clear filters to see alerts again. "
           action={
             <Button
               variant="secondary"

@@ -129,7 +129,7 @@ export function DashboardPage() {
         description={pageBlueprints.overview.description}
         meta={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="outline">four-detection scope</Badge>
+            <Badge tone="outline">Enterprise SOC</Badge>
             {data ? <Badge tone="brand">refreshed {data.fetchedAt}</Badge> : null}
           </div>
         }

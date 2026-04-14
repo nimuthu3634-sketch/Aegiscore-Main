@@ -128,7 +128,7 @@ export function AssetsPage() {
               value={String(
                 assets.reduce((total, asset) => total + asset.recentAlertsCount, 0)
               )}
-              detail="On this page: sum of MVP-scope alerts per visible host—pairs with top assets on the overview."
+              detail="On this page: sum of in-scope alerts per visible host."
             />
           </>
         )}

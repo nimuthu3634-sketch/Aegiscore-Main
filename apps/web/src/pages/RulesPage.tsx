@@ -170,12 +170,12 @@ export function RulesPage() {
             <MetricCard
               label="Dry-run policies"
               value={String(summary.dryRun)}
-              detail="Safe lab default: log what would happen without touching production controls."
+              detail="Simulation mode — logs what would happen without executing actions."
             />
             <MetricCard
               label="Live policies"
               value={String(summary.live)}
-              detail="Production-leaning mode—confirm each rule before demos with external systems."
+              detail="Production mode — actions execute against live systems."
               tone="warning"
             />
             <MetricCard
@@ -191,7 +191,7 @@ export function RulesPage() {
         title="Policy filters"
         description={
           canTogglePolicies
-            ? "Only the academic MVP four validated threat categories appear here. Enable or disable automation; threshold and action edits stay backend-managed in this build."
+            ? "Only the four validated threat categories appear here. Enable or disable automation as needed."
             : "Read-only view of the same four-detection policies. Admins can toggle enablement from an admin session."
         }
         search={

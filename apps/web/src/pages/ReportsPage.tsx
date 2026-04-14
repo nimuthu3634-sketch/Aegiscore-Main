@@ -171,7 +171,7 @@ export function ReportsPage() {
         description={pageBlueprints.reports.description}
         meta={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="outline">MVP threat-scope summaries</Badge>
+            <Badge tone="outline">Threat-scope summaries</Badge>
             {data ? <Badge tone="brand">fetched {data.fetchedAt}</Badge> : null}
           </div>
         }
