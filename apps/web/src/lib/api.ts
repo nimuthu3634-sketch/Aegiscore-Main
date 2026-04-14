@@ -30,6 +30,7 @@ type FetchApiJsonOptions = {
 
 const accessTokenStorageKey = "aegiscore.access_token";
 const sessionRoleStorageKey = "aegiscore.session_role";
+const sessionUsernameStorageKey = "aegiscore.session_username";
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
 const devAuthBootstrapEnabled =
   import.meta.env.DEV &&
@@ -85,6 +86,7 @@ export function clearStoredAccessToken() {
 
   window.localStorage.removeItem(accessTokenStorageKey);
   window.localStorage.removeItem(sessionRoleStorageKey);
+  window.localStorage.removeItem(sessionUsernameStorageKey);
 }
 
 /**
@@ -108,6 +110,13 @@ export function getStoredSessionRole() {
     return null;
   }
   return window.localStorage.getItem(sessionRoleStorageKey);
+}
+
+export function getStoredUsername() {
+  if (!canUseWebStorage()) {
+    return null;
+  }
+  return window.localStorage.getItem(sessionUsernameStorageKey);
 }
 
 export function isDevAuthBootstrapEnabled() {
@@ -142,6 +151,7 @@ export async function loginWithPassword(
   if (options.persist ?? true) {
     setStoredAccessToken(payload.access_token);
     window.localStorage.setItem(sessionRoleStorageKey, payload.user.role.name);
+    window.localStorage.setItem(sessionUsernameStorageKey, payload.user.username);
   }
 
   return payload;

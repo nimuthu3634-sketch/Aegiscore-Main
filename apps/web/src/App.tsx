@@ -21,6 +21,7 @@ import {
   AUTH_REQUIRED_EVENT,
   fetchHealthResponse,
   getStoredSessionRole,
+  getStoredUsername,
   hasStoredAccessToken,
   isDevAuthBootstrapEnabled,
   logoutOperator,
@@ -51,12 +52,14 @@ export default function App() {
   const hasSession = hasStoredAccessToken();
   const allowDevBootstrap = isDevAuthBootstrapEnabled();
   const sessionRole = getStoredSessionRole();
-  const sessionLabel =
-    sessionRole === "admin"
-      ? "Admin session"
+  const storedUsername = getStoredUsername();
+  const sessionLabel = storedUsername
+    ? storedUsername
+    : sessionRole === "admin"
+      ? "Admin"
       : sessionRole === "analyst"
-        ? "Analyst session"
-        : "Authenticated session";
+        ? "Analyst"
+        : "Session";
 
   useEffect(() => {
     if (isLoginRoute) {

@@ -30,7 +30,7 @@ export function Sidebar({
         <AegisCoreLogo mode="compact" className="items-start" />
         <div className="mt-3 border-t border-slate-200 pt-3">
           <p className="type-label-sm text-slate-500">Environment</p>
-          <p className="mt-1.5 text-body-sm text-slate-800">Single-tenant SME SOC</p>
+          <p className="mt-1.5 text-body-sm text-slate-800">AegisCore SOC</p>
         </div>
       </div>
       <nav className="flex flex-1 flex-col gap-2" aria-label="Primary">
@@ -64,15 +64,11 @@ export function Sidebar({
         })}
       </nav>
       <div className="rounded-panel border border-slate-700/70 bg-slate-900/60 p-4">
-        <p className="type-label-sm text-slate-300">Backend ownership</p>
-        <p className="mt-2 text-body-sm text-slate-300">
-          Wazuh and Suricata remain behind the API boundary. The UI consumes backend-only contracts.
-        </p>
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="mt-4 w-full justify-start border border-slate-600/60 text-slate-100 hover:border-brand-primary/45 hover:bg-brand-primary/15 hover:text-white"
+          className="w-full justify-start border border-slate-600/60 text-slate-100 hover:border-brand-primary/45 hover:bg-brand-primary/15 hover:text-white"
           leadingIcon={<Icon name="logout" className="h-4 w-4" />}
           onClick={onLogout}
         >
