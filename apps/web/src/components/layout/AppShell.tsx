@@ -92,6 +92,12 @@ export function AppShell({
           <main className="px-4 pb-8 pt-6 md:px-6 lg:px-8">
             <div className="mx-auto max-w-[76rem]">{children}</div>
           </main>
+          <footer className="border-t border-border-subtle/40 px-4 py-4 md:px-6 lg:px-8">
+            <div className="mx-auto flex max-w-[76rem] flex-wrap items-center justify-between gap-2">
+              <p className="type-body-sm text-content-muted">AegisCore SOC Platform &mdash; v1.0.0</p>
+              <p className="type-body-sm text-content-muted">Powered by Wazuh &amp; Suricata &middot; AI by TensorFlow</p>
+            </div>
+          </footer>
         </div>
       </div>
     </div>
