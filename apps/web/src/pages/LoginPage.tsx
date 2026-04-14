@@ -7,10 +7,6 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { authenticateOperator } from "../features/auth/service";
 import { hasStoredAccessToken, isDevAuthBootstrapEnabled } from "../lib/api";
-import {
-  ACADEMIC_THREAT_SCOPE_DESCRIPTION,
-  ACADEMIC_THREAT_SCOPE_ROADMAP_NOTE
-} from "../lib/supportedDetections";
 import loginBg from "../assets/login-bg.png";
 
 const devAuthBootstrapEnabled = isDevAuthBootstrapEnabled();
@@ -93,35 +89,6 @@ export function LoginPage() {
               SOC console.
             </p>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                label: "Threat detection scope",
-                value: "4",
-                detail: `${ACADEMIC_THREAT_SCOPE_DESCRIPTION} ${ACADEMIC_THREAT_SCOPE_ROADMAP_NOTE}`
-              },
-              {
-                label: "Core workflow",
-                value: "Live",
-                detail:
-                  "ingestion, normalization, scoring, incident grouping, response, and reports"
-              },
-              {
-                label: "Audit posture",
-                value: "Tracked",
-                detail:
-                  "all workflow writes, notes, policies, and exports remain backend-audited"
-              }
-            ].map((item) => (
-              <Card key={item.label} tone="subtle" className="border-border-subtle/85 bg-surface-subtle/55">
-                <CardContent className="space-y-3 pt-6">
-                  <p className="type-label-md">{item.label}</p>
-                  <p className="type-heading-md">{item.value}</p>
-                  <p className="type-body-sm">{item.detail}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </section>
 
         <Card className="mx-auto w-full max-w-xl border-brand-divider/45 bg-surface-panel/95 shadow-float">
@@ -164,12 +131,6 @@ export function LoginPage() {
               />
               {error ? (
                 <p className="text-body-sm text-status-danger">{error}</p>
-              ) : import.meta.env.DEV ? (
-                <p className="type-body-sm">
-                  Local lab sign-in uses the seeded backend accounts. Automatic browser
-                  bootstrap stays off unless
-                  <span className="type-mono-sm"> VITE_ENABLE_DEV_AUTH_BOOTSTRAP=true</span>.
-                </p>
               ) : (
                 <p className="type-body-sm">
                   Authentication is handled by the backend JWT flow and stored locally
@@ -180,21 +141,6 @@ export function LoginPage() {
                 {isSubmitting ? "Signing in..." : "Sign in"}
               </Button>
             </form>
-
-            {import.meta.env.DEV ? (
-              <div className="rounded-panel border border-border-subtle bg-surface-subtle/55 p-4">
-                <p className="type-label-sm">Local development shortcut</p>
-                <p className="mt-2 type-body-sm">
-                  Seeded credentials default to <span className="type-mono-sm">admin</span>{" "}
-                  / <span className="type-mono-sm">AegisCore123!</span>.
-                </p>
-                <p className="mt-2 type-body-sm">
-                  {devAuthBootstrapEnabled
-                    ? "Dev auth bootstrap is currently enabled for local browser sessions."
-                    : "Dev auth bootstrap is currently disabled, which keeps the login boundary explicit during local testing."}
-                </p>
-              </div>
-            ) : null}
           </CardContent>
         </Card>
       </div>
