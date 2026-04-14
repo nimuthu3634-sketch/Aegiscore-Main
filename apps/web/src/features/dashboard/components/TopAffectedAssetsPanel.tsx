@@ -28,7 +28,7 @@ export function TopAffectedAssetsPanel({
           <p className="type-label-md">Top affected assets</p>
           <CardTitle>Asset exposure</CardTitle>
           <CardDescription>
-            Hosts with the most MVP-scope alert activity—pair with incidents to prioritize
+            Hosts with the most alert activity — pair with incidents to prioritize
             review.
           </CardDescription>
         </div>

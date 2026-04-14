@@ -95,15 +95,15 @@ def seed_database(session: Session) -> None:
             return
         default_policies = [
             ResponsePolicy(
-                name="Dry-run brute-force IP containment",
-                description="Simulate IP blocking for high-risk brute-force alerts.",
+                name="Brute-force IP containment",
+                description="Block source IP for high-risk brute-force alerts.",
                 enabled=True,
                 target=ResponsePolicyTarget.ALERT,
                 detection_type=DetectionType.BRUTE_FORCE,
                 min_risk_score=85,
                 action_type=ResponseActionType.BLOCK_IP,
-                mode=ResponseMode.DRY_RUN,
-                config={"reason": "SME baseline brute-force containment"},
+                mode=ResponseMode.LIVE,
+                config={"reason": "Brute-force IP containment"},
             ),
             ResponsePolicy(
                 name="Notify admin on unauthorized user creation",
@@ -129,13 +129,13 @@ def seed_database(session: Session) -> None:
             ),
             ResponsePolicy(
                 name="Incident-level port-scan notification",
-                description="Escalate correlated reconnaissance incidents through a dry-run notification.",
+                description="Notify admin when correlated port-scan incidents exceed the risk threshold.",
                 enabled=True,
                 target=ResponsePolicyTarget.INCIDENT,
                 detection_type=DetectionType.PORT_SCAN,
                 min_risk_score=75,
                 action_type=ResponseActionType.NOTIFY_ADMIN,
-                mode=ResponseMode.DRY_RUN,
+                mode=ResponseMode.LIVE,
                 config={"channel": "soc-queue"},
             ),
         ]

@@ -2,7 +2,7 @@ import { formatTokenLabel } from "./formatters";
 
 /** Standard product copy for panels, login, and examiner-facing UI (aligned with documentation). */
 export const ACADEMIC_THREAT_SCOPE_DESCRIPTION =
-  "The current academic MVP validates four core threat categories: brute-force attacks, port scans, file integrity violations, and unauthorized user account creation.";
+  "AegisCore validates four core threat categories: brute-force attacks, port scans, file integrity violations, and unauthorized user account creation.";
 
 /** Short roadmap disclaimer—broader categories are not implemented in this release. */
 export const ACADEMIC_THREAT_SCOPE_ROADMAP_NOTE =
