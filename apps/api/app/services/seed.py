@@ -351,8 +351,10 @@ def seed_database(session: Session) -> None:
         )
         session.flush()
         for linked_alert in incident_spec["linked_alerts"]:
-            linked_alert.incident = incident
-        incident.primary_alert = primary_alert
+            linked_alert.incident_id = incident.id
+        session.flush()
+        incident.primary_alert_id = primary_alert.id
+        session.flush()
         refresh_incident_priority(incident)
         created_incidents.append(incident)
 
