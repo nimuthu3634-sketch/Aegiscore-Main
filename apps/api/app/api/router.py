@@ -10,6 +10,7 @@ from app.api.routes.incidents import router as incidents_router
 from app.api.routes.policies import router as policies_router
 from app.api.routes.reports import router as reports_router
 from app.api.routes.responses import router as responses_router
+from app.api.routes.users import router as users_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -21,4 +22,5 @@ api_router.include_router(incidents_router)
 api_router.include_router(responses_router)
 api_router.include_router(policies_router)
 api_router.include_router(reports_router)
+api_router.include_router(users_router)
 api_router.include_router(health_router)

@@ -17,6 +17,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { ResponsesPage } from "./pages/ResponsesPage";
 import { RulesPage } from "./pages/RulesPage";
+import { UserManagementPage } from "./pages/UserManagementPage";
 import {
   AUTH_REQUIRED_EVENT,
   fetchHealthResponse,
@@ -29,13 +30,14 @@ import {
 } from "./lib/api";
 import {
   analystNavigation,
+  primaryNavigation,
   pageBlueprints,
   type HealthTone,
   type NavKey
 } from "./lib/theme/tokens";
 
 function resolveActivePage(pathname: string): NavKey {
-  const match = analystNavigation.find(
+  const match = primaryNavigation.find(
     (item) => pathname === item.path || pathname.startsWith(`${item.path}/`)
   );
 
@@ -144,12 +146,17 @@ export default function App() {
     return <Navigate to="/login" replace />;
   }
 
+  const sidebarItems =
+    sessionRole === "admin"
+      ? [...analystNavigation, ...primaryNavigation.filter((i) => i.id === "users")]
+      : analystNavigation;
+
   return (
     <AppShell
-      items={analystNavigation}
+      items={sidebarItems}
       activeId={activePage}
       onNavigate={(id) => {
-        const target = analystNavigation.find((item) => item.id === id);
+        const target = primaryNavigation.find((item) => item.id === id);
 
         if (target) {
           navigate(target.path);
@@ -176,6 +183,7 @@ export default function App() {
         <Route path="/responses" element={<ResponsesPage />} />
         <Route path="/rules" element={<RulesPage />} />
         <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/users" element={<UserManagementPage />} />
         <Route path="*" element={<Navigate to="/overview" replace />} />
       </Routes>
     </AppShell>

@@ -6,7 +6,8 @@ export type NavKey =
   | "responses"
   | "rules"
   | "reports"
-  | "settings";
+  | "settings"
+  | "users";
 
 export type IconName =
   | "dashboard"
@@ -144,6 +145,13 @@ export const primaryNavigation: NavigationItem[] = [
     shortLabel: "Settings",
     icon: "settings",
     path: "/settings"
+  },
+  {
+    id: "users",
+    label: "User Management",
+    shortLabel: "Users",
+    icon: "shield",
+    path: "/users"
   }
 ];
 
@@ -164,7 +172,8 @@ export const navPathById = primaryNavigation.reduce<Record<NavKey, string>>(
     responses: "/responses",
     rules: "/rules",
     reports: "/reports",
-    settings: "/settings"
+    settings: "/settings",
+    users: "/users"
   }
 );
 
@@ -219,5 +228,11 @@ export const pageBlueprints: Record<
     title: "Settings",
     description:
       "Single-tenant integration, auth, notification, and retention settings owned by the backend platform."
+  },
+  users: {
+    eyebrow: "Administration",
+    title: "User Management",
+    description:
+      "Create and manage SOC operator accounts for analysts and administrators."
   }
 };
