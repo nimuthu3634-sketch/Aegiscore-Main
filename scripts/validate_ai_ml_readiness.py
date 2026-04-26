@@ -32,9 +32,9 @@ REQUIRED_THREAT_TYPES = (
     "file_integrity",
     "unauthorized_user_creation",
 )
-ALLOWED_LABELS = frozenset({"Low", "Medium", "High"})
+ALLOWED_LABELS = frozenset({"Critical", "High", "Medium", "Low"})
 MIN_TRAINING_ROWS = 200  # excludes stale tiny fixtures (e.g. 20-row sklearn era)
-EXPECTED_LABEL_CLASSES = ["low", "medium", "high"]
+EXPECTED_LABEL_CLASSES = ["low", "medium", "high", "critical"]
 
 
 def validate_ai_ml_readiness(repo_root: Path | None = None) -> list[str]:
@@ -67,9 +67,9 @@ def validate_ai_ml_readiness(repo_root: Path | None = None) -> list[str]:
 
     unknown_labels = set(labels) - ALLOWED_LABELS
     if unknown_labels:
-        errors.append(f"Dataset label column has values outside Low/Medium/High: {sorted(unknown_labels)}")
+        errors.append(f"Dataset label column has values outside Critical/High/Medium/Low: {sorted(unknown_labels)}")
 
-    for lb in ("Low", "Medium", "High"):
+    for lb in ("Critical", "High", "Medium", "Low"):
         if labels.get(lb, 0) <= 0:
             errors.append(f"Dataset missing label rows for {lb!r}")
 
@@ -104,13 +104,6 @@ def validate_ai_ml_readiness(repo_root: Path | None = None) -> list[str]:
     if lc != EXPECTED_LABEL_CLASSES:
         errors.append(f'metadata label_classes must be {EXPECTED_LABEL_CLASSES}, got {lc!r}')
 
-    if "critical" in {str(x).strip().lower() for x in (lc or [])}:
-        errors.append('metadata label_classes must not include "critical" as an ML class')
-
-    lti = meta.get("label_to_index") or {}
-    if any(str(k).strip().lower() == "critical" for k in lti):
-        errors.append('metadata label_to_index must not include a "critical" ML class key')
-
     tr = meta.get("training_rows")
     if not isinstance(tr, int) or tr < MIN_TRAINING_ROWS:
         errors.append(
@@ -130,7 +123,7 @@ def main() -> int:
     print("AI/ML readiness validation passed.")
     print("  - ai/datasets/alerts_dataset.csv contract OK")
     print("  - ai/models/aegiscore-risk-priority-model.{keras,metadata.json} OK")
-    print("  - metadata matches alert_prioritization_v1 / 3-class TensorFlow design")
+    print("  - metadata matches alert_prioritization_v1 / 4-class TensorFlow design")
     print("Optional: run brute-force ML gate tests:")
     print(
         "  docker compose run --rm --no-deps --entrypoint pytest api "
