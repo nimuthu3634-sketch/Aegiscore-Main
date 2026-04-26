@@ -7,8 +7,6 @@ import { Icon } from "../ui/Icon";
 import { Badge } from "../ui/Badge";
 
 type TopNavigationProps = {
-  pageTitle: string;
-  pageDescription: string;
   healthTone: HealthTone;
   healthLabel: string;
   sessionLabel: string;
@@ -29,8 +27,6 @@ const healthToneMap: Record<HealthTone, "success" | "warning" | "danger"> = {
 };
 
 export function TopNavigation({
-  pageTitle,
-  pageDescription,
   healthTone,
   healthLabel,
   sessionLabel,
@@ -45,7 +41,7 @@ export function TopNavigation({
   return (
     <header className="sticky top-0 z-20 border-b border-border-subtle bg-white/92 backdrop-blur-xl">
       <div className="mx-auto flex max-w-shell items-center gap-3 px-4 py-4 md:px-6 lg:px-8">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
@@ -57,12 +53,8 @@ export function TopNavigation({
           </Button>
           <AegisCoreLogo mode="mark" className="shrink-0 sm:hidden" />
           <AegisCoreLogo mode="compact" className="hidden max-w-[14.5rem] shrink-0 sm:flex" />
-          <div className="min-w-0 flex-1 border-l border-border-subtle pl-3 sm:pl-4">
-            <p className="type-label-sm hidden text-content-muted md:block">{pageTitle}</p>
-            <p className="truncate text-body-sm text-content-secondary">{pageDescription}</p>
-          </div>
         </div>
-        <div className="hidden min-w-[20rem] max-w-[28rem] flex-1 xl:block">
+        <div className="min-w-0 flex-1">
           <SearchInput value={searchValue} onChange={onSearchChange} />
         </div>
         <div className="flex shrink-0 items-center gap-2 md:gap-3">
