@@ -83,7 +83,7 @@ def test_alerts_dataset_includes_threat_types_labels_and_counts() -> None:
 def test_generate_alerts_dataset_script_writes_contract_csv(tmp_path: Path) -> None:
     """CLI generator produces the same column schema and in-scope threat types."""
     script = _repo_root() / "ai" / "datasets" / "generate_alerts_dataset.py"
-    result = subprocess.run(
+    subprocess.run(
         [sys.executable, str(script)],
         check=True,
         capture_output=True,
