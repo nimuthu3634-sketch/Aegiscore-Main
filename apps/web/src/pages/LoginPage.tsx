@@ -6,7 +6,11 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { authenticateOperator } from "../features/auth/service";
-import { hasStoredAccessToken, isDevAuthBootstrapEnabled } from "../lib/api";
+import {
+  hasStoredAccessToken,
+  isDevAuthBootstrapEnabled,
+  validateMfaAndPersistSession
+} from "../lib/api";
 import loginBg from "../assets/login-bg.png";
 
 const devAuthBootstrapEnabled = isDevAuthBootstrapEnabled();
@@ -24,6 +28,8 @@ export function LoginPage() {
   const [password, setPassword] = useState(defaultPassword);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [totpCode, setTotpCode] = useState("");
 
   useEffect(() => {
     if (hasStoredAccessToken()) {
@@ -31,7 +37,7 @@ export function LoginPage() {
     }
   }, [navigate]);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!username.trim() || !password.trim()) {
@@ -43,11 +49,41 @@ export function LoginPage() {
     setError(null);
 
     try {
-      await authenticateOperator(username.trim(), password);
+      const result = await authenticateOperator(username.trim(), password);
+      if ("mfa_required" in result && result.mfa_required) {
+        setMfaToken(result.mfa_token);
+        setTotpCode("");
+        return;
+      }
       navigate("/overview", { replace: true });
     } catch (loginError: unknown) {
       setError(
         loginError instanceof Error ? loginError.message : "Sign-in failed."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleTotpSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!mfaToken) {
+      return;
+    }
+    if (totpCode.trim().length !== 6) {
+      setError("Enter the 6-digit code from your authenticator app.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      await validateMfaAndPersistSession(mfaToken, totpCode);
+      navigate("/overview", { replace: true });
+    } catch (loginError: unknown) {
+      setError(
+        loginError instanceof Error ? loginError.message : "MFA verification failed."
       );
     } finally {
       setIsSubmitting(false);
@@ -103,44 +139,89 @@ export function LoginPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-5 pt-0">
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <Input
-                label="Username"
-                value={username}
-                onChange={(event) => {
-                  setUsername(event.target.value);
-                  if (error) {
-                    setError(null);
-                  }
-                }}
-                autoComplete="username"
-                placeholder="admin"
-              />
-              <Input
-                label="Password"
-                type="password"
-                value={password}
-                onChange={(event) => {
-                  setPassword(event.target.value);
-                  if (error) {
-                    setError(null);
-                  }
-                }}
-                autoComplete="current-password"
-                placeholder="AegisCore password"
-              />
-              {error ? (
-                <p className="text-body-sm text-status-danger">{error}</p>
-              ) : (
-                <p className="type-body-sm">
-                  Authentication is handled by the backend JWT flow and stored locally
-                  for this browser session.
+            {!mfaToken ? (
+              <form className="space-y-4" onSubmit={handlePasswordSubmit}>
+                <Input
+                  label="Username"
+                  value={username}
+                  onChange={(event) => {
+                    setUsername(event.target.value);
+                    if (error) {
+                      setError(null);
+                    }
+                  }}
+                  autoComplete="username"
+                  placeholder="admin"
+                />
+                <Input
+                  label="Password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    if (error) {
+                      setError(null);
+                    }
+                  }}
+                  autoComplete="current-password"
+                  placeholder="AegisCore password"
+                />
+                {error ? (
+                  <p className="text-body-sm text-status-danger">{error}</p>
+                ) : (
+                  <p className="type-body-sm">
+                    Authentication is handled by the backend JWT flow and stored locally
+                    for this browser session.
+                  </p>
+                )}
+                <Button type="submit" variant="primary" fullWidth disabled={isSubmitting}>
+                  {isSubmitting ? "Signing in..." : "Sign in"}
+                </Button>
+              </form>
+            ) : (
+              <form className="space-y-4" onSubmit={handleTotpSubmit}>
+                <p className="type-body-sm text-content-secondary">
+                  Multi-factor authentication is enabled for this account. Open your
+                  authenticator app and enter the current 6-digit code.
                 </p>
-              )}
-              <Button type="submit" variant="primary" fullWidth disabled={isSubmitting}>
-                {isSubmitting ? "Signing in..." : "Sign in"}
-              </Button>
-            </form>
+                <Input
+                  label="Authenticator code"
+                  value={totpCode}
+                  onChange={(event) => {
+                    const v = event.target.value.replace(/\D/g, "").slice(0, 6);
+                    setTotpCode(v);
+                    if (error) {
+                      setError(null);
+                    }
+                  }}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="000000"
+                  maxLength={6}
+                />
+                {error ? (
+                  <p className="text-body-sm text-status-danger">{error}</p>
+                ) : null}
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button type="submit" variant="primary" fullWidth disabled={isSubmitting}>
+                    {isSubmitting ? "Verifying…" : "Verify and continue"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    fullWidth
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      setMfaToken(null);
+                      setTotpCode("");
+                      setError(null);
+                    }}
+                  >
+                    Back
+                  </Button>
+                </div>
+              </form>
+            )}
           </CardContent>
         </Card>
       </div>

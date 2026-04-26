@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import {
   Navigate,
   Route,
@@ -13,6 +13,7 @@ import { AssetsPage } from "./pages/AssetsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { IncidentDetailPage } from "./pages/IncidentDetailPage";
 import { IncidentsPage } from "./pages/IncidentsPage";
+import { MfaSetupModal } from "./features/auth/MfaSetupModal";
 import { LoginPage } from "./pages/LoginPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { ResponsesPage } from "./pages/ResponsesPage";
@@ -20,12 +21,14 @@ import { RulesPage } from "./pages/RulesPage";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import {
   AUTH_REQUIRED_EVENT,
+  fetchCurrentUser,
   fetchHealthResponse,
   getStoredSessionRole,
   getStoredUsername,
   hasStoredAccessToken,
   isDevAuthBootstrapEnabled,
   logoutOperator,
+  type AuthUserResponse,
   type HealthResponse
 } from "./lib/api";
 import {
@@ -50,6 +53,8 @@ export default function App() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [globalSearch, setGlobalSearch] = useState("");
+  const [sessionProfile, setSessionProfile] = useState<AuthUserResponse | null>(null);
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
   const isLoginRoute = location.pathname === "/login";
   const hasSession = hasStoredAccessToken();
   const allowDevBootstrap = isDevAuthBootstrapEnabled();
@@ -62,6 +67,42 @@ export default function App() {
       : sessionRole === "analyst"
         ? "Analyst"
         : "Session";
+
+  const refreshSessionProfile = useCallback(() => {
+    void fetchCurrentUser()
+      .then((user) => {
+        setSessionProfile(user);
+      })
+      .catch(() => {
+        setSessionProfile(null);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (isLoginRoute) {
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    void fetchCurrentUser()
+      .then((user) => {
+        if (!isMounted) {
+          return;
+        }
+        setSessionProfile(user);
+      })
+      .catch(() => {
+        if (!isMounted) {
+          return;
+        }
+        setSessionProfile(null);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoginRoute, hasSession, allowDevBootstrap, location.pathname]);
 
   useEffect(() => {
     if (isLoginRoute) {
@@ -130,6 +171,7 @@ export default function App() {
 
   function handleLogout() {
     logoutOperator();
+    setSessionProfile(null);
     navigate("/login", { replace: true });
   }
 
@@ -152,40 +194,51 @@ export default function App() {
       : analystNavigation;
 
   return (
-    <AppShell
-      items={sidebarItems}
-      activeId={activePage}
-      onNavigate={(id) => {
-        const target = primaryNavigation.find((item) => item.id === id);
+    <>
+      <MfaSetupModal
+        open={securityModalOpen}
+        onClose={() => setSecurityModalOpen(false)}
+        mfaEnabled={sessionProfile?.mfa_enabled ?? false}
+        isAdmin={sessionProfile?.role.name === "admin"}
+        onProfileChanged={refreshSessionProfile}
+      />
+      <AppShell
+        items={sidebarItems}
+        activeId={activePage}
+        onNavigate={(id) => {
+          const target = primaryNavigation.find((item) => item.id === id);
 
-        if (target) {
-          navigate(target.path);
-        }
-      }}
-      onLogout={handleLogout}
-      pageTitle={pageContent.title}
-      pageDescription={pageContent.description}
-      healthTone={healthTone}
-      healthLabel={healthLabel}
-      sessionLabel={sessionLabel}
-      searchValue={globalSearch}
-      onSearchChange={(event) => setGlobalSearch(event.target.value)}
-    >
-      <Routes>
-        <Route path="/" element={<Navigate to="/overview" replace />} />
-        <Route path="/login" element={<Navigate to="/overview" replace />} />
-        <Route path="/overview" element={<DashboardPage />} />
-        <Route path="/alerts" element={<AlertsPage />} />
-        <Route path="/alerts/:alertId" element={<AlertDetailPage />} />
-        <Route path="/incidents" element={<IncidentsPage />} />
-        <Route path="/incidents/:incidentId" element={<IncidentDetailPage />} />
-        <Route path="/assets" element={<AssetsPage />} />
-        <Route path="/responses" element={<ResponsesPage />} />
-        <Route path="/rules" element={<RulesPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/users" element={<UserManagementPage />} />
-        <Route path="*" element={<Navigate to="/overview" replace />} />
-      </Routes>
-    </AppShell>
+          if (target) {
+            navigate(target.path);
+          }
+        }}
+        onLogout={handleLogout}
+        pageTitle={pageContent.title}
+        pageDescription={pageContent.description}
+        healthTone={healthTone}
+        healthLabel={healthLabel}
+        sessionLabel={sessionLabel}
+        sessionMfaEnabled={sessionProfile?.mfa_enabled ?? false}
+        onSessionSecurityClick={() => setSecurityModalOpen(true)}
+        searchValue={globalSearch}
+        onSearchChange={(event) => setGlobalSearch(event.target.value)}
+      >
+        <Routes>
+          <Route path="/" element={<Navigate to="/overview" replace />} />
+          <Route path="/login" element={<Navigate to="/overview" replace />} />
+          <Route path="/overview" element={<DashboardPage />} />
+          <Route path="/alerts" element={<AlertsPage />} />
+          <Route path="/alerts/:alertId" element={<AlertDetailPage />} />
+          <Route path="/incidents" element={<IncidentsPage />} />
+          <Route path="/incidents/:incidentId" element={<IncidentDetailPage />} />
+          <Route path="/assets" element={<AssetsPage />} />
+          <Route path="/responses" element={<ResponsesPage />} />
+          <Route path="/rules" element={<RulesPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/users" element={<UserManagementPage />} />
+          <Route path="*" element={<Navigate to="/overview" replace />} />
+        </Routes>
+      </AppShell>
+    </>
   );
 }

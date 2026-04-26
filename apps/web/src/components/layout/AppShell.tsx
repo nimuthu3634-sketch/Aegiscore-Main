@@ -18,6 +18,8 @@ type AppShellProps = {
   healthTone: HealthTone;
   healthLabel: string;
   sessionLabel: string;
+  sessionMfaEnabled: boolean;
+  onSessionSecurityClick: () => void;
   searchValue: string;
   onSearchChange: ChangeEventHandler<HTMLInputElement>;
   children: ReactNode;
@@ -33,6 +35,8 @@ export function AppShell({
   healthTone,
   healthLabel,
   sessionLabel,
+  sessionMfaEnabled,
+  onSessionSecurityClick,
   searchValue,
   onSearchChange,
   children
@@ -84,6 +88,8 @@ export function AppShell({
             healthTone={healthTone}
             healthLabel={healthLabel}
             sessionLabel={sessionLabel}
+            sessionMfaEnabled={sessionMfaEnabled}
+            onSessionSecurityClick={onSessionSecurityClick}
             searchValue={searchValue}
             onSearchChange={onSearchChange}
             onMenuClick={() => setSidebarOpen(true)}

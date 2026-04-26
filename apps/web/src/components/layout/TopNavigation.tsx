@@ -12,6 +12,8 @@ type TopNavigationProps = {
   healthTone: HealthTone;
   healthLabel: string;
   sessionLabel: string;
+  sessionMfaEnabled: boolean;
+  onSessionSecurityClick: () => void;
   searchValue: string;
   onSearchChange: ChangeEventHandler<HTMLInputElement>;
   onMenuClick: () => void;
@@ -30,6 +32,8 @@ export function TopNavigation({
   healthTone,
   healthLabel,
   sessionLabel,
+  sessionMfaEnabled,
+  onSessionSecurityClick,
   searchValue,
   onSearchChange,
   onMenuClick,
@@ -62,6 +66,16 @@ export function TopNavigation({
           <Button
             type="button"
             variant="ghost"
+            size="icon"
+            className="text-content-secondary hover:text-brand-hover md:hidden"
+            onClick={onSessionSecurityClick}
+            aria-label="Account security and MFA"
+          >
+            <Icon name="shield" className="h-5 w-5" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
             size="sm"
             onClick={onLogout}
             aria-label="Log out"
@@ -77,14 +91,21 @@ export function TopNavigation({
           >
             {healthLabel}
           </Badge>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="hidden border-border-subtle bg-surface-subtle/80 md:inline-flex"
-            leadingIcon={<Icon name="shield" className="h-4 w-4" />}
-          >
-            {sessionLabel}
-          </Button>
+          <div className="hidden items-center gap-2 md:flex">
+            <Badge tone={sessionMfaEnabled ? "success" : "warning"}>
+              MFA {sessionMfaEnabled ? "on" : "off"}
+            </Badge>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="border-border-subtle bg-surface-subtle/80"
+              leadingIcon={<Icon name="shield" className="h-4 w-4" />}
+              onClick={onSessionSecurityClick}
+            >
+              {sessionLabel}
+            </Button>
+          </div>
         </div>
       </div>
     </header>

@@ -20,6 +20,7 @@ def test_login_route_returns_token_payload(monkeypatch) -> None:
             username="admin",
             full_name="AegisCore Administrator",
             is_active=True,
+            mfa_enabled=False,
             last_login_at=datetime.now(UTC),
             created_at=datetime.now(UTC),
             role=RoleResponse(id=uuid4(), name=RoleName.ADMIN),

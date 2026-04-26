@@ -7,8 +7,11 @@ export type HealthResponse = {
 export type AuthUserResponse = {
   id: string;
   username: string;
-  full_name: string;
+  full_name: string | null;
   is_active: boolean;
+  mfa_enabled: boolean;
+  last_login_at: string | null;
+  created_at: string;
   role: {
     id: string;
     name: "admin" | "analyst";
@@ -16,10 +19,23 @@ export type AuthUserResponse = {
 };
 
 export type AuthTokenResponse = {
+  mfa_required?: false;
   access_token: string;
   token_type: string;
   expires_in: number;
   user: AuthUserResponse;
+};
+
+export type LoginMfaChallenge = {
+  mfa_required: true;
+  mfa_token: string;
+};
+
+export type LoginResult = AuthTokenResponse | LoginMfaChallenge;
+
+export type MfaSetupPayload = {
+  secret: string;
+  provisioning_uri: string;
 };
 
 export const AUTH_REQUIRED_EVENT = "aegiscore:auth-required";
@@ -123,13 +139,19 @@ export function isDevAuthBootstrapEnabled() {
   return devAuthBootstrapEnabled;
 }
 
+function persistSessionFromTokenResponse(payload: AuthTokenResponse) {
+  setStoredAccessToken(payload.access_token);
+  window.localStorage.setItem(sessionRoleStorageKey, payload.user.role.name);
+  window.localStorage.setItem(sessionUsernameStorageKey, payload.user.username);
+}
+
 export async function loginWithPassword(
   username: string,
   password: string,
   options: {
     persist?: boolean;
   } = {}
-): Promise<AuthTokenResponse> {
+): Promise<LoginResult> {
   const response = await fetch(buildUrl("/auth/login"), {
     method: "POST",
     headers: {
@@ -146,15 +168,71 @@ export async function loginWithPassword(
     throw new ApiRequestError(response.status, await extractApiError(response));
   }
 
-  const payload = (await response.json()) as AuthTokenResponse;
+  const payload = (await response.json()) as Record<string, unknown>;
 
-  if (options.persist ?? true) {
-    setStoredAccessToken(payload.access_token);
-    window.localStorage.setItem(sessionRoleStorageKey, payload.user.role.name);
-    window.localStorage.setItem(sessionUsernameStorageKey, payload.user.username);
+  if (payload.mfa_required === true && typeof payload.mfa_token === "string") {
+    return {
+      mfa_required: true,
+      mfa_token: payload.mfa_token
+    } satisfies LoginMfaChallenge;
   }
 
+  const tokenPayload = payload as AuthTokenResponse;
+
+  if (options.persist ?? true) {
+    persistSessionFromTokenResponse(tokenPayload);
+  }
+
+  return tokenPayload;
+}
+
+export async function validateMfaAndPersistSession(
+  mfaToken: string,
+  code: string
+): Promise<AuthTokenResponse> {
+  const response = await fetch(buildUrl("/auth/mfa/validate"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: JSON.stringify({
+      mfa_token: mfaToken,
+      code: code.trim()
+    })
+  });
+
+  if (!response.ok) {
+    throw new ApiRequestError(response.status, await extractApiError(response));
+  }
+
+  const payload = (await response.json()) as AuthTokenResponse;
+  persistSessionFromTokenResponse(payload);
   return payload;
+}
+
+export async function fetchMfaSetup(): Promise<MfaSetupPayload> {
+  return fetchApiJson<MfaSetupPayload>("/auth/mfa/setup", { method: "POST" });
+}
+
+export async function verifyMfaSetup(code: string): Promise<void> {
+  await fetchApiResponse(
+    "/auth/mfa/verify-setup",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: code.trim() })
+    },
+    { auth: true }
+  );
+}
+
+export async function disableMfa(): Promise<void> {
+  await fetchApiResponse("/auth/mfa/disable", { method: "POST" }, { auth: true });
+}
+
+export async function fetchCurrentUser(): Promise<AuthUserResponse> {
+  return fetchApiJson<AuthUserResponse>("/auth/me");
 }
 
 async function requestDevAccessToken(): Promise<string | null> {
@@ -164,6 +242,9 @@ async function requestDevAccessToken(): Promise<string | null> {
 
   try {
     const payload = await loginWithPassword(devApiUsername, devApiPassword);
+    if ("mfa_required" in payload && payload.mfa_required) {
+      return null;
+    }
     return payload.access_token;
   } catch (error) {
     if (error instanceof ApiRequestError) {

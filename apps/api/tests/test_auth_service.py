@@ -9,8 +9,9 @@ from app.models.role import Role
 from app.models.user import User
 from app.repositories.audit_logs import AuditLogsRepository
 from app.repositories.users import UsersRepository
-from app.services.auth import authenticate_user
 from app.core.security import hash_password
+from app.schemas.auth import LoginMfaRequiredResponse
+from app.services.auth import authenticate_user
 
 
 class DummySession:
@@ -35,6 +36,8 @@ def build_user() -> User:
         password_hash=hash_password("AegisCore123!"),
         full_name="Admin User",
         is_active=True,
+        mfa_enabled=False,
+        mfa_secret=None,
         created_at=datetime.now(UTC),
     )
 
@@ -59,6 +62,22 @@ def test_authenticate_user_returns_token_response(monkeypatch) -> None:
     assert response.expires_in > 0
     assert created_logs[0].action == "auth.login"
     assert session.did_commit is True
+
+
+def test_authenticate_user_returns_mfa_challenge_without_commit(monkeypatch) -> None:
+    session = DummySession()
+    user = build_user()
+    user.mfa_enabled = True
+    user.mfa_secret = "JBSWY3DPEHPK3PXP"
+
+    monkeypatch.setattr(UsersRepository, "get_by_username", lambda self, username: user)
+    monkeypatch.setattr(UsersRepository, "touch_last_login", lambda self, target_user: None)
+
+    response = authenticate_user(session, "admin", "AegisCore123!")
+
+    assert isinstance(response, LoginMfaRequiredResponse)
+    assert response.mfa_token
+    assert session.did_commit is False
 
 
 def test_authenticate_user_raises_for_invalid_credentials(monkeypatch) -> None:

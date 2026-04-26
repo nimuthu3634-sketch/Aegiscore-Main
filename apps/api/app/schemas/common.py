@@ -34,6 +34,7 @@ class UserResponse(APIModel):
     username: str
     full_name: str | None
     is_active: bool
+    mfa_enabled: bool = False
     last_login_at: datetime | None
     created_at: datetime
     role: RoleResponse

@@ -32,7 +32,9 @@ type ScenarioDefinition = {
 };
 
 type LoginApiResponse = {
-  access_token: string;
+  access_token?: string;
+  mfa_required?: boolean;
+  mfa_token?: string;
 };
 
 type IngestionApiResponse = {
@@ -153,6 +155,32 @@ export async function loginByApiWithCredentials(
 
   expect(response.ok()).toBeTruthy();
   const payload = (await response.json()) as LoginApiResponse;
+
+  if (payload.mfa_required === true && payload.mfa_token) {
+    const secret = process.env.PLAYWRIGHT_MFA_SECRET;
+    if (!secret) {
+      throw new Error(
+        "Login returned an MFA challenge. Set PLAYWRIGHT_MFA_SECRET to the account base32 " +
+          "TOTP secret for Playwright API login, or disable MFA on the seeded test user."
+      );
+    }
+    const { authenticator } = await import("otplib");
+    authenticator.options = { digits: 6, step: 30 };
+    const code = authenticator.generate(secret);
+    const mfaResponse = await request.post("/api/auth/mfa/validate", {
+      data: {
+        mfa_token: payload.mfa_token,
+        code
+      }
+    });
+    expect(mfaResponse.ok()).toBeTruthy();
+    const completed = (await mfaResponse.json()) as { access_token: string };
+    return completed.access_token;
+  }
+
+  if (!payload.access_token) {
+    throw new Error("Login response missing access_token");
+  }
   return payload.access_token;
 }
 

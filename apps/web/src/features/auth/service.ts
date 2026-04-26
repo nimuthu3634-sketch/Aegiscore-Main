@@ -1,5 +1,8 @@
-import { loginWithPassword } from "../../lib/api";
+import { loginWithPassword, type LoginResult } from "../../lib/api";
 
-export async function authenticateOperator(username: string, password: string) {
+export function authenticateOperator(
+  username: string,
+  password: string
+): Promise<LoginResult> {
   return loginWithPassword(username, password);
 }

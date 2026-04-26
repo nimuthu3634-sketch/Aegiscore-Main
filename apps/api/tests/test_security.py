@@ -1,6 +1,11 @@
+import jwt
+import pytest
+
 from app.core.security import (
     create_access_token,
+    create_mfa_challenge_token,
     decode_access_token,
+    decode_bearer_access_token,
     hash_password,
     verify_password,
 )
@@ -23,4 +28,11 @@ def test_create_access_token_and_decode_access_token() -> None:
 
     assert payload["sub"] == "user-123"
     assert "exp" in payload
+
+
+def test_decode_bearer_access_token_rejects_mfa_challenge_token() -> None:
+    mfa_token = create_mfa_challenge_token("user-456")
+
+    with pytest.raises(jwt.InvalidTokenError):
+        decode_bearer_access_token(mfa_token)
 

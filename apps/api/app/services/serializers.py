@@ -386,6 +386,7 @@ def to_user_response(user: User) -> UserResponse:
         username=user.username,
         full_name=user.full_name,
         is_active=user.is_active,
+        mfa_enabled=user.mfa_enabled,
         last_login_at=user.last_login_at,
         created_at=user.created_at,
         role=to_role_response(user.role),
