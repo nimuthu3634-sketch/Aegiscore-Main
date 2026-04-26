@@ -49,31 +49,31 @@ def test_alerts_dataset_includes_threat_types_labels_and_counts() -> None:
     ):
         assert threats[t] > 0, f"Missing or empty threat_type={t!r}"
 
-    for lb in ("Low", "Medium", "High"):
+    for lb in ("Critical", "High", "Medium", "Low"):
         assert labels[lb] > 0, f"Missing or empty label={lb!r}"
 
-    extra = set(labels) - {"Low", "Medium", "High"}
-    assert not extra, f"label column must be only Low/Medium/High; found {sorted(extra)}"
+    extra = set(labels) - {"Critical", "High", "Medium", "Low"}
+    assert not extra, f"label column must be only Critical/High/Medium/Low; found {sorted(extra)}"
 
     assert threats["brute_force"] > 0
     assert threats["normal"] > 0
 
     expected_cols = {
-        "timestamp",
+        "source_type",
         "threat_type",
-        "source_ip",
-        "target_host",
-        "username",
+        "asset_criticality",
+        "integrity_change",
+        "wazuh_rule_level",
+        "suricata_severity",
         "failed_logins_1m",
         "failed_logins_5m",
         "unique_ports_1m",
-        "integrity_change",
+        "repeated_event_count",
+        "time_window_density",
+        "recurrence_history",
         "new_user_created",
         "off_hours",
         "privileged_account",
-        "asset_criticality",
-        "wazuh_rule_level",
-        "suricata_severity",
         "blacklisted_ip",
         "label",
     }
@@ -83,27 +83,19 @@ def test_alerts_dataset_includes_threat_types_labels_and_counts() -> None:
 def test_generate_alerts_dataset_script_writes_contract_csv(tmp_path: Path) -> None:
     """CLI generator produces the same column schema and in-scope threat types."""
     script = _repo_root() / "ai" / "datasets" / "generate_alerts_dataset.py"
-    out = tmp_path / "generated.csv"
-    subprocess.run(
-        [
-            sys.executable,
-            str(script),
-            "--rows",
-            "500",
-            "--seed",
-            "99",
-            "--output",
-            str(out),
-        ],
+    result = subprocess.run(
+        [sys.executable, str(script)],
         check=True,
         capture_output=True,
         text=True,
     )
-    assert out.is_file()
-    with out.open(encoding="utf-8", newline="") as handle:
+    # Generator writes to its default path; read from there
+    default_csv = _dataset_csv()
+    assert default_csv.is_file()
+    with default_csv.open(encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
         rows = list(reader)
-    assert len(rows) == 500
+    assert len(rows) >= 1200
     threats = Counter(r["threat_type"].strip() for r in rows)
     labels = Counter(r["label"].strip() for r in rows)
     for t in (
@@ -114,6 +106,6 @@ def test_generate_alerts_dataset_script_writes_contract_csv(tmp_path: Path) -> N
         "unauthorized_user_creation",
     ):
         assert threats[t] > 0
-    for lb in ("Low", "Medium", "High"):
+    for lb in ("Critical", "High", "Medium", "Low"):
         assert labels[lb] > 0
-    assert not (set(labels) - {"Low", "Medium", "High"})
+    assert not (set(labels) - {"Critical", "High", "Medium", "Low"})

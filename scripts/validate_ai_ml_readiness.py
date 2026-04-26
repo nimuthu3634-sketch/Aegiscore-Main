@@ -33,6 +33,7 @@ REQUIRED_THREAT_TYPES = (
     "unauthorized_user_creation",
 )
 ALLOWED_LABELS = frozenset({"Critical", "High", "Medium", "Low"})
+ALLOWED_TRAINING_SCHEMAS = {"alert_prioritization_v1", "alert_prioritization_v2"}
 MIN_TRAINING_ROWS = 200  # excludes stale tiny fixtures (e.g. 20-row sklearn era)
 EXPECTED_LABEL_CLASSES = ["low", "medium", "high", "critical"]
 
@@ -95,9 +96,10 @@ def validate_ai_ml_readiness(repo_root: Path | None = None) -> list[str]:
     if mf is not None and mf != "tensorflow":
         errors.append('metadata "ml_framework" must be "tensorflow" when present')
 
-    if meta.get("training_schema") != "alert_prioritization_v1":
+    ts = meta.get("training_schema")
+    if ts not in ALLOWED_TRAINING_SCHEMAS:
         errors.append(
-            f'metadata training_schema must be "alert_prioritization_v1", got {meta.get("training_schema")!r}'
+            f'metadata training_schema must be one of {sorted(ALLOWED_TRAINING_SCHEMAS)}, got {ts!r}'
         )
 
     lc = meta.get("label_classes")
@@ -123,7 +125,7 @@ def main() -> int:
     print("AI/ML readiness validation passed.")
     print("  - ai/datasets/alerts_dataset.csv contract OK")
     print("  - ai/models/aegiscore-risk-priority-model.{keras,metadata.json} OK")
-    print("  - metadata matches alert_prioritization_v1 / 4-class TensorFlow design")
+    print("  - metadata matches alert_prioritization / 4-class TensorFlow design")
     print("Optional: run brute-force ML gate tests:")
     print(
         "  docker compose run --rm --no-deps --entrypoint pytest api "

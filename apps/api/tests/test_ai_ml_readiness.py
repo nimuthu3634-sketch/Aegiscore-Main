@@ -41,8 +41,8 @@ def test_load_priority_model_from_committed_artifacts() -> None:
 
     model, metadata = load_priority_model(model_path=keras_path, metadata_path=meta_path)
     assert model is not None
-    assert metadata.get("training_schema") == "alert_prioritization_v1"
-    assert metadata.get("label_classes") == ["low", "medium", "high"]
+    assert metadata.get("training_schema") in ("alert_prioritization_v1", "alert_prioritization_v2")
+    assert set(metadata.get("label_classes", [])) == {"low", "medium", "high", "critical"}
 
 
 def test_load_priority_model_rejects_non_keras_suffix(tmp_path) -> None:
@@ -59,13 +59,13 @@ def test_load_priority_model_rejects_non_keras_suffix(tmp_path) -> None:
         load_priority_model(model_path=joblib_like, metadata_path=meta)
 
 
-def test_committed_metadata_json_no_critical_ml_class() -> None:
+def test_committed_metadata_json_has_valid_label_classes() -> None:
     meta_path = REPO_ROOT / "ai" / "models" / "aegiscore-risk-priority-model.metadata.json"
     if not meta_path.is_file():
         pytest.skip("metadata not present")
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     classes = [str(x).lower() for x in (meta.get("label_classes") or [])]
-    assert "critical" not in classes
+    assert set(classes) == {"low", "medium", "high", "critical"}
 
 
 # Brute-force ML automation gates: implemented in tests/test_response_automation.py

@@ -1,6 +1,6 @@
 {
   "model_name": "aegiscore_enterprise_alert_prioritization_v2",
-  "training_schema": "alert_prioritization_v1",
+  "training_schema": "alert_prioritization_v2",
   "model_version": "enterprise_model_20260426_070800",
   "model_architecture": "MLP_4layer_BatchNorm_Enterprise",
   "layers": "Dense(256)+BN+Drop(0.3)->Dense(128)+BN+Drop(0.2)->Dense(64)+BN+Drop(0.1)->Dense(32)->Dense(4,softmax)",

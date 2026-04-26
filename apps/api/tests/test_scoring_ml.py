@@ -38,7 +38,7 @@ def test_train_alert_prioritization_model_and_score(tmp_path: Path) -> None:
     assert metadata_path.exists()
     assert metadata["model_version"] == "test_alert_model_v1"
     assert metadata["training_rows"] >= 1200
-    assert set(metadata["label_classes"]) == {"low", "medium", "high"}
+    assert set(metadata["label_classes"]) == {"low", "medium", "high", "critical"}
     assert (eval_dir / "confusion_matrix.csv").exists()
     assert (eval_dir / "classification_report.txt").exists()
     assert metadata.get("metrics", {}).get("test_accuracy", 0) >= 0.0
@@ -73,18 +73,18 @@ def test_train_alert_prioritization_model_and_score(tmp_path: Path) -> None:
 
     assert result.scoring_method == ScoreMethod.TENSORFLOW_MODEL
     assert result.model_version == "test_alert_model_v1"
-    assert result.priority_label != IncidentPriority.CRITICAL
     assert result.priority_label in {
         IncidentPriority.LOW,
         IncidentPriority.MEDIUM,
         IncidentPriority.HIGH,
+        IncidentPriority.CRITICAL,
     }
     assert 0 <= result.score <= 100
     exp = result.explanation or {}
     assert exp.get("scoring_method") == ScoreMethod.TENSORFLOW_MODEL.value
-    assert exp.get("model_priority_tier") in {"low", "medium", "high"}
+    assert exp.get("model_priority_tier") in {"low", "medium", "high", "critical"}
     probs = exp.get("class_probabilities") or {}
-    assert set(probs.keys()) == {"low", "medium", "high"}
+    assert set(probs.keys()) == {"low", "medium", "high", "critical"}
     assert abs(sum(float(probs[k]) for k in probs) - 1.0) < 0.02
     assert "TensorFlow" in (exp.get("rationale") or "")
 
@@ -110,9 +110,9 @@ def test_train_alert_prioritization_model_and_score(tmp_path: Path) -> None:
             "blacklisted_ip": 1,
         },
     )
-    assert out["predicted_label"] in {"low", "medium", "high"}
+    assert out["predicted_label"] in {"low", "medium", "high", "critical"}
     assert 0.0 <= out["confidence"] <= 1.0
-    assert set(out["probabilities"]) == {"low", "medium", "high"}
+    assert set(out["probabilities"]) == {"low", "medium", "high", "critical"}
     assert abs(sum(out["probabilities"].values()) - 1.0) < 0.01
 
 
