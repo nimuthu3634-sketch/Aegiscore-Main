@@ -415,3 +415,41 @@ export async function fetchHealthResponse(): Promise<HealthResponse> {
 
   return response;
 }
+
+export type RecentNotificationItem = {
+  id: string;
+  incident_id: string;
+  incident_title: string;
+  trigger_type: string;
+  trigger_value: string;
+  subject: string;
+  status: string;
+  created_at: string;
+  read: boolean;
+};
+
+export type RecentNotificationsResponse = {
+  items: RecentNotificationItem[];
+  unread_count: number;
+  total: number;
+};
+
+export async function fetchRecentNotifications(
+  options: { limit?: number; unreadOnly?: boolean } = {}
+): Promise<RecentNotificationsResponse> {
+  const limit = options.limit ?? 20;
+  const unreadOnly = options.unreadOnly ?? false;
+  const query = new URLSearchParams({
+    limit: String(limit),
+    unread_only: unreadOnly ? "true" : "false"
+  });
+  return fetchApiJson<RecentNotificationsResponse>(`/notifications/recent?${query.toString()}`);
+}
+
+export async function markNotificationRead(notificationId: string): Promise<void> {
+  await fetchApiResponse(`/notifications/${notificationId}/read`, { method: "POST" });
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  await fetchApiResponse("/notifications/read-all", { method: "POST" });
+}

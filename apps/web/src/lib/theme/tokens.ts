@@ -32,7 +32,8 @@ export type IconName =
   | "check-circle"
   | "warning"
   | "x-circle"
-  | "logout";
+  | "logout"
+  | "bell";
 
 export type Severity = "critical" | "high" | "medium" | "low";
 export type StatusTone =

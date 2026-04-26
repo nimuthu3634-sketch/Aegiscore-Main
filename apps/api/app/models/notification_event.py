@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -13,6 +13,7 @@ from app.models.base import Base
 if TYPE_CHECKING:
     from app.models.incident import Incident
     from app.models.response_action import ResponseAction
+    from app.models.user import User
 
 
 class NotificationEvent(Base):
@@ -50,8 +51,15 @@ class NotificationEvent(Base):
         nullable=False,
     )
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    read_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     incident: Mapped["Incident"] = relationship(back_populates="notification_events")
     response_action: Mapped["ResponseAction | None"] = relationship(
         back_populates="notification_events"
     )
+    read_by_user: Mapped["User | None"] = relationship()

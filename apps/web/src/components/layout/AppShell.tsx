@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ChangeEventHandler, ReactNode } from "react";
+import { NotificationBell } from "./NotificationBell";
 import type {
   HealthTone,
   NavigationItem,
@@ -23,6 +24,8 @@ type AppShellProps = {
   searchValue: string;
   onSearchChange: ChangeEventHandler<HTMLInputElement>;
   children: ReactNode;
+  /** Interval in ms for polling unread notification count (default 30_000). */
+  notificationPollIntervalMs?: number;
 };
 
 export function AppShell({
@@ -39,7 +42,8 @@ export function AppShell({
   onSessionSecurityClick,
   searchValue,
   onSearchChange,
-  children
+  children,
+  notificationPollIntervalMs
 }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -94,6 +98,11 @@ export function AppShell({
             onSearchChange={onSearchChange}
             onMenuClick={() => setSidebarOpen(true)}
             onLogout={handleLogout}
+            notificationSlot={
+              <NotificationBell
+                pollIntervalMs={notificationPollIntervalMs ?? 30_000}
+              />
+            }
           />
           <main className="px-4 pb-8 pt-6 md:px-6 lg:px-8">
             <div className="mx-auto max-w-[76rem]">{children}</div>

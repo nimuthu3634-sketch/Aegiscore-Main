@@ -7,6 +7,7 @@ from app.api.routes.dashboard import router as dashboard_router
 from app.api.routes.health import router as health_router
 from app.api.routes.ingestion import router as ingestion_router
 from app.api.routes.incidents import router as incidents_router
+from app.api.routes.notifications import router as notifications_router
 from app.api.routes.policies import router as policies_router
 from app.api.routes.reports import router as reports_router
 from app.api.routes.responses import router as responses_router
@@ -19,6 +20,7 @@ api_router.include_router(ingestion_router)
 api_router.include_router(assets_router)
 api_router.include_router(alerts_router)
 api_router.include_router(incidents_router)
+api_router.include_router(notifications_router)
 api_router.include_router(responses_router)
 api_router.include_router(policies_router)
 api_router.include_router(reports_router)

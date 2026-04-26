@@ -1,4 +1,4 @@
-import type { ChangeEventHandler } from "react";
+import type { ChangeEventHandler, ReactNode } from "react";
 import type { HealthTone } from "../../lib/theme/tokens";
 import { AegisCoreLogo } from "../AegisCoreLogo";
 import { SearchInput } from "../ui/SearchInput";
@@ -18,6 +18,8 @@ type TopNavigationProps = {
   onSearchChange: ChangeEventHandler<HTMLInputElement>;
   onMenuClick: () => void;
   onLogout: () => void;
+  /** Rendered between the health badge and MFA controls (e.g. notification bell). */
+  notificationSlot?: ReactNode;
 };
 
 const healthToneMap: Record<HealthTone, "success" | "warning" | "danger"> = {
@@ -37,7 +39,8 @@ export function TopNavigation({
   searchValue,
   onSearchChange,
   onMenuClick,
-  onLogout
+  onLogout,
+  notificationSlot
 }: TopNavigationProps) {
   return (
     <header className="sticky top-0 z-20 border-b border-border-subtle bg-white/92 backdrop-blur-xl">
@@ -91,6 +94,9 @@ export function TopNavigation({
           >
             {healthLabel}
           </Badge>
+          {notificationSlot ? (
+            <div className="flex shrink-0 items-center">{notificationSlot}</div>
+          ) : null}
           <div className="hidden items-center gap-2 md:flex">
             <Badge tone={sessionMfaEnabled ? "success" : "warning"}>
               MFA {sessionMfaEnabled ? "on" : "off"}
