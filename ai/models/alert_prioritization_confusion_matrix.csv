@@ -1,5 +1,5 @@
 true/pred,low,medium,high,critical
 low,387,4,0,0
-medium,7,818,7,0
-high,0,2,574,1
+medium,6,816,10,0
+high,0,3,573,1
 critical,0,0,0,200
