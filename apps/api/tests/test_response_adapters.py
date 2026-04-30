@@ -38,6 +38,7 @@ def _settings(**overrides: object) -> SimpleNamespace:
         "automated_response_ledger_path": "/tmp/aegiscore-test-ledger.jsonl",
         "automated_response_host_tag_path": "/tmp/aegiscore-test-host-tags.jsonl",
         "automated_response_enable_host_tag_write": False,
+        "automated_response_protected_ips": "",
         "response_adapter_block_ip_script": None,
         "response_adapter_disable_user_script": None,
         "notifications_enabled": True,
@@ -196,3 +197,74 @@ def test_notify_admin_live_partial_delivery_returns_warning(monkeypatch) -> None
     assert result.details["attempted"] == 2
     assert result.details["delivered"] == 1
     assert result.details["failed"] == 1
+
+
+def test_block_ip_ledger_completes_when_lab_adapters_disabled(monkeypatch) -> None:
+    session = FakeSession()
+    monkeypatch.setattr(adapters, "_append_json_line", lambda path, payload: None)
+    result = execute_adapter(
+        _context(session, action=ResponseActionType.BLOCK_IP, target="203.0.113.10"),
+        settings=_settings(automated_response_lab_adapters_enabled=False),
+    )
+    assert result.status == ResponseStatus.COMPLETED
+    assert result.details["backend"] == "ledger"
+
+
+def test_block_ip_live_rejects_loopback_target(monkeypatch) -> None:
+    session = FakeSession()
+    monkeypatch.setattr(adapters, "_append_json_line", lambda path, payload: None)
+    result = execute_adapter(
+        _context(session, action=ResponseActionType.BLOCK_IP, target="127.0.0.1"),
+        settings=_settings(),
+    )
+    assert result.status == ResponseStatus.WARNING
+    assert "eligible" in (result.message or "").lower()
+
+
+def test_block_ip_iptables_blocked_when_allow_destructive_false(monkeypatch) -> None:
+    session = FakeSession()
+    cmds: list[list[str]] = []
+
+    def recorder(command: list[str]):
+        cmds.append(list(command))
+        return (0, "", "")
+
+    monkeypatch.setattr(adapters, "_run_command", recorder)
+    result = execute_adapter(
+        _context(session, action=ResponseActionType.BLOCK_IP, target="203.0.113.55"),
+        settings=_settings(
+            automated_response_lab_adapters_enabled=True,
+            automated_response_block_ip_backend="iptables",
+            automated_response_allow_destructive=False,
+        ),
+    )
+    assert result.status == ResponseStatus.WARNING
+    assert result.details.get("blocked_by_safety") is True
+    assert "AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE" in (result.message or "")
+    assert cmds == []
+
+
+def test_block_ip_iptables_uses_subprocess_argv_lists(monkeypatch) -> None:
+    session = FakeSession()
+    cmds: list[list[str]] = []
+    outcomes = iter([(1, "", ""), (0, "", ""), (0, "", "")])
+
+    def recorder(command: list[str]):
+        cmds.append(list(command))
+        return next(outcomes)
+
+    monkeypatch.setattr(adapters, "_run_command", recorder)
+    target_ip = "203.0.113.56"
+    result = execute_adapter(
+        _context(session, action=ResponseActionType.BLOCK_IP, target=target_ip),
+        settings=_settings(
+            automated_response_lab_adapters_enabled=True,
+            automated_response_block_ip_backend="iptables",
+            automated_response_allow_destructive=True,
+        ),
+    )
+    assert result.status == ResponseStatus.COMPLETED
+    assert cmds[0] == ["iptables", "-C", "INPUT", "-s", target_ip, "-j", "DROP"]
+    assert cmds[1] == ["iptables", "-I", "INPUT", "-s", target_ip, "-j", "DROP"]
+    assert cmds[2] == cmds[0]
+    assert all(isinstance(part, str) for cmd in cmds for part in cmd)

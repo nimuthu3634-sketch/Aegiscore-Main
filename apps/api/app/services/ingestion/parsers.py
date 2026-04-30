@@ -384,6 +384,9 @@ def parse_wazuh_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
         "raw_groups": _pick_first(payload, ("rule", "groups")),
     }
 
+    if detection_type == DetectionType.BRUTE_FORCE and failed_attempts is not None:
+        normalized_payload["failed_logins_5m"] = failed_attempts
+
     return ParsedSecurityEvent(
         source="wazuh",
         external_id=external_id,

@@ -147,6 +147,15 @@ class Settings(BaseSettings):
         default="untrained",
         alias="SCORING_MODEL_VERSION",
     )
+    ai_direct_brute_force_block_enabled: bool = Field(
+        default=False,
+        alias="AI_DIRECT_BRUTE_FORCE_BLOCK_ENABLED",
+        description=(
+            "When true, score_alert queues block_ip immediately after TensorFlow scoring when "
+            "brute_force gates pass (high/critical model tier, failed_logins_5m≥10, safe IP). "
+            "Uses the same adapters as policy automation; default false."
+        ),
+    )
     automated_response_allow_destructive: bool = Field(
         default=False,
         alias="AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE",
@@ -175,6 +184,15 @@ class Settings(BaseSettings):
     automated_response_block_ip_backend: str = Field(
         default="ledger",
         alias="AUTOMATED_RESPONSE_BLOCK_IP_BACKEND",
+    )
+    automated_response_protected_ips: str = Field(
+        default="",
+        alias="AUTOMATED_RESPONSE_PROTECTED_IPS",
+        description=(
+            "Comma-separated IPs never blocked by automated block_ip (policies, built-in ML rule, "
+            "or AI-direct block). Loopback, multicast, unspecified, and IPv4 limited broadcast are "
+            "always rejected regardless."
+        ),
     )
     automated_response_disable_user_backend: str = Field(
         default="ledger",

@@ -112,6 +112,10 @@ def test_score_alert_falls_back_to_baseline_when_model_artifacts_missing(
         "app.services.scoring.service.evaluate_incident_policies_for_alert",
         lambda *_a, **_k: [],
     )
+    monkeypatch.setattr(
+        "app.services.scoring.service.execute_ai_direct_block_if_required",
+        lambda *_a, **_k: [],
+    )
 
     captured: dict[str, ScoringResult] = {}
 
@@ -210,6 +214,10 @@ def test_score_alert_uses_model_when_load_succeeds(
     )
     monkeypatch.setattr(
         "app.services.scoring.service.evaluate_incident_policies_for_alert",
+        lambda *_a, **_k: [],
+    )
+    monkeypatch.setattr(
+        "app.services.scoring.service.execute_ai_direct_block_if_required",
         lambda *_a, **_k: [],
     )
 

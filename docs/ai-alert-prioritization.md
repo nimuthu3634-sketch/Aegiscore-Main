@@ -9,6 +9,14 @@ This document is the **canonical reference** for how AegisCore uses machine lear
 3. **Deterministic baseline (default)** — When `SCORING_STRATEGY=baseline`, or when the model path is missing/invalid, scoring uses additive rules and may still assign **Critical** from **numeric score thresholds** (that is baseline behavior, not the ML head).
 4. **Built-in automated block (this project)** — Only **`brute_force`** can trigger the **ML-gated** auto **`block_ip`** rule, and only when **all** preconditions in [§5](#5-brute-force-ml-auto-block-optional) hold. Other detection types are **never** auto-blocked by this built-in rule (user policies are separate).
 
+### Separation: AI scores vs firewall execution
+
+The prioritization model **does not** invoke iptables, firewalls, or shell commands. It **only** scores and explains alerts (persisted on `risk_scores`). After the score is saved, **response automation** evaluates policies and the optional built-in ML brute-force rule; **`block_ip`** runs through adapters (**`ledger`** is the default non-destructive demo backend; **`iptables`** is for controlled Linux lab hosts and additionally requires **`AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`**).
+
+### Flow (Wazuh brute force → optional auto-block)
+
+**Wazuh** detects brute-force activity → **AegisCore** ingests and normalizes **`detection_type=brute_force`** with **`source_ip`** / **`failed_logins_5m`** in telemetry → optional **`SCORING_STRATEGY=model`** runs TensorFlow → **`score_alert`** persists the score → **if `AI_DIRECT_BRUTE_FORCE_BLOCK_ENABLED=true`**, the scoring service **immediately** evaluates the AI-direct gates and may queue **`block_ip`** (same adapters as policy automation: **`ledger`** for demo evidence by default; **`iptables`** only when **`AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`** and lab adapters are enabled) → **`evaluate_alert_policies`** still runs for policies and the legacy built-in ML brute-force rule → **audit logs** record AI-direct evaluation / execution / skips (`alert.ai_direct_block.*`) alongside existing automation audits.
+
 ## Supported threat naming (use consistently in writeups)
 
 | Concept | Values |

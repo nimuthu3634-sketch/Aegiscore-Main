@@ -27,6 +27,9 @@ from app.models.risk_score import RiskScore
 from app.repositories.policies import PoliciesRepository
 from app.repositories.responses import ResponsesRepository
 from app.services.response_automation import adapters, execution
+from app.services.response_automation.ai_direct_brute_force_block import (
+    AUTOMATION_RULE_ID as AI_DIRECT_RULE_ID,
+)
 
 
 class FakeSession:
@@ -66,6 +69,9 @@ class FakeSession:
     def scalar(self, statement):  # noqa: ANN001
         return None
 
+    def scalars(self, statement):  # noqa: ANN001
+        return iter(())
+
     def get(self, model, obj_id):  # noqa: ANN001
         for candidate in self.added:
             if isinstance(candidate, model) and getattr(candidate, "id", None) == obj_id:
@@ -89,6 +95,7 @@ def _settings(**overrides: object) -> SimpleNamespace:
         "automated_response_ledger_path": "/tmp/aegiscore-test-ledger.jsonl",
         "automated_response_host_tag_path": "/tmp/aegiscore-test-host-tags.jsonl",
         "automated_response_enable_host_tag_write": False,
+        "automated_response_protected_ips": "",
         "notifications_enabled": False,
         "notifications_mode": "log",
         "notifications_risk_threshold": 85,
@@ -106,6 +113,7 @@ def _settings(**overrides: object) -> SimpleNamespace:
         "smtp_timeout_seconds": 10.0,
     }
     defaults.setdefault("automated_response_ml_brute_force_enabled", True)
+    defaults.setdefault("ai_direct_brute_force_block_enabled", False)
     defaults.update(overrides)
     return SimpleNamespace(**defaults)
 
@@ -577,11 +585,6 @@ def test_ml_brute_force_auto_block_executes_when_all_gates_met(monkeypatch) -> N
     )
     monkeypatch.setattr(
         ResponsesRepository,
-        "find_existing_automation_action",
-        lambda self, **kwargs: None,
-    )
-    monkeypatch.setattr(
-        ResponsesRepository,
         "find_existing_policy_action",
         lambda self, **kwargs: None,
     )
@@ -593,11 +596,14 @@ def test_ml_brute_force_auto_block_executes_when_all_gates_met(monkeypatch) -> N
     assert r.policy_id is None
     assert r.action_type == ResponseActionType.BLOCK_IP.value
     assert r.target_value == "198.51.100.50"
+    assert r.status == ResponseStatus.COMPLETED
+    assert "ledger" in (r.result_summary or "").lower()
     assert (r.details or {}).get("automation_rule") == "ml_brute_force_auto_block_v1"
     ev = (r.details or {}).get("ml_brute_force_evaluation") or {}
     assert ev.get("thresholds", {}).get("required_failed_logins_5m") == 10
     assert ev.get("checks", {}).get("failed_logins_5m_meets_threshold") is True
     assert "response.builtin_automation_matched" in _audit_actions(session)
+    assert "alert.builtin_ml_brute_force.evaluation" in _audit_actions(session)
 
 
 def test_ml_brute_force_auto_block_skipped_when_failed_logins_below_threshold(monkeypatch) -> None:
@@ -616,6 +622,9 @@ def test_ml_brute_force_auto_block_skipped_when_failed_logins_below_threshold(mo
     monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
 
     assert execution.evaluate_alert_policies(session, alert) == []
+    audits = _audit_actions(session)
+    assert "alert.builtin_ml_brute_force.evaluation" in audits
+    assert audits.count("alert.builtin_ml_brute_force.evaluation") == 1
 
 
 def test_ml_brute_force_auto_block_skipped_for_non_brute_high_risk(monkeypatch) -> None:
@@ -634,6 +643,7 @@ def test_ml_brute_force_auto_block_skipped_for_non_brute_high_risk(monkeypatch) 
     monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
 
     assert execution.evaluate_alert_policies(session, alert) == []
+    assert "alert.builtin_ml_brute_force.evaluation" not in _audit_actions(session)
 
 
 def test_ml_brute_force_auto_block_skipped_for_file_integrity_high_even_with_failed_logins(
@@ -700,6 +710,9 @@ def test_ml_brute_force_auto_block_skipped_when_source_ip_missing(monkeypatch) -
     monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
 
     assert execution.evaluate_alert_policies(session, alert) == []
+    audits = _audit_actions(session)
+    assert "alert.builtin_ml_brute_force.evaluation" in audits
+    assert audits.count("alert.builtin_ml_brute_force.evaluation") == 1
 
 
 def test_ml_brute_force_not_duplicated_when_policy_already_blocks_ip(monkeypatch) -> None:
@@ -763,3 +776,382 @@ def test_ml_brute_force_auto_block_skipped_when_disabled(monkeypatch) -> None:
     monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
 
     assert execution.evaluate_alert_policies(session, alert) == []
+
+
+def test_ml_brute_force_skipped_for_loopback_source(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=80,
+        raw_payload={"source_ip": "127.0.0.1"},
+        normalized_payload={"source_ip": "127.0.0.1"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={"source_ip": "127.0.0.1", "failed_logins_5m": 12},
+    )
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
+
+    assert execution.evaluate_alert_policies(session, alert) == []
+    audits = _audit_actions(session)
+    assert "alert.builtin_ml_brute_force.skipped" in audits
+    assert any(
+        isinstance(o, AuditLog)
+        and o.action == "alert.builtin_ml_brute_force.skipped"
+        and (o.details or {}).get("reason") == "unsafe_or_protected_ip"
+        for o in session.added
+    )
+
+
+def test_ml_brute_force_auto_block_adapter_invoked_only_once_on_repeat_evaluation(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=80,
+        raw_payload={"source_ip": "198.51.100.50"},
+        normalized_payload={"source_ip": "198.51.100.50"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high", "summary": "TF"},
+        feature_snapshot={
+            "source_ip": "198.51.100.50",
+            "failed_logins_5m": 12,
+            "detection_type": "brute_force",
+        },
+    )
+    adapter_calls: list[int] = []
+    real_execute_adapter = execution.execute_adapter
+
+    def counting_adapter(ctx, *, settings):
+        adapter_calls.append(1)
+        return real_execute_adapter(ctx, settings=settings)
+
+    monkeypatch.setattr(execution, "execute_adapter", counting_adapter)
+    monkeypatch.setattr(adapters, "_append_json_line", lambda path, payload: None)
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(automated_response_block_ip_backend="ledger"),
+    )
+    monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
+    monkeypatch.setattr(
+        ResponsesRepository,
+        "find_existing_policy_action",
+        lambda self, **kwargs: None,
+    )
+
+    execution.evaluate_alert_policies(session, alert)
+    execution.evaluate_alert_policies(session, alert)
+    assert len(adapter_calls) == 1
+
+
+def test_ml_brute_force_skipped_when_prior_policy_block_ip_recorded(monkeypatch) -> None:
+    session = FakeSession()
+
+    monkeypatch.setattr(
+        ResponsesRepository,
+        "find_existing_policy_block_ip_for_alert",
+        lambda self, *, normalized_alert_id: object(),
+    )
+
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=80,
+        raw_payload={"source_ip": "198.51.100.50"},
+        normalized_payload={"source_ip": "198.51.100.50"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={"source_ip": "198.51.100.50", "failed_logins_5m": 12},
+    )
+    monkeypatch.setattr(execution, "get_settings", lambda: _settings())
+    monkeypatch.setattr(PoliciesRepository, "find_matching_policies", lambda self, **kwargs: [])
+
+    assert execution.evaluate_alert_policies(session, alert) == []
+    assert "alert.builtin_ml_brute_force.skipped" in _audit_actions(session)
+
+
+def test_ai_direct_brute_force_block_executes_when_enabled(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=82,
+        raw_payload={"source_ip": "198.51.100.77"},
+        normalized_payload={"source_ip": "198.51.100.77"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={"source_ip": "198.51.100.77", "failed_logins_5m": 11},
+    )
+    monkeypatch.setattr(adapters, "_append_json_line", lambda path, payload: None)
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(
+            ai_direct_brute_force_block_enabled=True,
+            automated_response_block_ip_backend="ledger",
+            automated_response_allow_destructive=False,
+        ),
+    )
+
+    out = execution.execute_ai_direct_block_if_required(session, alert)
+    assert len(out) == 1
+    r = out[0]
+    assert (r.details or {}).get("triggered_by") == "ai_model"
+    assert (r.details or {}).get("automation_rule") == AI_DIRECT_RULE_ID
+    assert r.status == ResponseStatus.COMPLETED
+    audits = _audit_actions(session)
+    assert "alert.ai_direct_block.evaluation" in audits
+    assert "alert.ai_direct_block.executed" in audits
+
+
+def test_ai_direct_skipped_for_medium_tier_brute_force(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=55,
+        normalized_payload={"source_ip": "198.51.100.78"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.MEDIUM,
+        explanation={"model_priority_tier": "medium"},
+        feature_snapshot={"source_ip": "198.51.100.78", "failed_logins_5m": 15},
+    )
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(ai_direct_brute_force_block_enabled=True),
+    )
+    assert execution.execute_ai_direct_block_if_required(session, alert) == []
+    assert "alert.ai_direct_block.skipped" in _audit_actions(session)
+
+
+def test_ai_direct_no_op_for_high_non_brute(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.PORT_SCAN,
+        score=80,
+        normalized_payload={"source_ip": "198.51.100.79"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={"source_ip": "198.51.100.79", "failed_logins_5m": 12},
+    )
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(ai_direct_brute_force_block_enabled=True),
+    )
+    assert execution.execute_ai_direct_block_if_required(session, alert) == []
+    assert "alert.ai_direct_block.evaluation" not in _audit_actions(session)
+
+
+def test_ai_direct_skipped_loopback_after_gates(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=80,
+        normalized_payload={"source_ip": "127.0.0.1"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={"source_ip": "127.0.0.1", "failed_logins_5m": 12},
+    )
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(ai_direct_brute_force_block_enabled=True),
+    )
+    assert execution.execute_ai_direct_block_if_required(session, alert) == []
+    assert any(
+        isinstance(o, AuditLog)
+        and o.action == "alert.ai_direct_block.skipped"
+        and (o.details or {}).get("reason") == "unsafe_or_protected_ip"
+        for o in session.added
+    )
+
+
+def test_ai_direct_adapter_invoked_only_once_on_repeat(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=82,
+        raw_payload={"source_ip": "198.51.100.80"},
+        normalized_payload={"source_ip": "198.51.100.80"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.HIGH,
+        explanation={"model_priority_tier": "high"},
+        feature_snapshot={"source_ip": "198.51.100.80", "failed_logins_5m": 12},
+    )
+    adapter_calls: list[int] = []
+    real_execute_adapter = execution.execute_adapter
+
+    def counting_adapter(ctx, *, settings):
+        adapter_calls.append(1)
+        return real_execute_adapter(ctx, settings=settings)
+
+    monkeypatch.setattr(execution, "execute_adapter", counting_adapter)
+    monkeypatch.setattr(adapters, "_append_json_line", lambda path, payload: None)
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(
+            ai_direct_brute_force_block_enabled=True,
+            automated_response_block_ip_backend="ledger",
+        ),
+    )
+
+    execution.execute_ai_direct_block_if_required(session, alert)
+    execution.execute_ai_direct_block_if_required(session, alert)
+    assert len(adapter_calls) == 1
+
+
+def test_ai_direct_critical_model_tier_executes(monkeypatch) -> None:
+    session = FakeSession()
+    alert = _build_alert(
+        detection_type=DetectionType.BRUTE_FORCE,
+        score=95,
+        normalized_payload={"source_ip": "198.51.100.81"},
+        scoring_method=ScoreMethod.TENSORFLOW_MODEL,
+        priority_label=IncidentPriority.CRITICAL,
+        explanation={"model_priority_tier": "critical"},
+        feature_snapshot={"source_ip": "198.51.100.81", "failed_logins_5m": 18},
+    )
+    monkeypatch.setattr(adapters, "_append_json_line", lambda path, payload: None)
+    monkeypatch.setattr(
+        execution,
+        "get_settings",
+        lambda: _settings(ai_direct_brute_force_block_enabled=True),
+    )
+    out = execution.execute_ai_direct_block_if_required(session, alert)
+    assert len(out) == 1
+    assert (out[0].details or {}).get("model_priority_tier") == "critical"
+
+
+def test_score_alert_calls_ai_direct_before_alert_policies(monkeypatch) -> None:
+    from app.services.scoring.service import score_alert
+    from app.services.scoring.types import AlertRiskFeatures, ScoringResult
+
+    order: list[str] = []
+
+    monkeypatch.setattr(
+        "app.services.scoring.service.execute_ai_direct_block_if_required",
+        lambda session, alert: order.append("ai_direct") or [],
+    )
+    monkeypatch.setattr(
+        "app.services.scoring.service.evaluate_alert_policies",
+        lambda session, alert: order.append("policies"),
+    )
+    monkeypatch.setattr(
+        "app.services.scoring.service.evaluate_incident_policies_for_alert",
+        lambda session, alert: order.append("incident_for_alert"),
+    )
+
+    now = datetime.now(UTC)
+    feats = AlertRiskFeatures(
+        observed_at=now,
+        source_type="wazuh",
+        detection_type="brute_force",
+        source_severity=5,
+        source_rule_level=5,
+        repeated_event_count=1,
+        time_window_density=1,
+        asset_criticality="medium",
+        privileged_account_flag=False,
+        sensitive_file_flag=False,
+        repeated_source_ip=0,
+        repeated_failed_logins=0,
+        recurrence_history=0,
+        destination_port=0,
+        has_destination_port=False,
+        source_ip="198.51.100.1",
+    )
+
+    monkeypatch.setattr(
+        "app.services.scoring.service.extract_alert_features",
+        lambda _s, _a: feats,
+    )
+
+    def baseline_stub(features: AlertRiskFeatures, baseline_version: str) -> ScoringResult:
+        return ScoringResult(
+            score=50.0,
+            confidence=0.5,
+            priority_label=IncidentPriority.MEDIUM,
+            scoring_method=ScoreMethod.BASELINE_RULES,
+            reasoning="t",
+            explanation={"summary": "x"},
+            feature_snapshot=features.to_snapshot(),
+            baseline_version=baseline_version,
+            model_version=None,
+        )
+
+    monkeypatch.setattr("app.services.scoring.service.score_with_baseline", baseline_stub)
+    monkeypatch.setattr(
+        "app.services.scoring.service.get_settings",
+        lambda: SimpleNamespace(
+            scoring_strategy="baseline",
+            scoring_baseline_version="baseline_v1",
+            scoring_model_path="/x",
+            scoring_model_metadata_path="/y",
+        ),
+    )
+
+    asset = Asset(
+        id=uuid4(),
+        hostname="h",
+        ip_address="10.0.0.5",
+        operating_system="Linux",
+        criticality=AssetCriticality.MEDIUM,
+        created_at=now,
+        updated_at=now,
+    )
+    raw_alert = RawAlert(
+        id=uuid4(),
+        asset=asset,
+        source="wazuh",
+        external_id="e-score-order",
+        detection_type=DetectionType.BRUTE_FORCE,
+        severity=5,
+        raw_payload={},
+        received_at=now,
+    )
+    alert = NormalizedAlert(
+        id=uuid4(),
+        raw_alert=raw_alert,
+        asset=asset,
+        source="wazuh",
+        title="bf",
+        description="d",
+        detection_type=DetectionType.BRUTE_FORCE,
+        severity=5,
+        status=AlertStatus.NEW,
+        normalized_payload={"source_ip": "198.51.100.1"},
+        created_at=now,
+    )
+
+    def fake_upsert(_self, norm_alert, result):
+        rs = RiskScore(
+            id=uuid4(),
+            normalized_alert=norm_alert,
+            score=result.score,
+            confidence=result.confidence,
+            priority_label=result.priority_label,
+            scoring_method=result.scoring_method,
+            baseline_version=result.baseline_version,
+            model_version=result.model_version,
+            reasoning=result.reasoning,
+            explanation=result.explanation or {},
+            feature_snapshot=result.feature_snapshot or {},
+            calculated_at=now,
+        )
+        norm_alert.risk_score = rs
+        return rs
+
+    monkeypatch.setattr(
+        "app.services.scoring.service.RiskScoresRepository.upsert_for_alert",
+        fake_upsert,
+    )
+
+    score_alert(FakeSession(), alert)
+
+    assert order[:3] == ["ai_direct", "policies", "incident_for_alert"]

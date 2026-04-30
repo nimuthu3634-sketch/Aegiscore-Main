@@ -8,7 +8,7 @@ import subprocess
 from datetime import UTC, datetime
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 from uuid import UUID
 
 from sqlalchemy import select
@@ -20,7 +20,11 @@ from app.models.incident import Incident
 from app.core.config import Settings
 from app.models.enums import ResponseActionType, ResponseMode, ResponseStatus
 from app.services.notifications.service import send_admin_notification
+from app.services.response_automation.ip_safety import validate_automated_block_ip_target
 from app.services.response_automation.types import AdapterExecutionResult
+
+if TYPE_CHECKING:
+    from app.models.normalized_alert import NormalizedAlert
 
 
 @dataclass(frozen=True)
@@ -31,6 +35,7 @@ class AdapterContext:
     target_value: str | None
     policy_name: str
     payload: dict
+    normalized_alert: NormalizedAlert | None = None
 
 
 def _run_script(script_path: str, payload: dict) -> tuple[int, str, str]:
@@ -225,24 +230,63 @@ def _destructive_guard(action_name: str, *, settings: Settings) -> AdapterExecut
     )
 
 
+def _block_ip_lab_guard(
+    context: AdapterContext,
+    *,
+    settings: Settings,
+    backend: str,
+) -> AdapterExecutionResult | None:
+    """Ledger is demo-safe and does not require AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED."""
+    if context.mode == ResponseMode.DRY_RUN:
+        return _dry_run_result(context)
+    if not settings.automated_response_builtin_adapters_enabled:
+        return _warning_result(
+            summary="Built-in block_ip adapter disabled by configuration.",
+            message=(
+                "AegisCore skipped live built-in adapter execution because "
+                "AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED is false."
+            ),
+            extra={"builtin_adapters_enabled": False},
+        )
+    if backend == "ledger":
+        return None
+    if not settings.automated_response_lab_adapters_enabled:
+        return _warning_result(
+            summary="Live block_ip blocked because lab adapters are disabled.",
+            message=(
+                "Enable AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true to allow "
+                "iptables/script live lab adapter execution."
+            ),
+            extra={"lab_adapters_enabled": False},
+        )
+    return None
+
+
 def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> AdapterExecutionResult:
     preconditions = [
         "Resolved target_value must be a valid IPv4 or IPv6 address.",
+        "Target must not be loopback, multicast, unspecified, IPv4 global broadcast, infrastructure, or protected.",
     ]
     mode_requirements = [
         "Policy mode must be live for non-simulated execution.",
         "AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED=true.",
-        "AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true.",
+        "AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true for iptables/script backends.",
     ]
-    guarded = _lab_live_guard(context, settings=settings, action_name="block_ip")
+    backend = settings.automated_response_block_ip_backend.lower()
+    guarded = _block_ip_lab_guard(context, settings=settings, backend=backend)
     if guarded is not None:
         return guarded
 
-    valid_target, target_error = _validate_ip_target(context.target_value)
-    if not valid_target:
+    ip_ok, ip_msg = validate_automated_block_ip_target(
+        context.target_value,
+        settings=settings,
+        alert=context.normalized_alert,
+        execution_payload=context.payload,
+    )
+    if not ip_ok:
         return _warning_result(
             summary="Live block_ip skipped because target preconditions failed.",
-            message=target_error,
+            message=ip_msg,
             extra=_with_contract_details(
                 action_name="block_ip",
                 preconditions=preconditions,
@@ -252,7 +296,6 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
         )
 
     assert context.target_value is not None
-    backend = settings.automated_response_block_ip_backend.lower()
     if backend == "ledger":
         try:
             _append_json_line(
@@ -381,6 +424,10 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
         )
 
     if backend == "script" and settings.response_adapter_block_ip_script:
+        mode_requirements.append("AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true for script backend.")
+        blocked_script = _destructive_guard("block_ip", settings=settings)
+        if blocked_script is not None:
+            return blocked_script
         return_code, stdout, stderr = _run_script(
             settings.response_adapter_block_ip_script,
             context.payload,

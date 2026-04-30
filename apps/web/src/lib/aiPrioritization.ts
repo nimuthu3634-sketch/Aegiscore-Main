@@ -7,6 +7,7 @@
 export type AiPriorityTier = "low" | "medium" | "high";
 
 const ML_BRUTE_RULE = "ml_brute_force_auto_block_v1";
+const AI_DIRECT_BRUTE_RULE = "ai_direct_brute_force_block";
 
 export function isTensorFlowScoringMethod(value: string | null | undefined): boolean {
   return (value ?? "").toLowerCase() === "tensorflow_model";
@@ -47,6 +48,22 @@ export function formatClassProbabilitiesLine(
 export function summarizeMlBruteForceBlock(details: Record<string, unknown> | undefined): string | null {
   if (!details || typeof details !== "object") {
     return null;
+  }
+  const rule = details.automation_rule;
+  if (rule === AI_DIRECT_BRUTE_RULE) {
+    const triggered =
+      details.triggered_by === "ai_model" ? "AI model decision" : "Automated rule";
+    const ip =
+      typeof details.source_ip === "string" && details.source_ip.trim()
+        ? details.source_ip.trim()
+        : "unknown IP";
+    const tier =
+      typeof details.model_priority_tier === "string" ? details.model_priority_tier : "n/a";
+    const fl =
+      typeof details.failed_logins_5m === "number"
+        ? String(details.failed_logins_5m)
+        : "n/a";
+    return `${triggered}: block_ip queued for brute_force source ${ip} (model tier ${tier}, failed_logins_5m=${fl}). Triggered from scoring immediately after TensorFlow classification; execution uses the configured block_ip backend (ledger demo vs iptables lab).`;
   }
   if (details.automation_rule !== ML_BRUTE_RULE) {
     return null;

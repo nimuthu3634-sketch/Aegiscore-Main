@@ -55,12 +55,14 @@ For wiring **live Wazuh polling** and **Suricata `file_tail`** on an **Ubuntu Se
 - `SCORING_MODEL_PATH`: TensorFlow Keras file (`.keras` or `.h5`) used when `SCORING_STRATEGY=model`
 - `SCORING_MODEL_METADATA_PATH`: metadata JSON path paired with the model artifact
 - `SCORING_MODEL_VERSION`: fallback runtime model version label for local development
+- `AI_DIRECT_BRUTE_FORCE_BLOCK_ENABLED`: when `true`, **`score_alert`** queues **`block_ip`** immediately after a **`tensorflow_model`** score on **`brute_force`** alerts when gates pass (**high** or **critical** model tier, **`failed_logins_5m` ≥ 10**, safe **source IP**). Default **`false`**. Uses the same **`block_ip`** adapters as other automation (`ledger` default; **`iptables`** only with **`AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`**).
 - `AUTOMATED_RESPONSE_ML_BRUTE_FORCE_ENABLED`: when `true`, allows **evaluation** of the **built-in** brute-force **`block_ip`** automation (**`brute_force` only**); requires **`tensorflow_model`** score, **High** AI tier, **`failed_logins_5m` ≥ 10**, **source IP**, and model tier **high** — see [ai-alert-prioritization.md](ai-alert-prioritization.md) §5. With baseline-only scoring, this path does not fire.
 - `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE`: safety gate for live destructive adapters such as `block_ip` and `disable_user`; keep `false` for local development
 - `AUTOMATED_RESPONSE_MAX_RETRIES`: maximum automated execution attempts before a response action is marked failed
 - `AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED`: enables first-party backend adapters for response actions
 - `AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED`: explicit gate for running live lab adapters
 - `AUTOMATED_RESPONSE_BLOCK_IP_BACKEND`: backend for `block_ip` (`ledger`, `iptables`, or `script`)
+- `AUTOMATED_RESPONSE_PROTECTED_IPS`: comma-separated IPs never blocked by automated `block_ip` (policy or built-in ML rule); loopback, multicast, unspecified, and IPv4 limited broadcast are always rejected
 - `AUTOMATED_RESPONSE_DISABLE_USER_BACKEND`: backend for `disable_user` (`ledger`, `linux_lock`, or `script`)
 - `AUTOMATED_RESPONSE_LEDGER_PATH`: JSONL ledger path used by built-in lab-safe action backends
 - `AUTOMATED_RESPONSE_HOST_TAG_PATH`: JSONL path for optional host-tag output from quarantine action
@@ -107,8 +109,10 @@ For wiring **live Wazuh polling** and **Suricata `file_tail`** on an **Ubuntu Se
 
 - User-defined policies may target the academic MVP detection types: `brute_force`, `port_scan`, `file_integrity_violation`, and `unauthorized_user_creation` (broader detection families are not implemented in this release).
 - The **built-in ML auto-block** is **only** for **`brute_force`** (TensorFlow-scored, gated); it is **not** a generic auto-block across all four types.
+- **`AI_DIRECT_BRUTE_FORCE_BLOCK_ENABLED`** (default **`false`**) optionally queues **`block_ip` from `score_alert` immediately after TensorFlow scoring** when **high/critical** tier and login-density gates pass; it reuses the same **`block_ip`** adapters and IP safety checks as other automation.
 - Built-in adapters are first-party and backend-owned; they do not require external scripts for lab-safe defaults.
-- Live execution still requires `AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true`.
+- **`AUTOMATED_RESPONSE_BLOCK_IP_BACKEND=ledger`** writes JSONL evidence **without** requiring **`AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true`** (ledger is the default safe/demo path).
+- **`iptables`** / **`script`** backends require **`AUTOMATED_RESPONSE_LAB_ADAPTERS_ENABLED=true`**; **`iptables`** (and **`script`**) also require **`AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`** before issuing host-level changes.
 - Destructive adapters remain blocked unless `AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`.
 - `ledger` backends are safe defaults for local/lab operation and persist action evidence without destructive host changes.
 - Response execution attempts, final outcomes, and policy matches are written to audit history and exposed through the response history APIs.

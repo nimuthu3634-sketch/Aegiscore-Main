@@ -1,12 +1,14 @@
 from uuid import UUID
 
+import ipaddress
+
 from sqlalchemy import String, case, cast, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
 from app.models.response_action import ResponseAction
-from app.models.enums import ResponseMode, ResponseStatus
+from app.models.enums import ResponseActionType, ResponseMode, ResponseStatus
 from app.models.user import User
 from app.schemas.listing import (
     ResponseExecutionStatusLabel,
@@ -20,6 +22,47 @@ from app.schemas.listing import (
 class ResponsesRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
+
+    @staticmethod
+    def normalize_ip_for_dedup(ip: str | None) -> str | None:
+        if not ip or not str(ip).strip():
+            return None
+        try:
+            return str(ipaddress.ip_address(str(ip).strip()))
+        except ValueError:
+            return None
+
+    def find_existing_block_ip_for_alert_target(
+        self,
+        *,
+        normalized_alert_id: UUID,
+        target_ip: str,
+    ) -> ResponseAction | None:
+        """Return an existing block_ip for this alert whose target matches ``target_ip`` (normalized)."""
+        want = self.normalize_ip_for_dedup(target_ip)
+        if want is None:
+            return None
+
+        statement = select(ResponseAction).where(
+            ResponseAction.normalized_alert_id == normalized_alert_id,
+            ResponseAction.action_type == ResponseActionType.BLOCK_IP.value,
+        )
+        for row in self.session.scalars(statement):
+            if self.normalize_ip_for_dedup(row.target_value) == want:
+                return row
+
+        added = getattr(self.session, "added", None)
+        if isinstance(added, list):
+            for obj in added:
+                if not isinstance(obj, ResponseAction):
+                    continue
+                if obj.normalized_alert_id != normalized_alert_id:
+                    continue
+                if obj.action_type != ResponseActionType.BLOCK_IP.value:
+                    continue
+                if self.normalize_ip_for_dedup(obj.target_value) == want:
+                    return obj
+        return None
 
     def list_response_actions(
         self, query: ResponseListQuery
@@ -121,6 +164,46 @@ class ResponsesRepository:
         for row in self.session.scalars(statement):
             if (row.details or {}).get("automation_rule") == automation_rule:
                 return row
+        added = getattr(self.session, "added", None)
+        if isinstance(added, list):
+            for obj in added:
+                if not isinstance(obj, ResponseAction):
+                    continue
+                if obj.incident_id != incident_id or obj.normalized_alert_id != normalized_alert_id:
+                    continue
+                if (obj.details or {}).get("automation_rule") == automation_rule:
+                    return obj
+        return None
+
+    def find_existing_policy_block_ip_for_alert(
+        self,
+        *,
+        normalized_alert_id: UUID,
+    ) -> ResponseAction | None:
+        """Any policy-backed block_ip already recorded for this alert (skip duplicate built-in ML block)."""
+        statement = (
+            select(ResponseAction)
+            .where(
+                ResponseAction.normalized_alert_id == normalized_alert_id,
+                ResponseAction.action_type == ResponseActionType.BLOCK_IP.value,
+                ResponseAction.policy_id.is_not(None),
+            )
+            .limit(1)
+        )
+        hit = self.session.scalar(statement)
+        if hit is not None:
+            return hit
+        added = getattr(self.session, "added", None)
+        if isinstance(added, list):
+            for obj in added:
+                if not isinstance(obj, ResponseAction):
+                    continue
+                if (
+                    obj.normalized_alert_id == normalized_alert_id
+                    and obj.action_type == ResponseActionType.BLOCK_IP.value
+                    and obj.policy_id is not None
+                ):
+                    return obj
         return None
 
     def find_existing_policy_action(

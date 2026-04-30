@@ -119,6 +119,7 @@ def test_parse_wazuh_supported_detections_from_fixtures() -> None:
 
     assert brute_force.detection_type == DetectionType.BRUTE_FORCE
     assert brute_force.normalized_payload["failed_attempts"] == 24
+    assert brute_force.normalized_payload["failed_logins_5m"] == 24
     assert file_integrity.detection_type == DetectionType.FILE_INTEGRITY_VIOLATION
     assert "file_path" in file_integrity.normalized_payload
     assert user_creation.detection_type == DetectionType.UNAUTHORIZED_USER_CREATION

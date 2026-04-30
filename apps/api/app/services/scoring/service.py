@@ -11,6 +11,7 @@ from app.services.response_automation.execution import (
     evaluate_alert_policies,
     evaluate_incident_policies,
     evaluate_incident_policies_for_alert,
+    execute_ai_direct_block_if_required,
 )
 from app.services.scoring.baseline import score_with_baseline
 from app.services.scoring.features import extract_alert_features
@@ -73,7 +74,10 @@ def score_alert(
     risk_score = RiskScoresRepository(session).upsert_for_alert(alert, result)
     session.flush()
 
-    # Automated responses (including built-in ML brute-force block) read ``alert.risk_score``.
+    # AI-direct block_ip runs immediately after TensorFlow-backed scores are persisted (gated by env).
+    execute_ai_direct_block_if_required(session, alert)
+
+    # Policy automation + legacy built-in ML brute-force auto-block read ``alert.risk_score``.
     evaluate_alert_policies(session, alert)
 
     if alert.incident is not None:

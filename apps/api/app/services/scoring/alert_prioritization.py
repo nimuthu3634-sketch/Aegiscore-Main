@@ -537,6 +537,7 @@ def score_alert_model_with_features(
         "priority_label":      priority_label.value,
         "scoring_method":      ScoreMethod.TENSORFLOW_MODEL.value,
         "model_version":       metadata.get("model_version"),
+        "model_priority_tier": top_label_str.strip().lower(),
     }
 
     return ScoringResult(

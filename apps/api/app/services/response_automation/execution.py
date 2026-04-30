@@ -7,11 +7,13 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.models.audit_log import AuditLog
 from app.models.enums import (
+    DetectionType,
     IncidentStatus,
     ResponseActionType,
     ResponseMode,
     ResponsePolicyTarget,
     ResponseStatus,
+    ScoreMethod,
 )
 from app.models.incident import Incident
 from app.models.normalized_alert import NormalizedAlert
@@ -32,6 +34,13 @@ from app.services.scoring.features import (
     extract_destination_port,
     extract_source_ip,
     extract_username,
+)
+from app.services.response_automation.ai_direct_brute_force_block import (
+    AUTOMATION_RULE_ID as AI_DIRECT_AUTOMATION_RULE_ID,
+    evaluate_ai_direct_brute_force_block,
+)
+from app.services.response_automation.ip_safety import (
+    validate_automated_block_ip_target,
 )
 from app.services.response_automation.ml_brute_force_automation import (
     AUTOMATION_RULE_ID,
@@ -181,6 +190,9 @@ def _build_execution_payload(
             "risk_score": round(primary_alert.risk_score.score) if primary_alert and primary_alert.risk_score else None,
             "source_ip": extract_source_ip(primary_alert) if primary_alert else None,
             "destination_ip": extract_destination_ip(primary_alert) if primary_alert else None,
+            "asset_ip": (
+                (primary_alert.normalized_payload or {}).get("asset_ip") if primary_alert else None
+            ),
             "destination_port": extract_destination_port(primary_alert) if primary_alert else None,
             "username": extract_username(primary_alert) if primary_alert else None,
         },
@@ -220,6 +232,7 @@ def _build_builtin_ml_brute_force_payload(
             else None,
             "source_ip": extract_source_ip(primary_alert) if primary_alert else None,
             "destination_ip": extract_destination_ip(primary_alert) if primary_alert else None,
+            "asset_ip": (primary_alert.normalized_payload or {}).get("asset_ip"),
             "destination_port": extract_destination_port(primary_alert) if primary_alert else None,
             "username": extract_username(primary_alert) if primary_alert else None,
         },
@@ -227,6 +240,293 @@ def _build_builtin_ml_brute_force_payload(
         "evaluation_reason": reason,
         "config": {},
     }
+
+
+def _build_ai_direct_execution_payload(
+    *,
+    alert: NormalizedAlert,
+    incident: Incident,
+    target_value: str | None,
+    evaluation_detail: dict,
+    fixed_reason: str,
+) -> dict:
+    primary_alert = alert
+    return {
+        "policy": None,
+        "built_in_automation": {
+            "rule": AI_DIRECT_AUTOMATION_RULE_ID,
+            "name": "AI-direct TensorFlow brute-force IP block",
+            "evaluation": evaluation_detail,
+            "triggered_by": "ai_model",
+        },
+        "incident": {
+            "id": str(incident.id),
+            "title": incident.title,
+            "priority": incident.priority.value,
+            "status": incident.status.value,
+        },
+        "alert": {
+            "id": str(primary_alert.id) if primary_alert else None,
+            "detection_type": primary_alert.detection_type.value if primary_alert else None,
+            "risk_score": round(primary_alert.risk_score.score)
+            if primary_alert and primary_alert.risk_score
+            else None,
+            "source_ip": extract_source_ip(primary_alert) if primary_alert else None,
+            "destination_ip": extract_destination_ip(primary_alert) if primary_alert else None,
+            "asset_ip": (primary_alert.normalized_payload or {}).get("asset_ip"),
+            "destination_port": extract_destination_port(primary_alert) if primary_alert else None,
+            "username": extract_username(primary_alert) if primary_alert else None,
+        },
+        "target_value": target_value,
+        "evaluation_reason": fixed_reason,
+        "config": {},
+    }
+
+
+def _upsert_ai_direct_automation_action(
+    session: Session,
+    *,
+    incident: Incident,
+    alert: NormalizedAlert,
+    target_value: str | None,
+    evaluation_detail: dict,
+    failed_logins_5m: int,
+    model_priority_tier: str,
+    fixed_reason: str,
+) -> ResponseAction:
+    responses_repository = ResponsesRepository(session)
+    existing = responses_repository.find_existing_automation_action(
+        incident_id=incident.id,
+        normalized_alert_id=alert.id,
+        automation_rule=AI_DIRECT_AUTOMATION_RULE_ID,
+    )
+    if existing is not None:
+        return existing
+
+    tier_clean = (model_priority_tier or "").strip().lower()
+    response_action = responses_repository.create(
+        ResponseAction(
+            incident=incident,
+            normalized_alert=alert,
+            policy=None,
+            action_type=ResponseActionType.BLOCK_IP.value,
+            status=ResponseStatus.QUEUED,
+            mode=ResponseMode.LIVE,
+            target_value=target_value,
+            attempt_count=0,
+            details={
+                "triggered_by": "ai_model",
+                "automation_rule": AI_DIRECT_AUTOMATION_RULE_ID,
+                "detection_type": DetectionType.BRUTE_FORCE.value,
+                "source_ip": target_value,
+                "failed_logins_5m": failed_logins_5m,
+                "model_priority_tier": tier_clean or None,
+                "scoring_method": ScoreMethod.TENSORFLOW_MODEL.value,
+                "reason": fixed_reason,
+                "adapter_policy_name": "AI-direct: TensorFlow brute-force IP block",
+                "ai_direct_evaluation": evaluation_detail,
+                "evaluation_reason": fixed_reason,
+            },
+        )
+    )
+    session.flush()
+    _create_audit_log(
+        session,
+        entity_type="response",
+        entity_id=str(response_action.id),
+        action="response.ai_direct_automation_matched",
+        details={
+            "automation_rule": AI_DIRECT_AUTOMATION_RULE_ID,
+            "incident_id": str(incident.id),
+            "alert_id": str(alert.id),
+            "summary": "AI-direct TensorFlow brute-force block queued from scoring pipeline.",
+            "evaluation": evaluation_detail,
+        },
+    )
+    return response_action
+
+
+def execute_ai_direct_block_if_required(
+    session: Session,
+    alert: NormalizedAlert,
+) -> list[ResponseAction]:
+    """Queue ``block_ip`` immediately after TensorFlow scoring when AI-direct gates pass."""
+    settings = get_settings()
+    rs = alert.risk_score
+    if rs is None:
+        return []
+
+    if (
+        alert.detection_type != DetectionType.BRUTE_FORCE
+        or rs.scoring_method != ScoreMethod.TENSORFLOW_MODEL
+    ):
+        return []
+
+    if not settings.ai_direct_brute_force_block_enabled:
+        _create_audit_log(
+            session,
+            entity_type="alert",
+            entity_id=str(alert.id),
+            action="alert.ai_direct_block.skipped",
+            details={
+                "reason": "feature_disabled",
+                "summary": "AI_DIRECT_BRUTE_FORCE_BLOCK_ENABLED is false.",
+                "automation_rule": AI_DIRECT_AUTOMATION_RULE_ID,
+            },
+        )
+        return []
+
+    passed, evaluation_detail = evaluate_ai_direct_brute_force_block(alert)
+    tier_display = evaluation_detail.get("model_priority_tier") or (
+        rs.priority_label.value if rs.priority_label else None
+    )
+    failed_5m_val = (evaluation_detail.get("checks") or {}).get("failed_logins_5m")
+
+    _create_audit_log(
+        session,
+        entity_type="alert",
+        entity_id=str(alert.id),
+        action="alert.ai_direct_block.evaluation",
+        details={
+            "automation_rule": AI_DIRECT_AUTOMATION_RULE_ID,
+            "passed": passed,
+            "checks": evaluation_detail.get("checks"),
+            "thresholds": evaluation_detail.get("thresholds"),
+            "summary": evaluation_detail.get("summary"),
+            "model_priority_tier": tier_display,
+            "failed_logins_5m": failed_5m_val,
+        },
+    )
+
+    if not passed:
+        _create_audit_log(
+            session,
+            entity_type="alert",
+            entity_id=str(alert.id),
+            action="alert.ai_direct_block.skipped",
+            details={
+                "reason": "gates_failed",
+                "automation_rule": AI_DIRECT_AUTOMATION_RULE_ID,
+                "summary": "AI-direct brute-force gates did not pass.",
+                "evaluation": evaluation_detail,
+            },
+        )
+        return []
+
+    if not settings.automated_response_builtin_adapters_enabled:
+        _create_audit_log(
+            session,
+            entity_type="alert",
+            entity_id=str(alert.id),
+            action="alert.ai_direct_block.skipped",
+            details={
+                "reason": "builtin_adapters_disabled",
+                "automation_rule": AI_DIRECT_AUTOMATION_RULE_ID,
+                "summary": "AUTOMATED_RESPONSE_BUILTIN_ADAPTERS_ENABLED is false.",
+            },
+        )
+        return []
+
+    incident = alert.incident or _ensure_incident_for_alert(session, alert)
+    target_ip = evaluation_detail.get("resolved_source_ip") or extract_source_ip(alert)
+    if not target_ip:
+        _create_audit_log(
+            session,
+            entity_type="alert",
+            entity_id=str(alert.id),
+            action="alert.ai_direct_block.skipped",
+            details={
+                "reason": "missing_source_ip",
+                "automation_rule": AI_DIRECT_AUTOMATION_RULE_ID,
+                "summary": "Resolved source IP missing after gate evaluation.",
+            },
+        )
+        return []
+
+    responses_repository = ResponsesRepository(session)
+    if responses_repository.find_existing_block_ip_for_alert_target(
+        normalized_alert_id=alert.id,
+        target_ip=target_ip,
+    ):
+        _create_audit_log(
+            session,
+            entity_type="alert",
+            entity_id=str(alert.id),
+            action="alert.ai_direct_block.skipped",
+            details={
+                "reason": "duplicate_block_ip",
+                "automation_rule": AI_DIRECT_AUTOMATION_RULE_ID,
+                "target_ip": target_ip,
+                "summary": "block_ip already recorded for this alert and IP.",
+            },
+        )
+        return []
+
+    ip_ok, ip_msg = validate_automated_block_ip_target(
+        target_ip,
+        settings=settings,
+        alert=alert,
+        execution_payload=None,
+    )
+    if not ip_ok:
+        _create_audit_log(
+            session,
+            entity_type="alert",
+            entity_id=str(alert.id),
+            action="alert.ai_direct_block.skipped",
+            details={
+                "reason": "unsafe_or_protected_ip",
+                "automation_rule": AI_DIRECT_AUTOMATION_RULE_ID,
+                "target_ip": target_ip,
+                "message": ip_msg,
+                "summary": "AI-direct block skipped: IP safety validation failed.",
+            },
+        )
+        return []
+
+    fixed_reason = "AI model classified brute-force alert as high/critical risk"
+    tier_raw = (rs.explanation or {}).get("model_priority_tier") or tier_display
+    tier_clean = str(tier_raw).strip().lower() if tier_raw else ""
+
+    failed_int = int(failed_5m_val) if isinstance(failed_5m_val, int) else int(failed_5m_val or 0)
+
+    response_action = _upsert_ai_direct_automation_action(
+        session,
+        incident=incident,
+        alert=alert,
+        target_value=target_ip,
+        evaluation_detail=evaluation_detail,
+        failed_logins_5m=failed_int,
+        model_priority_tier=tier_clean,
+        fixed_reason=fixed_reason,
+    )
+    payload = _build_ai_direct_execution_payload(
+        alert=alert,
+        incident=incident,
+        target_value=target_ip,
+        evaluation_detail=evaluation_detail,
+        fixed_reason=fixed_reason,
+    )
+    executed = _execute_response_action(
+        session,
+        response_action=response_action,
+        payload=payload,
+    )
+    _create_audit_log(
+        session,
+        entity_type="alert",
+        entity_id=str(alert.id),
+        action="alert.ai_direct_block.executed",
+        details={
+            "automation_rule": AI_DIRECT_AUTOMATION_RULE_ID,
+            "response_action_id": str(executed.id),
+            "status": executed.status.value,
+            "result_summary": executed.result_summary,
+            "target_ip": target_ip,
+        },
+    )
+    refresh_incident_priority(incident)
+    return [executed]
 
 
 def _upsert_response_action(
@@ -386,6 +686,7 @@ def _execute_response_action(
                 target_value=response_action.target_value,
                 policy_name=_response_adapter_policy_name(response_action),
                 payload=payload,
+                normalized_alert=response_action.normalized_alert,
             ),
             settings=settings,
         )
@@ -467,14 +768,90 @@ def _evaluate_builtin_ml_brute_force_auto_block(
         return []
     if not settings.automated_response_builtin_adapters_enabled:
         return []
+    if alert.detection_type != DetectionType.BRUTE_FORCE:
+        return []
+    rs = alert.risk_score
+    if rs is None or rs.scoring_method != ScoreMethod.TENSORFLOW_MODEL:
+        return []
+
+    responses_repository = ResponsesRepository(session)
+    if responses_repository.find_existing_policy_block_ip_for_alert(normalized_alert_id=alert.id):
+        _create_audit_log(
+            session,
+            entity_type="alert",
+            entity_id=str(alert.id),
+            action="alert.builtin_ml_brute_force.skipped",
+            details={
+                "automation_rule": AUTOMATION_RULE_ID,
+                "reason": "policy_block_ip_already_recorded",
+                "summary": (
+                    "Skipped built-in TensorFlow brute-force auto-block because a policy-backed "
+                    "block_ip response already exists for this alert."
+                ),
+            },
+        )
+        return []
 
     passed, evaluation_detail = ml_brute_force_auto_block_evaluation(alert)
+    _create_audit_log(
+        session,
+        entity_type="alert",
+        entity_id=str(alert.id),
+        action="alert.builtin_ml_brute_force.evaluation",
+        details={
+            "automation_rule": AUTOMATION_RULE_ID,
+            "passed": passed,
+            "summary": evaluation_detail.get("summary"),
+            "checks": evaluation_detail.get("checks"),
+            "thresholds": evaluation_detail.get("thresholds"),
+        },
+    )
     if not passed:
         return []
 
     incident = alert.incident or _ensure_incident_for_alert(session, alert)
     target_ip = evaluation_detail.get("resolved_source_ip") or extract_source_ip(alert)
     if not target_ip:
+        return []
+
+    if responses_repository.find_existing_block_ip_for_alert_target(
+        normalized_alert_id=alert.id,
+        target_ip=target_ip,
+    ):
+        _create_audit_log(
+            session,
+            entity_type="alert",
+            entity_id=str(alert.id),
+            action="alert.builtin_ml_brute_force.skipped",
+            details={
+                "automation_rule": AUTOMATION_RULE_ID,
+                "reason": "duplicate_block_ip",
+                "target_ip": target_ip,
+                "summary": "Built-in ML brute-force auto-block skipped: block_ip already exists for this alert and IP.",
+            },
+        )
+        return []
+
+    ip_ok, ip_msg = validate_automated_block_ip_target(
+        target_ip,
+        settings=settings,
+        alert=alert,
+        execution_payload=None,
+    )
+    if not ip_ok:
+        _create_audit_log(
+            session,
+            entity_type="alert",
+            entity_id=str(alert.id),
+            action="alert.builtin_ml_brute_force.skipped",
+            details={
+                "automation_rule": AUTOMATION_RULE_ID,
+                "reason": "unsafe_or_protected_ip",
+                "target_ip": target_ip,
+                "message": ip_msg,
+                "summary": "Built-in ML brute-force auto-block skipped: IP safety validation failed.",
+            },
+        )
         return []
 
     thr = evaluation_detail.get("thresholds", {})

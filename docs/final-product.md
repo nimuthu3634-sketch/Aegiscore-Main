@@ -13,7 +13,7 @@ The product provides:
 - **Incident workflows** — incident queue, state transitions, timelines, and investigation surfaces in the console.
 - **Explainable AI-assisted alert prioritization** — **Wazuh/Suricata detect first**; the optional **TensorFlow (Keras)** ranker (**post-detection only**) outputs **Low / Medium / High** — **not** raw detection and **no Critical from the ML head**. **Deterministic baseline** remains the default configuration (`SCORING_STRATEGY=baseline`) and may still assign **Critical** from numeric thresholds; persisted score metadata and explanations accompany both paths.
 - **Reporting and export** — operational summaries and exports for alerts, incidents, and responses.
-- **Controlled automated response** — policy-driven actions (including safe defaults and explicit gates for destructive paths), with auditable execution history.
+- **Controlled automated response** — policy-driven actions (including safe defaults and explicit gates for destructive paths), with auditable execution history. **TensorFlow prioritization does not execute firewall commands**: it scores alerts only; the response automation layer decides containment (`block_ip` defaults to **`ledger`** evidence; live **`iptables`** requires **`AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true`**).
 
 The **academic release** is **intentionally limited** to **four validated threat detections** (enforced in ingestion and documentation):
 

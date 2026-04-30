@@ -338,6 +338,7 @@ def _score_legacy_tensorflow_model(
         "scoring_method": ScoreMethod.TENSORFLOW_MODEL.value,
         "model_version": metadata.get("model_version"),
         "training_schema": metadata.get("training_schema", LEGACY_TRAINING_SCHEMA),
+        "model_priority_tier": str(top_label).strip().lower(),
     }
 
     return ScoringResult(
