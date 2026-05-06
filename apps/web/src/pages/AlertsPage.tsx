@@ -18,6 +18,7 @@ import type { AlertsDateRange, AlertsListQuery, AlertsSortField } from "../featu
 import { formatTokenLabel } from "../lib/formatters";
 import { supportedDetectionSelectOptions } from "../lib/supportedDetections";
 import { pageBlueprints } from "../lib/theme/tokens";
+import { downloadApiFile } from "../lib/api";
 
 export function AlertsPage() {
   const navigate = useNavigate();
@@ -31,8 +32,14 @@ export function AlertsPage() {
   const [sortBy, setSortBy] = useState<AlertsSortField>("timestamp");
   const [sortDirection, setSortDirection] = useState<AlertsListQuery["sortDirection"]>("desc");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
+  const [pageSize, setPageSize] = useState(10); 
+  
+  const handleExportQueue = async () => {
+    await downloadApiFile(
+      "/reports/alerts/export?format=csv",
+      "aegiscore-alerts-export.csv"
+    );
+  };
   const query = useMemo<AlertsListQuery>(
     () => ({
       search,
@@ -96,7 +103,7 @@ export function AlertsPage() {
           </div>
         }
         actions={
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" onClick={handleExportQueue}>
             Export queue
           </Button>
         }

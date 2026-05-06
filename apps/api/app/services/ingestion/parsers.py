@@ -138,7 +138,13 @@ def _infer_detection_from_text(*values: Any) -> DetectionType | None:
             "user account created",
             "account created",
             "new user created",
+            "new user added",
+            "new user added to the system",
+            "new user:",
             "local user created",
+            "useradd",
+            "adduser",
+            "5902",
             "4720",
             "domain admins",
         )
@@ -323,6 +329,7 @@ def parse_wazuh_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
         ("data", "user"),
         ("data", "new_user"),
         ("data", "srcuser"),
+        ("data", "dstuser"),
         ("data", "win", "eventdata", "TargetUserName"),
     )
     failed_attempts = _coerce_int(

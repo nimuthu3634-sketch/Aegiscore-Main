@@ -401,13 +401,17 @@ export function formatUtcDateTime(value: string | null | undefined) {
     return value;
   }
 
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const hours = String(date.getUTCHours()).padStart(2, "0");
-  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+  const formatted = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Colombo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+ }).format(date);
 
-  return `${year}-${month}-${day} ${hours}:${minutes} UTC`;
+ return `${formatted} SLT`;
 }
 
 export async function fetchHealthResponse(): Promise<HealthResponse> {
