@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-aegiscore}
       POSTGRES_USER: ${POSTGRES_USER:-aegiscore}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aegiscore_dev_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -30,17 +30,19 @@ services:
     build:
       context: .
       dockerfile: infra/docker/api.Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       APP_ENV: docker
       API_HOST: 0.0.0.0
       API_PORT: 8000
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aegiscore}:${POSTGRES_PASSWORD:-aegiscore_dev_password}@postgres:5432/${POSTGRES_DB:-aegiscore}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aegiscore}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-aegiscore}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-replace-with-a-development-secret}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
-      WAZUH_BASE_URL: ${WAZUH_BASE_URL:-http://wazuh-manager:55000}
-      WAZUH_USERNAME: ${WAZUH_USERNAME:-}
-      WAZUH_PASSWORD: ${WAZUH_PASSWORD:-}
+      WAZUH_BASE_URL: ${WAZUH_BASE_URL:-https://host.docker.internal:55000}
+      WAZUH_USERNAME: ${WAZUH_USERNAME:-wazuh}
+      WAZUH_PASSWORD: ${WAZUH_PASSWORD}
       WAZUH_BEARER_TOKEN: ${WAZUH_BEARER_TOKEN:-}
       WAZUH_AUTH_MODE: ${WAZUH_AUTH_MODE:-basic}
       WAZUH_AUTH_ENDPOINT: ${WAZUH_AUTH_ENDPOINT:-/security/user/authenticate}
@@ -50,7 +52,12 @@ services:
       WAZUH_TIMEOUT_SECONDS: ${WAZUH_TIMEOUT_SECONDS:-10}
       WAZUH_RETRY_ATTEMPTS: ${WAZUH_RETRY_ATTEMPTS:-2}
       WAZUH_RETRY_BACKOFF_SECONDS: ${WAZUH_RETRY_BACKOFF_SECONDS:-1}
-      WAZUH_VERIFY_TLS: ${WAZUH_VERIFY_TLS:-true}
+      WAZUH_VERIFY_TLS: ${WAZUH_VERIFY_TLS:-false}
+      WAZUH_INDEXER_URL: ${WAZUH_INDEXER_URL:-https://host.docker.internal:9200}
+      WAZUH_INDEXER_USERNAME: ${WAZUH_INDEXER_USERNAME:-admin}
+      WAZUH_INDEXER_PASSWORD: ${WAZUH_INDEXER_PASSWORD}
+      WAZUH_INDEXER_ALERT_INDEX: ${WAZUH_INDEXER_ALERT_INDEX:-wazuh-alerts-*}
+      WAZUH_INDEXER_VERIFY_TLS: ${WAZUH_INDEXER_VERIFY_TLS:-false}
       WAZUH_CA_FILE: ${WAZUH_CA_FILE:-}
       WAZUH_PAGE_SIZE: ${WAZUH_PAGE_SIZE:-200}
       WAZUH_MAX_PAGES_PER_CYCLE: ${WAZUH_MAX_PAGES_PER_CYCLE:-5}
@@ -67,9 +74,9 @@ services:
       SURICATA_RETRY_BACKOFF_SECONDS: ${SURICATA_RETRY_BACKOFF_SECONDS:-1}
       SURICATA_FAIL_WHEN_SOURCE_MISSING: ${SURICATA_FAIL_WHEN_SOURCE_MISSING:-true}
       DEV_SEED_ADMIN_USERNAME: ${DEV_SEED_ADMIN_USERNAME:-admin}
-      DEV_SEED_ADMIN_PASSWORD: ${DEV_SEED_ADMIN_PASSWORD:-AegisCore123!}
+      DEV_SEED_ADMIN_PASSWORD: ${DEV_SEED_ADMIN_PASSWORD}
       DEV_SEED_ANALYST_USERNAME: ${DEV_SEED_ANALYST_USERNAME:-analyst}
-      DEV_SEED_ANALYST_PASSWORD: ${DEV_SEED_ANALYST_PASSWORD:-AegisCore123!}
+      DEV_SEED_ANALYST_PASSWORD: ${DEV_SEED_ANALYST_PASSWORD}
       # Default baseline: no Keras required. Use SCORING_STRATEGY=model for TensorFlow 4-class AI scoring.
       SCORING_STRATEGY: ${SCORING_STRATEGY:-baseline}
       SCORING_BASELINE_VERSION: ${SCORING_BASELINE_VERSION:-baseline_v1}
@@ -137,7 +144,7 @@ services:
       dockerfile: infra/docker/worker.Dockerfile
     environment:
       APP_ENV: docker
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aegiscore}:${POSTGRES_PASSWORD:-aegiscore_dev_password}@postgres:5432/${POSTGRES_DB:-aegiscore}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aegiscore}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-aegiscore}
       WORKER_POLL_INTERVAL_SECONDS: 15
     volumes:
       - ./apps/worker:/srv/apps/worker
