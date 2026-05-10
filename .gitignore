@@ -18,3 +18,5 @@ ai/outputs/
 # Primary scoring ships TensorFlow .keras only — do not commit sklearn dumps here
 ai/models/*.joblib
 *.egg-info/
+wazuh-passwords.txt
+wazuh-install-files.tar

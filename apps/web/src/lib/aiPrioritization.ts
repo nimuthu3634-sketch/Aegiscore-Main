@@ -4,7 +4,7 @@
  * built-in IP block may apply only to brute_force under strict gates.
  */
 
-export type AiPriorityTier = "low" | "medium" | "high";
+export type AiPriorityTier = "low" | "medium" | "high" | "critical";
 
 const ML_BRUTE_RULE = "ml_brute_force_auto_block_v1";
 const AI_DIRECT_BRUTE_RULE = "ai_direct_brute_force_block";
@@ -34,7 +34,7 @@ export function formatClassProbabilitiesLine(
   if (!probs || typeof probs !== "object") {
     return null;
   }
-  const order: AiPriorityTier[] = ["low", "medium", "high"];
+  const order: AiPriorityTier[] = ["low", "medium", "high", "critical"];
   const parts: string[] = [];
   for (const key of order) {
     const v = probs[key];

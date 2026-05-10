@@ -1,59 +1,79 @@
+from __future__ import annotations
+
+# This file uses FastAPI dependency aliases such as CurrentUser, AdminUser, and DbSession.
+# They work correctly at runtime. This line prevents Pylance from incorrectly flagging them.
+# pyright: reportInvalidTypeForm=false
+
+from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter
+import requests
+import urllib3
+from fastapi import APIRouter, HTTPException
+from sqlalchemy import func, select
 
 from app.api.deps import AdminUser, CurrentUser, DbSession
-from app.schemas.ingestion import (
-    IngestionResultResponse,
-    SuricataConnectorStatusResponse,
-    WazuhConnectorStatusResponse,
-)
+from app.core.config import get_settings
+from app.models.asset import Asset
 from app.services.ingestion.service import ingest_suricata_event, ingest_wazuh_event
 from app.services.integrations.suricata_connector import get_suricata_connector_status
 from app.services.integrations.wazuh_connector import get_wazuh_connector_status
-from app.services.integrations.wazuh_indexer_connector import fetch_latest_wazuh_indexer_alerts
+from app.services.integrations.wazuh_indexer_connector import (
+    fetch_latest_wazuh_indexer_alerts,
+)
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-@router.post("/wazuh/events", response_model=IngestionResultResponse)
+
+@router.get("/status")
+def get_integration_status(
+    current_user: CurrentUser,
+    db: DbSession,
+) -> dict[str, Any]:
+    return {
+        "wazuh": get_wazuh_connector_status(db),
+        "suricata": get_suricata_connector_status(db),
+    }
+
+
+@router.post("/wazuh")
 def ingest_wazuh_event_route(
     payload: dict[str, Any],
-    current_user: AdminUser,
+    current_user: CurrentUser,
     db: DbSession,
-) -> IngestionResultResponse:
-    return ingest_wazuh_event(db, payload, actor=current_user)
+) -> dict[str, Any]:
+    alert = ingest_wazuh_event(db, payload, actor=current_user)
+
+    return {
+        "status": "accepted",
+        "alert_id": str(alert.id),
+        "detection_type": alert.detection_type.value,
+    }
 
 
-@router.post("/suricata/events", response_model=IngestionResultResponse)
+@router.post("/suricata")
 def ingest_suricata_event_route(
     payload: dict[str, Any],
-    current_user: AdminUser,
-    db: DbSession,
-) -> IngestionResultResponse:
-    return ingest_suricata_event(db, payload, actor=current_user)
-
-
-@router.get("/wazuh/connector/status", response_model=WazuhConnectorStatusResponse)
-def wazuh_connector_status_route(
     current_user: CurrentUser,
     db: DbSession,
-) -> WazuhConnectorStatusResponse:
-    return get_wazuh_connector_status(db)
+) -> dict[str, Any]:
+    alert = ingest_suricata_event(db, payload, actor=current_user)
 
+    return {
+        "status": "accepted",
+        "alert_id": str(alert.id),
+        "detection_type": alert.detection_type.value,
+    }
 
-@router.get("/suricata/connector/status", response_model=SuricataConnectorStatusResponse)
-def suricata_connector_status_route(
-    current_user: CurrentUser,
-    db: DbSession,
-) -> SuricataConnectorStatusResponse:
-    return get_suricata_connector_status(db)
 
 @router.get("/wazuh/indexer/test")
 def wazuh_indexer_test_route(
     current_user: CurrentUser,
 ) -> dict[str, Any]:
     alerts = fetch_latest_wazuh_indexer_alerts(limit=5)
+
     return {
         "count": len(alerts),
         "alerts": alerts,
@@ -69,7 +89,7 @@ def wazuh_indexer_sync_route(
 
     ingested = 0
     failed = 0
-    errors = []
+    errors: list[str] = []
 
     for alert in alerts:
         try:
@@ -86,35 +106,41 @@ def wazuh_indexer_sync_route(
         "errors": errors[:5],
     }
 
-# --- Wazuh live agent status sync imports ---
-from datetime import UTC as _UTC, datetime as _datetime
-import requests as _requests
-import urllib3 as _urllib3
-from sqlalchemy import func as _func, select as _select
-
-from app.core.config import get_settings as _get_settings
-from app.models.asset import Asset as _Asset
-
-_urllib3.disable_warnings(_urllib3.exceptions.InsecureRequestWarning)
-
 
 @router.post("/wazuh/agents/sync")
 def wazuh_agents_sync_route(
     current_user: AdminUser,
     db: DbSession,
 ) -> dict[str, Any]:
-    settings = _get_settings()
+    settings = get_settings()
+
     base_url = settings.wazuh_base_url.rstrip("/")
-    auth_response = _requests.get(
+    username = settings.wazuh_username
+    password = settings.wazuh_password
+
+    if not username or not password:
+        raise HTTPException(
+            status_code=500,
+            detail="Wazuh Manager API username or password is not configured.",
+        )
+
+    auth_response = requests.get(
         f"{base_url}/security/user/authenticate?raw=true",
-        auth=(settings.wazuh_username, settings.wazuh_password),
+        auth=(username, password),
         verify=settings.wazuh_verify_tls,
         timeout=10,
     )
     auth_response.raise_for_status()
+
     token = auth_response.text.strip()
 
-    agents_response = _requests.get(
+    if not token:
+        raise HTTPException(
+            status_code=500,
+            detail="Wazuh Manager API authentication did not return a token.",
+        )
+
+    agents_response = requests.get(
         f"{base_url}/agents?pretty=true",
         headers={"Authorization": f"Bearer {token}"},
         verify=settings.wazuh_verify_tls,
@@ -127,7 +153,7 @@ def wazuh_agents_sync_route(
 
     checked = 0
     updated_online = 0
-    unmatched = []
+    unmatched: list[dict[str, Any]] = []
 
     for agent in agents:
         checked += 1
@@ -136,10 +162,12 @@ def wazuh_agents_sync_route(
         agent_name = agent.get("name")
         agent_ip = agent.get("ip")
         agent_status = str(agent.get("status", "")).lower()
+
         agent_os = agent.get("os") or {}
         os_name = agent_os.get("name")
         os_version = agent_os.get("version")
 
+        # Skip the Wazuh Manager local agent.
         if agent_id == "000":
             continue
 
@@ -147,14 +175,14 @@ def wazuh_agents_sync_route(
 
         if agent_name:
             asset = db.scalar(
-                _select(_Asset).where(
-                    _func.lower(_Asset.hostname) == str(agent_name).lower()
+                select(Asset).where(
+                    func.lower(Asset.hostname) == str(agent_name).lower()
                 )
             )
 
         if asset is None and agent_ip and agent_ip not in {"any", "127.0.0.1"}:
             asset = db.scalar(
-                _select(_Asset).where(_Asset.ip_address == str(agent_ip))
+                select(Asset).where(Asset.ip_address == str(agent_ip))
             )
 
         if asset is None:
@@ -169,14 +197,14 @@ def wazuh_agents_sync_route(
             continue
 
         if agent_status == "active":
-            asset.updated_at = _datetime.now(_UTC)
-            
+            asset.updated_at = datetime.now(UTC)
+
             if os_name:
-               asset.operating_system = (
-                   f"{os_name} {os_version}".strip()
-                   if os_version 
-                   else str(os_name)
-               )
+                asset.operating_system = (
+                    f"{os_name} {os_version}".strip()
+                    if os_version
+                    else str(os_name)
+                )
 
             updated_online += 1
 

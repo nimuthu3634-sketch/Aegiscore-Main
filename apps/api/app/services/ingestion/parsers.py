@@ -142,8 +142,6 @@ def _infer_detection_from_text(*values: Any) -> DetectionType | None:
             "new user added to the system",
             "new user:",
             "local user created",
-            "useradd",
-            "adduser",
             "5902",
             "4720",
             "domain admins",
