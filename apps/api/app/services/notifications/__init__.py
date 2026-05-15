@@ -1,3 +1,4 @@
+# Makes the main notification service functions available from this package.
 from app.services.notifications.service import (
     list_incident_notifications,
     notify_for_high_risk_incident,
@@ -6,6 +7,7 @@ from app.services.notifications.service import (
     send_admin_notification,
 )
 
+# Defines what can be imported when using from app.services.notifications import *.
 __all__ = [
     "notify_for_high_risk_incident",
     "notify_for_incident_state",

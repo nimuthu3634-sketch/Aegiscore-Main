@@ -1,3 +1,5 @@
+# Policy evaluation and execution flow for automated response actions.
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -49,6 +51,7 @@ from app.services.response_automation.ml_brute_force_automation import (
 from app.services.scoring.rollup import incident_rollup_score, refresh_incident_priority
 
 
+# Resolves the display name used by adapters and audit logs.
 def _response_adapter_policy_name(response_action: ResponseAction) -> str:
     details = response_action.details or {}
     named = str(details.get("adapter_policy_name") or "").strip()
@@ -59,6 +62,7 @@ def _response_adapter_policy_name(response_action: ResponseAction) -> str:
     return "Unnamed policy"
 
 
+# Creates system audit records for automation decisions and execution results.
 def _create_audit_log(
     session: Session,
     *,
@@ -78,10 +82,12 @@ def _create_audit_log(
     )
 
 
+# Ensures an alert has an incident so response actions can be tracked properly.
 def _ensure_incident_for_alert(
     session: Session,
     alert: NormalizedAlert,
 ) -> Incident:
+    # Reuse the existing incident when the alert is already linked.
     if alert.incident is not None:
         return alert.incident
 
@@ -133,6 +139,7 @@ def _ensure_incident_for_alert(
     return incident
 
 
+# Resolves the action target, such as source IP, username, or hostname.
 def _resolve_target_value(
     policy: ResponsePolicy,
     *,
@@ -159,6 +166,7 @@ def _resolve_target_value(
     return None
 
 
+# Builds the payload passed into the selected response adapter.
 def _build_execution_payload(
     policy: ResponsePolicy,
     *,
@@ -202,6 +210,7 @@ def _build_execution_payload(
     }
 
 
+# Builds adapter payload for the built-in ML brute-force block rule.
 def _build_builtin_ml_brute_force_payload(
     *,
     alert: NormalizedAlert,
@@ -242,6 +251,7 @@ def _build_builtin_ml_brute_force_payload(
     }
 
 
+# Builds adapter payload for the AI-direct brute-force block rule.
 def _build_ai_direct_execution_payload(
     *,
     alert: NormalizedAlert,
@@ -283,6 +293,7 @@ def _build_ai_direct_execution_payload(
     }
 
 
+# Creates or reuses the response action for AI-direct block automation.
 def _upsert_ai_direct_automation_action(
     session: Session,
     *,
@@ -346,6 +357,7 @@ def _upsert_ai_direct_automation_action(
     return response_action
 
 
+# Runs the AI-direct block flow after scoring when all gates pass.
 def execute_ai_direct_block_if_required(
     session: Session,
     alert: NormalizedAlert,
@@ -362,6 +374,7 @@ def execute_ai_direct_block_if_required(
     ):
         return []
 
+    # Feature flag keeps AI-direct blocking disabled unless the lab explicitly enables it.
     if not settings.ai_direct_brute_force_block_enabled:
         _create_audit_log(
             session,
@@ -398,6 +411,7 @@ def execute_ai_direct_block_if_required(
         },
     )
 
+    # If any AI-direct gate fails, no response action is created.
     if not passed:
         _create_audit_log(
             session,
@@ -444,6 +458,7 @@ def execute_ai_direct_block_if_required(
         return []
 
     responses_repository = ResponsesRepository(session)
+    # Prevents duplicate block_ip actions for the same alert and source IP.
     if responses_repository.find_existing_block_ip_for_alert_target(
         normalized_alert_id=alert.id,
         target_ip=target_ip,
@@ -462,6 +477,7 @@ def execute_ai_direct_block_if_required(
         )
         return []
 
+    # Final IP safety validation protects infrastructure and configured protected IPs.
     ip_ok, ip_msg = validate_automated_block_ip_target(
         target_ip,
         settings=settings,
@@ -529,6 +545,7 @@ def execute_ai_direct_block_if_required(
     return [executed]
 
 
+# Creates a policy response action or reuses the existing one to avoid duplicates.
 def _upsert_response_action(
     session: Session,
     *,
@@ -588,6 +605,7 @@ def _upsert_response_action(
     return response_action
 
 
+# Creates or reuses the response action for built-in ML brute-force automation.
 def _upsert_builtin_automation_action(
     session: Session,
     *,
@@ -643,6 +661,7 @@ def _upsert_builtin_automation_action(
     return response_action
 
 
+# Executes a queued response action and saves the final result.
 def _execute_response_action(
     session: Session,
     *,
@@ -727,6 +746,7 @@ def _execute_response_action(
     return response_action
 
 
+# Evaluates one matched policy and executes its configured action.
 def _evaluate_policy(
     session: Session,
     *,
@@ -759,6 +779,7 @@ def _evaluate_policy(
     )
 
 
+# Evaluates the built-in TensorFlow brute-force auto-block rule.
 def _evaluate_builtin_ml_brute_force_auto_block(
     session: Session,
     alert: NormalizedAlert,
@@ -887,6 +908,7 @@ def _evaluate_builtin_ml_brute_force_auto_block(
     return [executed]
 
 
+# Public entry point for evaluating alert-level response policies.
 def evaluate_alert_policies(
     session: Session,
     alert: NormalizedAlert,
@@ -894,6 +916,7 @@ def evaluate_alert_policies(
     if alert.risk_score is None:
         return []
 
+    # Finds enabled policies that match the alert type and risk score.
     policies = PoliciesRepository(session).find_matching_policies(
         target=ResponsePolicyTarget.ALERT,
         detection_type=alert.detection_type,
@@ -932,6 +955,7 @@ def evaluate_alert_policies(
     return responses
 
 
+# Checks incident-level policies using an alert as the starting context.
 def evaluate_incident_policies_for_alert(
     session: Session,
     alert: NormalizedAlert,
@@ -951,6 +975,7 @@ def evaluate_incident_policies_for_alert(
     return evaluate_incident_policies(session, incident)
 
 
+# Public entry point for evaluating policies against a full incident.
 def evaluate_incident_policies(
     session: Session,
     incident: Incident,

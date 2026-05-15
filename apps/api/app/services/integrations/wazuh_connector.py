@@ -27,6 +27,7 @@ from app.services.integrations.state import (
 )
 
 
+# Converts different timestamp formats into UTC datetime objects.
 def _coerce_datetime(value: Any) -> datetime | None:
     if value is None:
         return None
@@ -53,6 +54,7 @@ def _coerce_datetime(value: Any) -> datetime | None:
     return parsed.astimezone(UTC)
 
 
+# Finds the event ID from common Wazuh response fields.
 def _extract_external_id(payload: dict[str, Any]) -> str | None:
     for key in ("id", "_id", "event_id"):
         value = payload.get(key)
@@ -66,6 +68,7 @@ def _extract_external_id(payload: dict[str, Any]) -> str | None:
     return None
 
 
+# Extracts and normalizes the timestamp used for checkpoint filtering.
 def _extract_timestamp(payload: dict[str, Any], field_name: str) -> str | None:
     value = payload.get(field_name)
     if value in (None, "") and isinstance(payload.get("data"), dict):
@@ -76,6 +79,7 @@ def _extract_timestamp(payload: dict[str, Any], field_name: str) -> str | None:
     return parsed.isoformat()
 
 
+# Handles different Wazuh API response shapes and returns a list of event objects.
 def _extract_event_list(response_payload: Any) -> list[dict[str, Any]]:
     if isinstance(response_payload, list):
         return [item for item in response_payload if isinstance(item, dict)]
@@ -98,6 +102,7 @@ def _extract_event_list(response_payload: Any) -> list[dict[str, Any]]:
     return []
 
 
+# Small API client used by the live Wazuh connector.
 class WazuhAPIClient:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -105,6 +110,7 @@ class WazuhAPIClient:
         self._cached_token: str | None = None
         self._cached_token_at: float = 0.0
 
+    # Builds the TLS context based on the Wazuh settings.
     def _ssl_context(self) -> ssl.SSLContext:
         if not self.settings.wazuh_verify_tls:
             return ssl._create_unverified_context()  # noqa: S323
@@ -114,12 +120,14 @@ class WazuhAPIClient:
             context.load_verify_locations(cafile=self.settings.wazuh_ca_file)
         return context
 
+    # Creates the Basic Auth header for Wazuh API login.
     def _basic_auth_header(self) -> str:
         username = self.settings.wazuh_username or ""
         password = self.settings.wazuh_password or ""
         encoded = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("utf-8")
         return f"Basic {encoded}"
 
+    # Sends an HTTP request to Wazuh and returns the JSON response.
     def _request_json(
         self,
         *,
@@ -157,6 +165,7 @@ class WazuhAPIClient:
                     ) from exc
                 time.sleep(self.settings.wazuh_retry_backoff_seconds * (attempt + 1))
 
+    # Resolves the bearer token based on the selected Wazuh auth mode.
     def _resolve_bearer_token(self) -> str:
         mode = self.settings.wazuh_auth_mode.lower()
         if mode == "bearer":
@@ -191,6 +200,7 @@ class WazuhAPIClient:
 
         raise RuntimeError(f"Unsupported Wazuh auth mode: {self.settings.wazuh_auth_mode}")
 
+    # Builds the final Authorization headers for Wazuh API requests.
     def _auth_headers(self) -> dict[str, str]:
         mode = self.settings.wazuh_auth_mode.lower()
         base_headers = {"Accept": "application/json"}
@@ -202,6 +212,7 @@ class WazuhAPIClient:
             return {**base_headers, "Authorization": self._basic_auth_header()}
         return {**base_headers, "Authorization": f"Bearer {self._resolve_bearer_token()}"}
 
+    # Fetches alert events from Wazuh using pagination and the saved checkpoint.
     def fetch_events(self, *, checkpoint: dict[str, Any]) -> list[dict[str, Any]]:
         page_size = max(1, self.settings.wazuh_page_size)
         max_pages = max(1, self.settings.wazuh_max_pages_per_cycle)
@@ -246,6 +257,7 @@ class WazuhAPIClient:
         return events
 
 
+# Builds default connector counters and keeps old values when available.
 def _default_metrics(existing: dict[str, Any] | None = None) -> dict[str, int]:
     seed = existing if isinstance(existing, dict) else {}
     return {
@@ -257,6 +269,7 @@ def _default_metrics(existing: dict[str, Any] | None = None) -> dict[str, int]:
     }
 
 
+# Removes events that were already processed in previous polling cycles.
 def _apply_checkpoint_filter(
     events: list[dict[str, Any]],
     *,
@@ -283,6 +296,7 @@ def _apply_checkpoint_filter(
     return filtered
 
 
+# Runs one Wazuh polling cycle and ingests any new Wazuh alerts.
 def run_wazuh_poll_cycle(
     session: Session,
     *,
@@ -314,6 +328,7 @@ def run_wazuh_poll_cycle(
     cycle_duplicates = 0
     cycle_failed = 0
 
+    # Each new event is passed into the normal AegisCore ingestion flow.
     for event in scoped_events:
         try:
             result = ingest_wazuh_event(session, event, actor=None)
@@ -335,6 +350,7 @@ def run_wazuh_poll_cycle(
         elif event_timestamp == latest_timestamp:
             latest_external_ids.add(result.external_id)
 
+    # Save updated metrics and checkpoint values after the cycle finishes.
     metrics["poll_count"] += 1
     metrics["total_fetched"] += len(events)
     metrics["total_ingested"] += cycle_ingested
@@ -359,6 +375,7 @@ def run_wazuh_poll_cycle(
     }
 
 
+# Background loop that keeps polling Wazuh until the API shuts down.
 async def run_wazuh_connector_forever(stop_event: asyncio.Event) -> None:
     settings = get_settings()
     while not stop_event.is_set():
@@ -380,6 +397,7 @@ async def run_wazuh_connector_forever(stop_event: asyncio.Event) -> None:
             continue
 
 
+# Returns the current Wazuh connector status for the API.
 def get_wazuh_connector_status(session: Session) -> WazuhConnectorStatusResponse:
     settings = get_settings()
     state = get_connector_state(session, WAZUH_CONNECTOR_KEY)

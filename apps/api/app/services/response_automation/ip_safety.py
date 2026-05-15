@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.normalized_alert import NormalizedAlert
 
 
+# Reads the protected IP list from configuration and normalizes valid IPs.
 def parse_protected_ip_csv(raw: str | None) -> frozenset[str]:
     if not raw or not str(raw).strip():
         return frozenset()
@@ -27,6 +28,7 @@ def parse_protected_ip_csv(raw: str | None) -> frozenset[str]:
     return frozenset(out)
 
 
+# Collects victim/infrastructure IPs that should never be blocked automatically.
 def collect_infrastructure_ips(alert: NormalizedAlert | None) -> frozenset[str]:
     """IPs representing managed assets / victims — never used as block targets for this rule."""
     ips: set[str] = set()
@@ -55,6 +57,7 @@ def collect_infrastructure_ips(alert: NormalizedAlert | None) -> frozenset[str]:
     return frozenset(ips)
 
 
+# Combines alert context and execution payload IPs for the final safety check.
 def infrastructure_ips_for_block(
     alert: NormalizedAlert | None,
     *,
@@ -74,6 +77,7 @@ def infrastructure_ips_for_block(
     return frozenset(merged)
 
 
+# Blocks unsafe network scopes such as loopback, multicast, or broadcast addresses.
 def is_forbidden_network_ip(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
     if addr.is_loopback or addr.is_multicast or addr.is_unspecified:
         return True
@@ -82,6 +86,7 @@ def is_forbidden_network_ip(addr: ipaddress.IPv4Address | ipaddress.IPv6Address)
     return False
 
 
+# Main validation function used before any automated block_ip action runs.
 def validate_automated_block_ip_target(
     candidate: str | None,
     *,
@@ -90,6 +95,7 @@ def validate_automated_block_ip_target(
     execution_payload: dict | None = None,
 ) -> tuple[bool, str]:
     """Return (ok, error_message). Empty / invalid / unsafe / protected IPs fail."""
+    # Empty, invalid, protected, or infrastructure IPs are rejected.
     if not candidate or not str(candidate).strip():
         return False, "No source IP target was resolved."
     trimmed = str(candidate).strip()
@@ -102,6 +108,7 @@ def validate_automated_block_ip_target(
         return False, f"Target '{trimmed}' is not eligible for automated blocking (unsafe network scope)."
 
     normalized_target = str(addr)
+    # Protected IPs are configured manually, while infrastructure IPs come from the alert context.
     protected = parse_protected_ip_csv(getattr(settings, "automated_response_protected_ips", None))
 
     infra = infrastructure_ips_for_block(alert, execution_payload=execution_payload)

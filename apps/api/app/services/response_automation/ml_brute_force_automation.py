@@ -13,10 +13,12 @@ from app.models.enums import DetectionType, IncidentPriority, ScoreMethod
 from app.models.normalized_alert import NormalizedAlert
 from app.services.scoring.features import extract_source_ip
 
+# Unique rule name used when this built-in automation creates response actions.
 AUTOMATION_RULE_ID = "ml_brute_force_auto_block_v1"
 REQUIRED_FAILED_LOGINS_5M = 10
 
 
+# Safely reads integer values from the risk score feature snapshot.
 def _snapshot_int(snapshot: dict[str, Any], key: str) -> int:
     raw = snapshot.get(key)
     if raw in (None, ""):
@@ -27,6 +29,7 @@ def _snapshot_int(snapshot: dict[str, Any], key: str) -> int:
         return 0
 
 
+# Evaluates whether a TensorFlow brute-force alert should automatically queue block_ip.
 def ml_brute_force_auto_block_evaluation(alert: NormalizedAlert) -> tuple[bool, dict[str, Any]]:
     """Return (all_preconditions_met, detail_payload for audits / API / dashboard)."""
     rs = alert.risk_score
@@ -44,6 +47,7 @@ def ml_brute_force_auto_block_evaluation(alert: NormalizedAlert) -> tuple[bool, 
     }
     checks: dict[str, Any] = detail["checks"]
 
+    # Without a risk score, the automation cannot be evaluated.
     if rs is None:
         detail["summary"] = "No risk score present; ML brute-force automation skipped."
         return False, detail
@@ -52,6 +56,7 @@ def ml_brute_force_auto_block_evaluation(alert: NormalizedAlert) -> tuple[bool, 
     checks["scoring_method_tensorflow"] = rs.scoring_method == ScoreMethod.TENSORFLOW_MODEL
     checks["ai_priority_high"] = rs.priority_label == IncidentPriority.HIGH
 
+    # Uses the stored feature snapshot to check failed-login volume and source IP.
     snapshot = rs.feature_snapshot or {}
     failed_5m = _snapshot_int(snapshot, "failed_logins_5m")
     checks["failed_logins_5m"] = failed_5m
@@ -61,6 +66,7 @@ def ml_brute_force_auto_block_evaluation(alert: NormalizedAlert) -> tuple[bool, 
     checks["source_ip_present"] = bool(ip)
     detail["resolved_source_ip"] = ip if ip else None
 
+    # The model priority tier is checked to avoid blocking on low-confidence cases.
     exp = rs.explanation or {}
     tier_raw = exp.get("model_priority_tier") or exp.get("predicted_class")
     tier = str(tier_raw).strip().lower() if tier_raw is not None else ""
@@ -70,6 +76,7 @@ def ml_brute_force_auto_block_evaluation(alert: NormalizedAlert) -> tuple[bool, 
     else:
         checks["model_tier_high"] = checks["ai_priority_high"]
 
+    # Every gate must pass before the automatic block is allowed.
     passed = all(
         (
             checks["detection_type_brute_force"],

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 
+# Builds the default counters used by live connector status tracking.
 def default_connector_metrics(existing: dict[str, Any] | None = None) -> dict[str, int]:
     seed = existing if isinstance(existing, dict) else {}
     return {
@@ -15,6 +16,7 @@ def default_connector_metrics(existing: dict[str, Any] | None = None) -> dict[st
     }
 
 
+# Reads the saved file position so the connector can continue from the last line.
 def parse_file_checkpoint(checkpoint: dict[str, Any]) -> tuple[int, int | None]:
     offset_raw = checkpoint.get("offset", 0)
     inode_raw = checkpoint.get("inode")
@@ -23,6 +25,7 @@ def parse_file_checkpoint(checkpoint: dict[str, Any]) -> tuple[int, int | None]:
     return max(0, offset), inode
 
 
+# Creates the checkpoint payload saved after a successful file polling cycle.
 def build_file_checkpoint(*, offset: int, inode: int | None) -> dict[str, Any]:
     payload: dict[str, Any] = {"offset": max(0, int(offset))}
     if inode is not None:
@@ -30,6 +33,7 @@ def build_file_checkpoint(*, offset: int, inode: int | None) -> dict[str, Any]:
     return payload
 
 
+# Gets the current inode so log rotation can be detected.
 def current_file_inode(path: Path) -> int | None:
     try:
         return path.stat().st_ino

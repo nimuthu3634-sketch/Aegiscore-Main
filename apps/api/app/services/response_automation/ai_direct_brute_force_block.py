@@ -12,10 +12,12 @@ from app.models.enums import DetectionType, IncidentPriority, ScoreMethod
 from app.models.normalized_alert import NormalizedAlert
 from app.services.scoring.features import extract_source_ip
 
+# Unique rule name used in audit logs and response action details.
 AUTOMATION_RULE_ID = "ai_direct_brute_force_block"
 REQUIRED_FAILED_LOGINS_5M = 10
 
 
+# Safely reads numeric values from the saved scoring feature snapshot.
 def _snapshot_int(snapshot: dict[str, Any], key: str) -> int:
     raw = snapshot.get(key)
     if raw in (None, ""):
@@ -26,6 +28,7 @@ def _snapshot_int(snapshot: dict[str, Any], key: str) -> int:
         return 0
 
 
+# Checks whether the alert is suitable for immediate AI-based block_ip automation.
 def evaluate_ai_direct_brute_force_block(alert: NormalizedAlert) -> tuple[bool, dict[str, Any]]:
     """Return (all_gates_passed, detail for audits / ``response_actions.details``)."""
     rs = alert.risk_score
@@ -43,6 +46,7 @@ def evaluate_ai_direct_brute_force_block(alert: NormalizedAlert) -> tuple[bool, 
     }
     checks: dict[str, Any] = detail["checks"]
 
+    # A risk score is required before this automation can make a decision.
     if rs is None:
         detail["summary"] = "No risk score; AI-direct brute-force block skipped."
         return False, detail
@@ -50,6 +54,7 @@ def evaluate_ai_direct_brute_force_block(alert: NormalizedAlert) -> tuple[bool, 
     checks["detection_type_brute_force"] = alert.detection_type == DetectionType.BRUTE_FORCE
     checks["scoring_method_tensorflow"] = rs.scoring_method == ScoreMethod.TENSORFLOW_MODEL
 
+    # Failed login count and source IP are taken from the model feature snapshot.
     snapshot = rs.feature_snapshot or {}
     failed_5m = _snapshot_int(snapshot, "failed_logins_5m")
     checks["failed_logins_5m"] = failed_5m
@@ -59,6 +64,7 @@ def evaluate_ai_direct_brute_force_block(alert: NormalizedAlert) -> tuple[bool, 
     checks["source_ip_present"] = bool(ip)
     detail["resolved_source_ip"] = ip if ip else None
 
+    # The model tier is used to make sure only high-risk predictions trigger blocking.
     exp = rs.explanation or {}
     tier_raw = exp.get("model_priority_tier") or exp.get("predicted_class")
     tier = str(tier_raw).strip().lower() if tier_raw is not None else ""
@@ -72,6 +78,7 @@ def evaluate_ai_direct_brute_force_block(alert: NormalizedAlert) -> tuple[bool, 
             IncidentPriority.CRITICAL,
         )
 
+    # All safety gates must pass before the block action can be queued.
     passed = all(
         (
             checks["detection_type_brute_force"],

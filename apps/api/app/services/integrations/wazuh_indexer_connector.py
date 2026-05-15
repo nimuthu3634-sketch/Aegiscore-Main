@@ -6,9 +6,11 @@ from typing import Any
 import requests
 import urllib3
 
+# The lab Wazuh Indexer uses self-signed TLS, so warnings are disabled for this connector.
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+# Fetches the latest Wazuh Indexer alerts directly from Elasticsearch/OpenSearch.
 def fetch_latest_wazuh_indexer_alerts(limit: int = 20) -> list[dict[str, Any]]:
     base_url = os.getenv("WAZUH_INDEXER_URL", "https://host.docker.internal:9200").rstrip("/")
     username = os.getenv("WAZUH_INDEXER_USERNAME", "admin")
@@ -18,6 +20,7 @@ def fetch_latest_wazuh_indexer_alerts(limit: int = 20) -> list[dict[str, Any]]:
 
     url = f"{base_url}/{index}/_search"
 
+    # Search query gets the newest alert documents first.
     query = {
         "size": limit,
         "sort": [
@@ -44,6 +47,7 @@ def fetch_latest_wazuh_indexer_alerts(limit: int = 20) -> list[dict[str, Any]]:
     data = response.json()
     hits = data.get("hits", {}).get("hits", [])
 
+    # Flatten each hit so the rest of the app can use normal alert dictionaries.
     alerts = []
     for hit in hits:
         source = hit.get("_source", {})
