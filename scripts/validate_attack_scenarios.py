@@ -1,4 +1,4 @@
-# AegisCore student note: Script used to validate expected attack scenario data.
+# Script used to validate the four main AegisCore attack scenarios against a running API.
 
 from __future__ import annotations
 
@@ -20,8 +20,8 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = ROOT_DIR / "apps" / "api" / "tests" / "fixtures" / "ingestion"
 
 
+# Defines the expected fixture and validation rule for one attack scenario.
 @dataclass(frozen=True)
-# ScenarioDefinition groups related data or behaviour for this module.
 class ScenarioDefinition:
     key: str
     source: str
@@ -68,12 +68,12 @@ SCENARIOS = [
 ]
 
 
-# ValidationError groups related data or behaviour for this module.
+# Custom error used when one of the validation checks fails.
 class ValidationError(RuntimeError):
     pass
 
 
-# Helper function used internally by this module.
+# Converts an alert timestamp into a date string for report filtering.
 def _date_string_from_timestamp(timestamp: str, *, scenario_key: str) -> str:
     normalized = timestamp.replace("Z", "+00:00")
     try:
@@ -85,7 +85,7 @@ def _date_string_from_timestamp(timestamp: str, *, scenario_key: str) -> str:
     return parsed.date().isoformat()
 
 
-# Handles the request json logic.
+# Sends an HTTP request to the backend and returns the JSON response.
 def request_json(
     *,
     base_url: str,
@@ -127,7 +127,7 @@ def request_json(
         ) from exc
 
 
-# Handles the login logic.
+# Logs in to the backend and returns the bearer token.
 def login(*, base_url: str, username: str, password: str) -> str:
     response = request_json(
         base_url=base_url,
@@ -141,12 +141,12 @@ def login(*, base_url: str, username: str, password: str) -> str:
     return access_token
 
 
-# Handles the load fixture logic.
+# Loads one attack fixture from the ingestion test fixture folder.
 def load_fixture(name: str) -> dict[str, Any]:
     return json.loads((FIXTURES_DIR / name).read_text(encoding="utf-8"))
 
 
-# Handles the with unique external id logic.
+# Adds a unique suffix so repeated validation runs do not create duplicate IDs.
 def with_unique_external_id(
     payload: dict[str, Any],
     *,
@@ -174,13 +174,14 @@ def with_unique_external_id(
     return cloned
 
 
-# Handles the validate scenario logic.
+# Runs one full scenario from ingestion up to alert, incident, response, and report checks.
 def validate_scenario(
     *,
     base_url: str,
     token: str,
     scenario: ScenarioDefinition,
 ) -> dict[str, Any]:
+    # Use a fresh external ID for each run to avoid duplicate ingestion behaviour.
     payload = with_unique_external_id(
         load_fixture(scenario.fixture_file),
         source=scenario.source,
@@ -199,6 +200,7 @@ def validate_scenario(
     if not isinstance(alert_id, str) or not alert_id:
         raise ValidationError(f"{scenario.key}: ingestion did not return an alert id.")
 
+    # Check the alert detail endpoint after ingestion.
     alert_detail = request_json(
         base_url=base_url,
         path=f"/alerts/{alert_id}",
@@ -238,6 +240,7 @@ def validate_scenario(
         raise ValidationError(f"{scenario.key}: linked incident is missing.")
 
     incident_id = str(linked_incident["id"])
+    # Check that the alert has been linked into an incident workflow.
     incident_detail = request_json(
         base_url=base_url,
         path=f"/incidents/{incident_id}",
@@ -251,6 +254,7 @@ def validate_scenario(
             f"{scenario.key}: incident detail response_history is empty."
         )
 
+    # Finally confirm that the scenario appears in the daily report summary.
     report_summary = request_json(
         base_url=base_url,
         path="/reports/daily-summary",
@@ -277,7 +281,7 @@ def validate_scenario(
     }
 
 
-# Handles the print markdown table logic.
+# Prints the final validation results in a simple Markdown table.
 def print_markdown_table(results: list[dict[str, Any]]) -> None:
     print("| Scenario | Ingestion | Alert | Incident | Risk | Responses | Daily report alerts |")
     print("| --- | --- | --- | --- | ---: | ---: | ---: |")
@@ -289,7 +293,7 @@ def print_markdown_table(results: list[dict[str, Any]]) -> None:
         )
 
 
-# Handles the ensure supported policies enabled logic.
+# Enables response policies required for the supported test scenarios.
 def ensure_supported_policies_enabled(*, base_url: str, token: str) -> None:
     response = request_json(base_url=base_url, path="/policies", token=token)
     items = response.get("items")
@@ -317,7 +321,7 @@ def ensure_supported_policies_enabled(*, base_url: str, token: str) -> None:
             )
 
 
-# Handles the parse args logic.
+# Reads CLI options such as API URL and login credentials.
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -343,7 +347,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-# Handles the main logic.
+# Main command-line workflow for running all scenario checks.
 def main() -> int:
     args = parse_args()
     token = login(base_url=args.base_url, username=args.username, password=args.password)

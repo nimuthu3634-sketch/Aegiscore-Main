@@ -22,9 +22,11 @@ from pathlib import Path
 
 
 def _repo_root() -> Path:
+    # Finds the repository root so the script works from any current directory.
     return Path(__file__).resolve().parents[1]
 
 
+# Dataset must contain all threat types supported by the academic MVP.
 REQUIRED_THREAT_TYPES = (
     "normal",
     "brute_force",
@@ -32,6 +34,7 @@ REQUIRED_THREAT_TYPES = (
     "file_integrity",
     "unauthorized_user_creation",
 )
+# Labels must match the priority classes used by the trained model.
 ALLOWED_LABELS = frozenset({"Critical", "High", "Medium", "Low"})
 ALLOWED_TRAINING_SCHEMAS = {"alert_prioritization_v1", "alert_prioritization_v2"}
 MIN_TRAINING_ROWS = 200  # excludes stale tiny fixtures (e.g. 20-row sklearn era)
@@ -40,9 +43,11 @@ EXPECTED_LABEL_CLASSES = ["low", "medium", "high", "critical"]
 
 def validate_ai_ml_readiness(repo_root: Path | None = None) -> list[str]:
     """Return a list of human-readable errors; empty list means success."""
+    # This checks the dataset, model file, and metadata before project submission.
     root = repo_root or _repo_root()
     errors: list[str] = []
 
+    # First check that the training dataset exists and has valid rows.
     dataset = root / "ai" / "datasets" / "alerts_dataset.csv"
     if not dataset.is_file():
         errors.append(f"Missing dataset: {dataset}")
@@ -59,6 +64,7 @@ def validate_ai_ml_readiness(repo_root: Path | None = None) -> list[str]:
         errors.append("Dataset is empty")
         return errors
 
+    # Count threat types and labels so missing categories can be reported clearly.
     threats = Counter(r.get("threat_type", "").strip() for r in rows)
     labels = Counter(r.get("label", "").strip() for r in rows)
 
@@ -74,6 +80,7 @@ def validate_ai_ml_readiness(repo_root: Path | None = None) -> list[str]:
         if labels.get(lb, 0) <= 0:
             errors.append(f"Dataset missing label rows for {lb!r}")
 
+    # The final deliverable should include both the Keras model and its metadata.
     keras_path = root / "ai" / "models" / "aegiscore-risk-priority-model.keras"
     meta_path = root / "ai" / "models" / "aegiscore-risk-priority-model.metadata.json"
 
@@ -84,6 +91,7 @@ def validate_ai_ml_readiness(repo_root: Path | None = None) -> list[str]:
     if errors:
         return errors
 
+    # Read metadata and confirm it matches the expected TensorFlow scoring design.
     try:
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
@@ -116,6 +124,7 @@ def validate_ai_ml_readiness(repo_root: Path | None = None) -> list[str]:
 
 
 def main() -> int:
+    # Command-line entry point used by students before handing over the project.
     errs = validate_ai_ml_readiness()
     if errs:
         print("AI/ML readiness validation FAILED:", file=sys.stderr)

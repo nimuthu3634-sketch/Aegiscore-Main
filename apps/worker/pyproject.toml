@@ -1,12 +1,15 @@
+# Build configuration for packaging the background worker.
 [build-system]
 requires = ["setuptools>=69.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+# Project metadata and dependencies for the AegisCore worker service.
 [project]
 name = "aegiscore-worker"
 version = "0.1.0"
 description = "AegisCore background worker"
 requires-python = ">=3.12"
+# Worker dependencies are kept smaller because it only runs background jobs.
 dependencies = [
   "sqlalchemy>=2.0.41,<3.0.0",
   "psycopg[binary]>=3.2.9,<4.0.0",
@@ -14,6 +17,7 @@ dependencies = [
   "pydantic-settings>=2.10.1,<3.0.0"
 ]
 
+# Development-only tools for worker linting.
 [project.optional-dependencies]
 dev = [
   "ruff>=0.12.4,<0.13.0"
@@ -22,6 +26,7 @@ dev = [
 [tool.setuptools.packages.find]
 include = ["app*"]
 
+# Ruff formatting/linting preferences for worker code.
 [tool.ruff]
 line-length = 100
 target-version = "py312"

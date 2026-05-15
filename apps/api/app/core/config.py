@@ -4,11 +4,15 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+# Central settings class for the AegisCore API.
+# Values can be overridden using environment variables or the .env file.
 class Settings(BaseSettings):
+    # Basic API runtime settings.
     app_name: str = "AegisCore API"
     app_env: str = Field(default="development", alias="APP_ENV")
     api_host: str = Field(default="0.0.0.0", alias="API_HOST")
     api_port: int = Field(default=8000, alias="API_PORT")
+    # Database connection and JWT authentication settings.
     database_url: str = Field(
         default="postgresql+psycopg://aegiscore:aegiscore_dev_password@postgres:5432/aegiscore",
         alias="DATABASE_URL",
@@ -22,6 +26,7 @@ class Settings(BaseSettings):
         default=60,
         alias="ACCESS_TOKEN_EXPIRE_MINUTES",
     )
+    # Wazuh API connector settings used for live alert collection.
     wazuh_base_url: str = Field(
         default="http://wazuh-manager:55000",
         alias="WAZUH_BASE_URL",
@@ -62,6 +67,7 @@ class Settings(BaseSettings):
         default="timestamp",
         alias="WAZUH_TIMESTAMP_FIELD",
     )
+    # Suricata connector settings used for IDS event ingestion.
     suricata_source: str = Field(default="suricata", alias="SURICATA_SOURCE")
     suricata_connector_enabled: bool = Field(
         default=False,
@@ -95,6 +101,7 @@ class Settings(BaseSettings):
         default=True,
         alias="SURICATA_FAIL_WHEN_SOURCE_MISSING",
     )
+    # Ingestion defaults used when new alerts are normalized into the system.
     ingestion_allow_asset_autocreate: bool = Field(
         default=True,
         alias="INGESTION_ALLOW_ASSET_AUTOCREATE",
@@ -103,6 +110,7 @@ class Settings(BaseSettings):
         default="medium",
         alias="INGESTION_DEFAULT_ASSET_CRITICALITY",
     )
+    # Development seed users used for local testing and demonstrations.
     dev_seed_admin_username: str = Field(
         default="admin",
         alias="DEV_SEED_ADMIN_USERNAME",
@@ -119,6 +127,7 @@ class Settings(BaseSettings):
         default="AegisCore123!",
         alias="DEV_SEED_ANALYST_PASSWORD",
     )
+    # AI/risk scoring settings for baseline rules and TensorFlow model scoring.
     scoring_strategy: str = Field(
         default="baseline",
         alias="SCORING_STRATEGY",
@@ -156,6 +165,7 @@ class Settings(BaseSettings):
             "Uses the same adapters as policy automation; default false."
         ),
     )
+    # Automated response settings control whether actions are simulated or executed.
     automated_response_allow_destructive: bool = Field(
         default=False,
         alias="AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE",
@@ -210,6 +220,7 @@ class Settings(BaseSettings):
         default=False,
         alias="AUTOMATED_RESPONSE_ENABLE_HOST_TAG_WRITE",
     )
+    # Optional external scripts used by response adapters in lab deployments.
     response_adapter_block_ip_script: str | None = Field(
         default=None,
         alias="RESPONSE_ADAPTER_BLOCK_IP_SCRIPT",
@@ -230,6 +241,7 @@ class Settings(BaseSettings):
         default=None,
         alias="RESPONSE_ADAPTER_NOTIFY_ADMIN_SCRIPT",
     )
+    # Notification settings used for admin alerts and response warnings.
     notifications_enabled: bool = Field(default=False, alias="NOTIFICATIONS_ENABLED")
     notifications_mode: str = Field(default="log", alias="NOTIFICATIONS_MODE")
     notifications_risk_threshold: int = Field(
@@ -256,6 +268,7 @@ class Settings(BaseSettings):
         default="aegiscore@localhost",
         alias="NOTIFICATIONS_SENDER",
     )
+    # SMTP settings are used only when email notifications are enabled.
     smtp_host: str = Field(default="localhost", alias="SMTP_HOST")
     smtp_port: int = Field(default=1025, alias="SMTP_PORT")
     smtp_username: str | None = Field(default=None, alias="SMTP_USERNAME")
@@ -264,6 +277,7 @@ class Settings(BaseSettings):
     smtp_use_starttls: bool = Field(default=False, alias="SMTP_USE_STARTTLS")
     smtp_timeout_seconds: float = Field(default=10.0, alias="SMTP_TIMEOUT_SECONDS")
 
+    # Pydantic loads environment variables from .env and ignores unknown values.
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -274,4 +288,5 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
+    # Cached settings prevent recreating the configuration object for every request.
     return Settings()

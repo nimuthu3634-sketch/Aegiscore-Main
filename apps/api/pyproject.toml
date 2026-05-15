@@ -1,12 +1,15 @@
+# Build configuration for packaging the FastAPI backend.
 [build-system]
 requires = ["setuptools>=69.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+# Project metadata and runtime dependencies for the API container.
 [project]
 name = "aegiscore-api"
 version = "0.1.0"
 description = "AegisCore FastAPI backend"
 requires-python = ">=3.12"
+# Backend dependencies used for the API, database, authentication, and AI scoring.
 dependencies = [
   "fastapi>=0.116.0,<0.117.0",
   "uvicorn[standard]>=0.35.0,<0.36.0",
@@ -23,6 +26,7 @@ dependencies = [
   "tensorflow-cpu>=2.17.0,<2.20.0"
 ]
 
+# Development-only tools used for testing and linting.
 [project.optional-dependencies]
 dev = [
   "httpx>=0.28.1,<0.29.0",
@@ -33,10 +37,12 @@ dev = [
 [tool.setuptools.packages.find]
 include = ["app*"]
 
+# Pytest configuration for API tests.
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
 
+# Ruff formatting/linting preferences for the backend code.
 [tool.ruff]
 line-length = 100
 target-version = "py312"
