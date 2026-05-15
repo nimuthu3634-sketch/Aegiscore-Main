@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
+# Base schema used by API request and response models.
 class APIModel(BaseModel):
-    pass
-
+    # Allows Pydantic models to read data directly from SQLAlchemy objects.
+    model_config = ConfigDict(from_attributes=True)

@@ -1,21 +1,15 @@
-from pydantic import BaseModel
+from app.schemas.base import APIModel
 
 
-class HealthResponse(BaseModel):
+# Basic API health response used by health check endpoints.
+class HealthResponse(APIModel):
     status: str
     service: str
     database: str
 
 
-class DependencyStatusResponse(BaseModel):
-    enabled: bool
+# Readiness response shows whether the API can fully serve requests.
+class ReadinessResponse(APIModel):
     status: str
-    detail: str | None = None
-
-
-class ReadinessResponse(BaseModel):
-    status: str
-    service: str
     database: str
-    dependencies: dict[str, DependencyStatusResponse]
-
+    checks: dict[str, str]

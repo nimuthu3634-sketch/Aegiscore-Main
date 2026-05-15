@@ -7,6 +7,7 @@ from app.models.enums import DetectionType
 from app.schemas.base import APIModel
 
 
+# Severity labels used for alert filtering and display.
 class AlertSeverityLabel(str, enum.Enum):
     LOW = "low"
     MEDIUM = "medium"
@@ -14,11 +15,13 @@ class AlertSeverityLabel(str, enum.Enum):
     CRITICAL = "critical"
 
 
+# Common sorting direction used by list pages.
 class SortDirection(str, enum.Enum):
     ASC = "asc"
     DESC = "desc"
 
 
+# Asset status labels shown in the asset table.
 class AssetAgentStatusLabel(str, enum.Enum):
     ONLINE = "online"
     DEGRADED = "degraded"
@@ -31,6 +34,7 @@ class AssetEnvironmentLabel(str, enum.Enum):
     REMOTE = "remote"
 
 
+# Status labels used when filtering response action results.
 class ResponseExecutionStatusLabel(str, enum.Enum):
     SUCCEEDED = "succeeded"
     WARNING = "warning"
@@ -43,6 +47,7 @@ class ResponseModeLabel(str, enum.Enum):
     LIVE = "live"
 
 
+# Alert status filters used by the Alerts page.
 class AlertListStatusFilter(str, enum.Enum):
     NEW = "new"
     TRIAGED = "triaged"
@@ -70,6 +75,7 @@ class SourceTypeFilter(str, enum.Enum):
     SURICATA = "suricata"
 
 
+# Incident workflow filters used by the Incidents page.
 class IncidentListStateFilter(str, enum.Enum):
     NEW = "new"
     TRIAGED = "triaged"
@@ -95,11 +101,13 @@ class ResponseListSortField(str, enum.Enum):
     STATUS = "status"
 
 
+# Common pagination fields reused by all list query schemas.
 class PaginationQuery(APIModel):
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=25, ge=1, le=100)
 
 
+# Metadata returned with paginated API responses.
 class ListMetaResponse(APIModel):
     page: int
     page_size: int
@@ -110,6 +118,7 @@ class ListMetaResponse(APIModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+# Query parameters supported by the alert listing API.
 class AlertListQuery(PaginationQuery):
     search: str | None = None
     severity: AlertSeverityLabel | None = None
@@ -122,6 +131,7 @@ class AlertListQuery(PaginationQuery):
     sort_direction: SortDirection = SortDirection.DESC
 
 
+# Query parameters supported by the incident listing API.
 class IncidentListQuery(PaginationQuery):
     search: str | None = None
     priority: AlertSeverityLabel | None = None
@@ -132,6 +142,7 @@ class IncidentListQuery(PaginationQuery):
     sort_direction: SortDirection = SortDirection.DESC
 
 
+# Query parameters supported by the asset listing API.
 class AssetListQuery(PaginationQuery):
     search: str | None = None
     status: AssetAgentStatusLabel | None = None
@@ -142,6 +153,7 @@ class AssetListQuery(PaginationQuery):
     sort_direction: SortDirection = SortDirection.ASC
 
 
+# Query parameters supported by the response action listing API.
 class ResponseListQuery(PaginationQuery):
     search: str | None = None
     mode: ResponseModeLabel | None = None

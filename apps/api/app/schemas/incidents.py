@@ -17,6 +17,7 @@ from app.schemas.common import (
 from app.schemas.listing import AlertSeverityLabel
 
 
+# Represents an alert linked to an incident.
 class IncidentLinkedAlertResponse(APIModel):
     id: UUID
     title: str
@@ -33,12 +34,14 @@ class IncidentLinkedAlertResponse(APIModel):
     username: str | None
 
 
+# Groups important evidence collected from the incident's linked alerts.
 class IncidentGroupedEvidenceResponse(APIModel):
     summary: str
     evidence_items: list[str]
     correlation_keys: dict[str, Any]
 
 
+# Explains why a specific priority was assigned to the incident.
 class IncidentPriorityExplanationResponse(APIModel):
     label: str
     summary: str
@@ -49,12 +52,14 @@ class IncidentPriorityExplanationResponse(APIModel):
     scoring_methods: list[str] = Field(default_factory=list)
 
 
+# Shows what state changes are allowed for the current incident.
 class IncidentStateTransitionCapabilitiesResponse(APIModel):
     current_state: IncidentStatus
     available_actions: list[str]
     allowed_target_states: list[IncidentStatus]
 
 
+# Full incident details returned to the incident detail page.
 class IncidentDetailResponse(APIModel):
     id: UUID
     title: str

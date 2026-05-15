@@ -15,11 +15,13 @@ from app.schemas.listing import (
 )
 
 
+# Supported export file formats for SOC reports.
 class ReportExportFormat(str, enum.Enum):
     CSV = "csv"
     JSON = "json"
 
 
+# Query filters used when generating daily or weekly report summaries.
 class ReportSummaryQuery(APIModel):
     date_from: date | None = None
     date_to: date | None = None
@@ -27,6 +29,7 @@ class ReportSummaryQuery(APIModel):
     source_type: SourceTypeFilter | None = None
 
 
+# Query filters used when exporting alert reports.
 class AlertReportExportQuery(APIModel):
     date_from: date | None = None
     date_to: date | None = None
@@ -38,6 +41,7 @@ class AlertReportExportQuery(APIModel):
     format: ReportExportFormat = ReportExportFormat.CSV
 
 
+# Query filters used when exporting incident reports.
 class IncidentReportExportQuery(APIModel):
     date_from: date | None = None
     date_to: date | None = None
@@ -48,6 +52,7 @@ class IncidentReportExportQuery(APIModel):
     format: ReportExportFormat = ReportExportFormat.CSV
 
 
+# Query filters used when exporting response action reports.
 class ResponseReportExportQuery(APIModel):
     date_from: date | None = None
     date_to: date | None = None
@@ -57,11 +62,13 @@ class ResponseReportExportQuery(APIModel):
     format: ReportExportFormat = ReportExportFormat.CSV
 
 
+# Small label and count item used for report charts.
 class ReportBreakdownItemResponse(APIModel):
     label: str
     total: int
 
 
+# Time-based alert count used for report trend charts.
 class ReportTimeBucketResponse(APIModel):
     label: str
     start: datetime
@@ -69,6 +76,7 @@ class ReportTimeBucketResponse(APIModel):
     total: int
 
 
+# Shows the most affected assets in a report.
 class ReportTopAssetResponse(APIModel):
     asset_id: UUID
     hostname: str
@@ -77,6 +85,7 @@ class ReportTopAssetResponse(APIModel):
     incident_count: int
 
 
+# Main summary response used by daily and weekly report pages.
 class ReportSummaryResponse(APIModel):
     report_type: Literal["daily", "weekly"]
     generated_at: datetime
@@ -96,6 +105,7 @@ class ReportSummaryResponse(APIModel):
     top_assets: list[ReportTopAssetResponse]
 
 
+# One alert row included in an exported alert report.
 class AlertExportItemResponse(APIModel):
     id: UUID
     event_id: str | None = None
@@ -116,6 +126,7 @@ class AlertExportItemResponse(APIModel):
     linked_incident_title: str | None = None
 
 
+# One incident row included in an exported incident report.
 class IncidentExportItemResponse(APIModel):
     id: UUID
     title: str
@@ -131,6 +142,7 @@ class IncidentExportItemResponse(APIModel):
     response_actions_count: int
 
 
+# One response action row included in an exported response report.
 class ResponseExportItemResponse(APIModel):
     id: UUID
     action_type: str
@@ -147,6 +159,7 @@ class ResponseExportItemResponse(APIModel):
     executed_at: datetime | None = None
 
 
+# Full response returned after exporting alerts.
 class AlertExportResponse(APIModel):
     report_name: str
     generated_at: datetime
@@ -156,6 +169,7 @@ class AlertExportResponse(APIModel):
     items: list[AlertExportItemResponse]
 
 
+# Full response returned after exporting incidents.
 class IncidentExportResponse(APIModel):
     report_name: str
     generated_at: datetime
@@ -165,6 +179,7 @@ class IncidentExportResponse(APIModel):
     items: list[IncidentExportItemResponse]
 
 
+# Full response returned after exporting response actions.
 class ResponseExportResponse(APIModel):
     report_name: str
     generated_at: datetime

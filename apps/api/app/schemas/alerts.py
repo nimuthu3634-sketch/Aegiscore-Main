@@ -23,6 +23,7 @@ from app.schemas.common import (
 from app.schemas.listing import AlertSeverityLabel
 
 
+# Represents the incident linked to an alert.
 class AlertLinkedIncidentResponse(APIModel):
     id: UUID
     title: str
@@ -33,6 +34,7 @@ class AlertLinkedIncidentResponse(APIModel):
     assigned_user: UserBriefResponse | None
 
 
+# Stores rule details from the original security tool, such as Wazuh or Suricata.
 class AlertSourceRuleResponse(APIModel):
     rule_id: str | None
     name: str | None
@@ -40,6 +42,7 @@ class AlertSourceRuleResponse(APIModel):
     metadata: dict[str, Any]
 
 
+# Explains how the alert risk score was calculated.
 class AlertScoreExplanationResponse(APIModel):
     label: str
     summary: str
@@ -65,6 +68,7 @@ class AlertScoreExplanationResponse(APIModel):
     )
 
 
+# Full response model used by the alert detail page in the frontend.
 class AlertDetailResponse(APIModel):
     id: UUID
     title: str

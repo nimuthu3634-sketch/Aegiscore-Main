@@ -24,11 +24,13 @@ from app.schemas.listing import (
 )
 
 
+# Common response schemas reused by many API routes.
 class RoleResponse(APIModel):
     id: UUID
     name: RoleName
 
 
+# Full user details returned by authentication and user-related APIs.
 class UserResponse(APIModel):
     id: UUID
     username: str
@@ -40,6 +42,7 @@ class UserResponse(APIModel):
     role: RoleResponse
 
 
+# Short user details used when showing owners, analysts, or actors.
 class UserBriefResponse(APIModel):
     id: UUID
     username: str
@@ -47,6 +50,7 @@ class UserBriefResponse(APIModel):
     role: RoleResponse
 
 
+# Notification details returned for incidents and response actions.
 class NotificationEventResponse(APIModel):
     id: UUID
     channel: str
@@ -61,6 +65,7 @@ class NotificationEventResponse(APIModel):
     sent_at: datetime | None
 
 
+# Basic asset details shown in alert, incident, and asset pages.
 class AssetSummaryResponse(APIModel):
     id: UUID
     hostname: str
@@ -77,10 +82,12 @@ class AssetSummaryResponse(APIModel):
 
 
 class AssetListResponse(APIModel):
+    # List response includes both asset rows and pagination details.
     items: list[AssetSummaryResponse]
     meta: ListMetaResponse
 
 
+# Summary of the original raw alert before normalization.
 class RawAlertSummaryResponse(APIModel):
     id: UUID
     source: str
@@ -91,6 +98,7 @@ class RawAlertSummaryResponse(APIModel):
     received_at: datetime
 
 
+# Risk scoring result returned with alert data.
 class RiskScoreResponse(APIModel):
     id: UUID
     score: float
@@ -105,6 +113,7 @@ class RiskScoreResponse(APIModel):
     calculated_at: datetime
 
 
+# Small incident object used when linking alerts to incidents.
 class IncidentReferenceResponse(APIModel):
     id: UUID
     title: str
@@ -114,6 +123,7 @@ class IncidentReferenceResponse(APIModel):
     updated_at: datetime
 
 
+# Audit log response used to show user/system activity history.
 class AuditLogResponse(APIModel):
     id: UUID
     action: str
@@ -124,6 +134,7 @@ class AuditLogResponse(APIModel):
     actor: UserBriefResponse | None
 
 
+# Short response action details used in incident summaries.
 class ResponseActionReferenceResponse(APIModel):
     id: UUID
     action_type: str
@@ -140,6 +151,7 @@ class ResponseActionReferenceResponse(APIModel):
     requested_by: UserBriefResponse | None
 
 
+# Detailed response action object used in alert and incident detail pages.
 class ResponseActionDetailResponse(APIModel):
     id: UUID
     action_type: str
@@ -158,6 +170,7 @@ class ResponseActionDetailResponse(APIModel):
     related_notifications: list[NotificationEventResponse] = Field(default_factory=list)
 
 
+# Analyst note shown in alert and incident investigation pages.
 class AnalystNoteResponse(APIModel):
     id: str
     author: UserBriefResponse | None
@@ -166,6 +179,7 @@ class AnalystNoteResponse(APIModel):
     updated_at: datetime | None = None
 
 
+# Generic activity entry used for investigation timelines.
 class ActivityEntryResponse(APIModel):
     id: str
     timestamp: datetime
@@ -176,6 +190,7 @@ class ActivityEntryResponse(APIModel):
     details: dict[str, Any]
 
 
+# Alert summary used in alert lists and linked incident views.
 class AlertSummaryResponse(APIModel):
     id: UUID
     source: str
@@ -203,10 +218,12 @@ class AlertSummaryResponse(APIModel):
 
 
 class AlertListResponse(APIModel):
+    # Alert list response with rows and pagination metadata.
     items: list[AlertSummaryResponse]
     meta: ListMetaResponse
 
 
+# Incident row data shown in the incident list page.
 class IncidentSummaryResponse(APIModel):
     id: UUID
     title: str
@@ -226,15 +243,18 @@ class IncidentSummaryResponse(APIModel):
 
 
 class IncidentListResponse(APIModel):
+    # Incident list response with rows and pagination metadata.
     items: list[IncidentSummaryResponse]
     meta: ListMetaResponse
 
 
+# Extends incident summary with response actions and audit history.
 class IncidentDetailResponse(IncidentSummaryResponse):
     response_actions: list[ResponseActionReferenceResponse]
     audit_logs: list[AuditLogResponse]
 
 
+# Response action row shown in the responses page.
 class ResponseActionSummaryResponse(APIModel):
     id: UUID
     action_type: str
@@ -256,5 +276,6 @@ class ResponseActionSummaryResponse(APIModel):
 
 
 class ResponseActionListResponse(APIModel):
+    # Response action list response with rows and pagination metadata.
     items: list[ResponseActionSummaryResponse]
     meta: ListMetaResponse
