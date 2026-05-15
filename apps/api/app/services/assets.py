@@ -7,9 +7,13 @@ from app.services.serializers import to_asset_summary_response
 
 
 def list_assets(session: Session, query: AssetListQuery) -> AssetListResponse:
+    # Gets asset records from the database using the selected filters and pagination.
     asset_rows, total = AssetsRepository(session).list_assets(query)
+
+    # Calculates pagination details for the frontend asset table.
     total_pages = max(1, (total + query.page_size - 1) // query.page_size)
     page = min(query.page, total_pages)
+
     return AssetListResponse(
         items=[
             to_asset_summary_response(

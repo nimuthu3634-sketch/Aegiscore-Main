@@ -1,3 +1,5 @@
+# Service logic for listing automated and manual response actions.
+
 from sqlalchemy.orm import Session
 
 from app.repositories.responses import ResponsesRepository
@@ -6,6 +8,7 @@ from app.schemas.listing import ListMetaResponse, ResponseListQuery
 from app.services.serializers import to_response_action_summary_response
 
 
+# Loads response actions with pagination and converts them for the frontend.
 def list_response_actions(
     session: Session, query: ResponseListQuery
 ) -> ResponseActionListResponse:

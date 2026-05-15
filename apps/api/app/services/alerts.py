@@ -37,6 +37,7 @@ from app.services.response_automation.execution import evaluate_incident_policie
 
 
 def list_alerts(session: Session, query: AlertListQuery) -> AlertListResponse:
+    # Gets filtered alerts and prepares the paginated response for the frontend.
     alerts, total = AlertsRepository(session).list_alerts(query)
     total_pages = max(1, (total + query.page_size - 1) // query.page_size)
     page = min(query.page, total_pages)
@@ -56,6 +57,7 @@ def list_alerts(session: Session, query: AlertListQuery) -> AlertListResponse:
 
 
 def get_alert(session: Session, alert_id: UUID) -> AlertSummaryResponse:
+    # Returns a single alert summary or a 404 error if it does not exist.
     alert = AlertsRepository(session).get_alert(alert_id)
     if alert is None:
         raise HTTPException(
@@ -66,6 +68,7 @@ def get_alert(session: Session, alert_id: UUID) -> AlertSummaryResponse:
 
 
 def get_alert_detail(session: Session, alert_id: UUID) -> AlertDetailResponse:
+    # Loads detailed alert information, including audit logs and analyst notes.
     alert = AlertsRepository(session).get_alert_detail(alert_id)
     if alert is None:
         raise HTTPException(
@@ -76,6 +79,7 @@ def get_alert_detail(session: Session, alert_id: UUID) -> AlertDetailResponse:
     audit_logs_repository = AuditLogsRepository(session)
     audit_logs = audit_logs_repository.list_for_entity("alert", str(alert.id))
 
+    # Also includes incident and response action audit history related to this alert.
     if alert.incident is not None:
         audit_logs.extend(
             audit_logs_repository.list_for_entity("incident", str(alert.incident.id))
@@ -101,6 +105,7 @@ def get_alert_detail(session: Session, alert_id: UUID) -> AlertDetailResponse:
 
 
 def _priority_from_alert(alert) -> IncidentPriority:
+    # Uses AI/risk score first, then falls back to the original alert severity.
     if alert.risk_score and alert.risk_score.priority_label is not None:
         return alert.risk_score.priority_label
     if alert.risk_score:
@@ -124,6 +129,7 @@ def _select_replacement_primary_alert(
     *,
     exclude_alert_id: UUID | None = None,
 ):
+    # Selects another important active alert if the current primary alert is closed.
     candidates = [
         linked_alert
         for linked_alert in _linked_alerts(incident)
@@ -150,6 +156,7 @@ def _select_replacement_primary_alert(
 
 
 def _get_alert_for_workflow(session: Session, alert_id: UUID):
+    # Shared helper used before performing alert workflow actions.
     alert = AlertsRepository(session).get_alert_detail(alert_id)
     if alert is None:
         raise HTTPException(
@@ -168,6 +175,7 @@ def _create_audit_log(
     action: str,
     details: dict,
 ) -> None:
+    # Creates an audit log entry for tracking analyst actions.
     AuditLogsRepository(session).create(
         AuditLog(
             actor=actor,
@@ -184,6 +192,7 @@ def acknowledge_alert(
     alert_id: UUID,
     actor: User,
 ) -> AlertLifecycleResponse:
+    # Moves an alert into investigation state.
     alert = _get_alert_for_workflow(session, alert_id)
     previous_status = alert.status.value
 
@@ -228,6 +237,7 @@ def close_alert(
     alert_id: UUID,
     actor: User,
 ) -> AlertLifecycleResponse:
+    # Closes an alert and updates the linked incident if needed.
     alert = _get_alert_for_workflow(session, alert_id)
     incident = alert.incident
     previous_status = alert.status.value
@@ -252,6 +262,7 @@ def close_alert(
         },
     )
 
+    # If the closed alert was the primary alert, another linked alert becomes primary.
     if incident and incident.primary_alert_id == alert.id:
         replacement_primary = _select_replacement_primary_alert(
             incident,
@@ -272,6 +283,7 @@ def close_alert(
                 },
             )
 
+    # Automatically resolves the incident when all linked alerts are closed.
     if incident and incident.status not in {
         IncidentStatus.RESOLVED,
         IncidentStatus.FALSE_POSITIVE,
@@ -317,6 +329,7 @@ def link_alert_incident(
     payload: AlertLinkIncidentRequest,
     actor: User,
 ) -> AlertLinkIncidentResponse:
+    # Links an alert to either an existing incident or a newly created incident.
     alert = _get_alert_for_workflow(session, alert_id)
     if alert.status == AlertStatus.RESOLVED:
         raise HTTPException(
@@ -337,6 +350,7 @@ def link_alert_incident(
     incidents_repository = IncidentsRepository(session)
 
     if payload.incident_id is not None:
+        # Existing incidents must still be active before new alerts can be linked.
         incident = incidents_repository.get_incident_detail(payload.incident_id)
         if incident is None:
             raise HTTPException(
@@ -351,6 +365,7 @@ def link_alert_incident(
         link_mode = "existing"
         creation_message = "Alert linked into an existing incident."
     else:
+        # Creates a new incident directly from the alert information.
         incident = incidents_repository.create(
             Incident(
                 assigned_user=actor,
@@ -383,6 +398,8 @@ def link_alert_incident(
     alert.incident = incident
     if incident.primary_alert is None:
         incident.primary_alert = alert
+
+    # Recalculates incident priority and checks any automation policies.
     refresh_incident_priority(incident)
     evaluate_incident_policies(session, incident)
 
@@ -431,6 +448,7 @@ def create_alert_note(
     content: str,
     actor: User,
 ) -> AnalystNoteCreateResponse:
+    # Adds an analyst note to an alert investigation.
     alert = _get_alert_for_workflow(session, alert_id)
     normalized_content = content.strip()
     if not normalized_content:

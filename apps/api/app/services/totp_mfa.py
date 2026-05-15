@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# Service logic for setting up and validating TOTP-based multi-factor authentication.
+
 import hashlib
 from datetime import timedelta
 from uuid import UUID
@@ -25,10 +27,12 @@ from app.services.serializers import to_user_response
 TOTP_ISSUER = "AegisCore"
 
 
+# Creates the TOTP object used to verify authenticator app codes.
 def totp_for_secret(secret: str) -> pyotp.TOTP:
     return pyotp.TOTP(secret, digits=6, interval=30, digest=hashlib.sha1)
 
 
+# Starts MFA setup by generating a new secret and provisioning URI.
 def issue_totp_setup(session: Session, user: User) -> MfaSetupResponse:
     if user.mfa_enabled:
         raise HTTPException(
@@ -36,6 +40,7 @@ def issue_totp_setup(session: Session, user: User) -> MfaSetupResponse:
             detail="MFA is already enabled. Disable it before generating a new secret.",
         )
 
+    # A new secret is generated and later scanned through the authenticator app.
     secret = pyotp.random_base32()
     user.mfa_secret = secret
 
@@ -57,6 +62,7 @@ def issue_totp_setup(session: Session, user: User) -> MfaSetupResponse:
     return MfaSetupResponse(secret=secret, provisioning_uri=provisioning_uri)
 
 
+# Confirms MFA setup after checking the user's authenticator code.
 def confirm_totp_setup(session: Session, user: User, code: str) -> None:
     if not user.mfa_secret:
         raise HTTPException(
@@ -70,12 +76,14 @@ def confirm_totp_setup(session: Session, user: User, code: str) -> None:
         )
 
     totp = totp_for_secret(user.mfa_secret)
+    # valid_window=1 allows a small time difference between server and phone clock.
     if not totp.verify(code.strip(), valid_window=1):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authenticator code",
         )
 
+    # MFA is only enabled after the first code is verified successfully.
     user.mfa_enabled = True
     AuditLogsRepository(session).create(
         AuditLog(
@@ -89,6 +97,7 @@ def confirm_totp_setup(session: Session, user: User, code: str) -> None:
     session.commit()
 
 
+# Disables MFA and clears the saved secret for the current user.
 def disable_totp_for_user(session: Session, user: User) -> None:
     user.mfa_enabled = False
     user.mfa_secret = None
@@ -104,6 +113,7 @@ def disable_totp_for_user(session: Session, user: User) -> None:
     session.commit()
 
 
+# Validates the MFA challenge and returns the final login token.
 def validate_totp_and_issue_token(session: Session, mfa_token: str, code: str) -> TokenResponse:
     settings = get_settings()
     try:

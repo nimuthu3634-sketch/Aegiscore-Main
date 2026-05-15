@@ -1,4 +1,6 @@
 """Business logic for user management operations."""
+# Service logic for creating and auditing SOC user accounts.
+
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -13,6 +15,7 @@ from app.schemas.users import UserCreateRequest, UserCreateResponse
 from app.services.serializers import to_user_response
 
 
+# Creates a new user after checking username uniqueness and role validity.
 def create_user(
     db: Session,
     payload: UserCreateRequest,
@@ -28,6 +31,7 @@ def create_user(
     users_repo = UsersRepository(db)
 
     # ── duplicate guard ──────────────────────────────────────────────
+    # Prevents duplicate usernames in the system.
     existing = users_repo.get_by_username(payload.username)
     if existing is not None:
         raise HTTPException(
@@ -37,6 +41,7 @@ def create_user(
 
     # ── resolve role ─────────────────────────────────────────────────
     roles_repo = RolesRepository(db)
+    # Finds the role selected by the admin before creating the account.
     role = roles_repo.get_by_name(payload.role)
     if role is None:
         raise HTTPException(
@@ -56,6 +61,7 @@ def create_user(
     )
 
     # ── audit trail ──────────────────────────────────────────────────
+    # Records the account creation for traceability.
     AuditLogsRepository(db).create(
         AuditLog(
             actor=actor,

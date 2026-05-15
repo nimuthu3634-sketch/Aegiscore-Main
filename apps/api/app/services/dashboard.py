@@ -5,7 +5,10 @@ from app.schemas.dashboard import DashboardSummaryResponse, DetectionCountRespon
 
 
 def get_dashboard_summary(session: Session) -> DashboardSummaryResponse:
+    # Gets the main dashboard metrics from the repository layer.
     metrics = DashboardRepository(session).get_metrics()
+
+    # Converts database metric values into the response format expected by the frontend.
     return DashboardSummaryResponse(
         asset_count=metrics.asset_count,
         raw_alert_count=metrics.raw_alert_count,

@@ -1,3 +1,5 @@
+# Converts database models into API response objects used by the frontend.
+
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -65,6 +67,7 @@ from app.services.workflows import (
 )
 
 
+# Formats source names such as Wazuh and Suricata for display.
 def _titleize_source(source: str) -> str:
     labels = {
         "wazuh": "Wazuh",
@@ -73,6 +76,7 @@ def _titleize_source(source: str) -> str:
     return labels.get(source.lower(), source.title())
 
 
+# Converts numeric severity into the dashboard severity label.
 def _severity_label_from_score(severity: int) -> AlertSeverityLabel:
     if severity >= 9:
         return AlertSeverityLabel.CRITICAL
@@ -83,6 +87,7 @@ def _severity_label_from_score(severity: int) -> AlertSeverityLabel:
     return AlertSeverityLabel.LOW
 
 
+# Estimates endpoint status based on the last time the asset was seen.
 def _asset_agent_status_from_timestamp(updated_at: datetime) -> AssetAgentStatusLabel:
     now = datetime.now(UTC)
     age = now - updated_at.astimezone(UTC)
@@ -93,6 +98,7 @@ def _asset_agent_status_from_timestamp(updated_at: datetime) -> AssetAgentStatus
     return AssetAgentStatusLabel.OFFLINE
 
 
+# Infers a simple asset environment label from the hostname.
 def _asset_environment_from_hostname(hostname: str) -> AssetEnvironmentLabel:
     lowered = hostname.lower()
     if "branch" in lowered or "office" in lowered:
@@ -102,6 +108,7 @@ def _asset_environment_from_hostname(hostname: str) -> AssetEnvironmentLabel:
     return AssetEnvironmentLabel.PRODUCTION
 
 
+# Converts stored response status into the label used by the UI.
 def _response_execution_status_label(
     response_action: ResponseAction,
 ) -> ResponseExecutionStatusLabel:
@@ -114,6 +121,7 @@ def _response_execution_status_label(
     return ResponseExecutionStatusLabel.PENDING
 
 
+# Converts stored response mode into the label shown in the frontend.
 def _response_mode_label(response_action: ResponseAction) -> ResponseModeLabel | None:
     mode = _extract_response_mode(response_action)
     if mode in {"dry-run", "dry_run"}:
@@ -123,6 +131,7 @@ def _response_mode_label(response_action: ResponseAction) -> ResponseModeLabel |
     return ResponseModeLabel.LIVE
 
 
+# Converts alert and incident state into a readable alert status label.
 def _alert_status_label(alert: NormalizedAlert) -> str:
     if alert.status.value == "resolved":
         return "resolved"
@@ -150,10 +159,12 @@ def _alert_status_label(alert: NormalizedAlert) -> str:
     return "new"
 
 
+# Converts incident status into the display label used on incident pages.
 def _incident_state_label(incident: Incident) -> str:
     return incident.status.value
 
 
+# Decides the priority label from risk score data or fallback severity.
 def _priority_label_from_risk(
     risk_score: RiskScore | None,
     severity: int,
@@ -167,6 +178,7 @@ def _priority_label_from_risk(
     return AlertSeverityLabel(priority_from_score(risk_score.score).value)
 
 
+# Reads the first available value from possible payload key names.
 def _pick_payload_value(
     payloads: list[dict[str, Any] | None],
     *keys: str,
@@ -181,6 +193,7 @@ def _pick_payload_value(
     return None
 
 
+# Safely converts values from payloads into integers when possible.
 def _coerce_int(value: Any) -> int | None:
     if value in (None, ""):
         return None
@@ -191,22 +204,27 @@ def _coerce_int(value: Any) -> int | None:
     return None
 
 
+# Extracts source IP from normalized payload data.
 def _extract_source_ip(alert: NormalizedAlert) -> str | None:
     return extract_source_ip(alert)
 
 
+# Extracts destination IP from normalized payload data.
 def _extract_destination_ip(alert: NormalizedAlert) -> str | None:
     return extract_destination_ip(alert)
 
 
+# Extracts destination port from normalized payload data.
 def _extract_destination_port(alert: NormalizedAlert) -> int | None:
     return extract_destination_port(alert)
 
 
+# Extracts username information from normalized payload data.
 def _extract_username(alert: NormalizedAlert) -> str | None:
     return extract_username(alert)
 
 
+# Extracts rule/provider details from the original alert payload.
 def _extract_source_rule(raw_alert: RawAlert) -> AlertSourceRuleResponse | None:
     raw_payload = raw_alert.raw_payload or {}
     nested_rule = raw_payload.get("rule")
@@ -241,6 +259,7 @@ def _extract_source_rule(raw_alert: RawAlert) -> AlertSourceRuleResponse | None:
     )
 
 
+# Gets the main target value of a response action.
 def _extract_response_target(response_action: ResponseAction) -> str | None:
     if response_action.target_value:
         return response_action.target_value
@@ -255,6 +274,7 @@ def _extract_response_target(response_action: ResponseAction) -> str | None:
     )
 
 
+# Gets the response action mode in a frontend-friendly format.
 def _extract_response_mode(response_action: ResponseAction) -> str | None:
     if response_action.mode == ResponseMode.DRY_RUN:
         return ResponseMode.DRY_RUN.value
@@ -265,6 +285,7 @@ def _extract_response_mode(response_action: ResponseAction) -> str | None:
     return str(mode) if mode is not None else None
 
 
+# Creates a short result message for response action tables.
 def _extract_response_summary(response_action: ResponseAction) -> str | None:
     if response_action.result_summary:
         return response_action.result_summary
@@ -278,14 +299,17 @@ def _extract_response_summary(response_action: ResponseAction) -> str | None:
     return str(summary) if summary is not None else None
 
 
+# Makes audit log action names easier to read in timelines.
 def _format_audit_title(action: str) -> str:
     return action.replace(".", " ").replace("_", " ").title()
 
 
+# Converts analyst note records into response objects.
 def _build_analyst_notes(notes: list[AnalystNote]) -> list[AnalystNoteResponse]:
     return [to_analyst_note_response(note) for note in notes]
 
 
+# Builds simple explanation factors for an alert risk score.
 def _build_alert_score_factors(alert: NormalizedAlert) -> list[str]:
     factors = [
         f"Detection type: {alert.detection_type.value}",
@@ -302,6 +326,7 @@ def _build_alert_score_factors(alert: NormalizedAlert) -> list[str]:
     return factors[:4]
 
 
+# Returns the alert list linked to an incident.
 def _incident_alerts(incident: Incident) -> list[NormalizedAlert]:
     return sorted(
         incident.alerts,
@@ -310,6 +335,7 @@ def _incident_alerts(incident: Incident) -> list[NormalizedAlert]:
     )
 
 
+# Chooses the primary alert for an incident when available.
 def _incident_primary_alert(incident: Incident) -> NormalizedAlert | None:
     if incident.primary_alert is not None:
         return incident.primary_alert
@@ -325,6 +351,7 @@ def _incident_primary_alert(incident: Incident) -> NormalizedAlert | None:
     )[0]
 
 
+# Removes duplicate assets from an incident while preserving order.
 def _unique_assets_for_incident(incident: Incident) -> list[Asset]:
     seen_asset_ids: set[str] = set()
     assets: list[Asset] = []
@@ -339,6 +366,7 @@ def _unique_assets_for_incident(incident: Incident) -> list[Asset]:
     return assets
 
 
+# Builds explanation factors for the incident priority section.
 def _build_incident_priority_factors(incident: Incident) -> list[str]:
     factors = [f"Incident priority: {incident.priority.value}"]
     primary_alert = _incident_primary_alert(incident)
@@ -363,6 +391,7 @@ def _build_incident_priority_factors(incident: Incident) -> list[str]:
     return factors[:4]
 
 
+# Shows which workflow actions are allowed for the incident state.
 def _state_transition_capabilities(
     incident: Incident,
 ) -> IncidentStateTransitionCapabilitiesResponse:
@@ -373,6 +402,7 @@ def _state_transition_capabilities(
     )
 
 
+# Converts a role database object into an API response.
 def to_role_response(role: Role) -> RoleResponse:
     return RoleResponse(
         id=role.id,
@@ -380,6 +410,7 @@ def to_role_response(role: Role) -> RoleResponse:
     )
 
 
+# Converts a full user object into an API response.
 def to_user_response(user: User) -> UserResponse:
     return UserResponse(
         id=user.id,
@@ -393,6 +424,7 @@ def to_user_response(user: User) -> UserResponse:
     )
 
 
+# Converts a user object into a shorter user summary response.
 def to_user_brief_response(user: User) -> UserBriefResponse:
     return UserBriefResponse(
         id=user.id,
@@ -402,6 +434,7 @@ def to_user_brief_response(user: User) -> UserBriefResponse:
     )
 
 
+# Converts an asset model into the asset summary response used by the UI.
 def to_asset_summary_response(
     asset: Asset,
     *,
@@ -424,6 +457,7 @@ def to_asset_summary_response(
     )
 
 
+# Converts the original raw alert into a summary response.
 def to_raw_alert_summary_response(raw_alert: RawAlert) -> RawAlertSummaryResponse:
     return RawAlertSummaryResponse(
         id=raw_alert.id,
@@ -436,6 +470,7 @@ def to_raw_alert_summary_response(raw_alert: RawAlert) -> RawAlertSummaryRespons
     )
 
 
+# Converts risk score data into the API response model.
 def to_risk_score_response(risk_score: RiskScore) -> RiskScoreResponse:
     return RiskScoreResponse(
         id=risk_score.id,
@@ -452,6 +487,7 @@ def to_risk_score_response(risk_score: RiskScore) -> RiskScoreResponse:
     )
 
 
+# Creates a short incident reference used inside alert responses.
 def to_incident_reference_response(incident: Incident) -> IncidentReferenceResponse:
     return IncidentReferenceResponse(
         id=incident.id,
@@ -463,6 +499,7 @@ def to_incident_reference_response(incident: Incident) -> IncidentReferenceRespo
     )
 
 
+# Converts a normalized alert into the alert row used in lists.
 def to_alert_summary_response(alert: NormalizedAlert) -> AlertSummaryResponse:
     return AlertSummaryResponse(
         id=alert.id,
@@ -491,6 +528,7 @@ def to_alert_summary_response(alert: NormalizedAlert) -> AlertSummaryResponse:
     )
 
 
+# Converts an incident into the incident row used in lists.
 def to_incident_summary_response(incident: Incident) -> IncidentSummaryResponse:
     primary_alert = _incident_primary_alert(incident)
     if primary_alert is None:
@@ -523,6 +561,7 @@ def to_incident_summary_response(incident: Incident) -> IncidentSummaryResponse:
     )
 
 
+# Gets notification records connected to a response action.
 def _notification_events_for_response_action(
     response_action: ResponseAction,
     *,
@@ -535,6 +574,7 @@ def _notification_events_for_response_action(
     return items
 
 
+# Converts a response action into a compact incident response reference.
 def to_response_action_reference_response(
     response_action: ResponseAction,
 ) -> ResponseActionReferenceResponse:
@@ -557,6 +597,7 @@ def to_response_action_reference_response(
     )
 
 
+# Converts a response action into the row used on the responses page.
 def to_response_action_summary_response(
     response_action: ResponseAction,
 ) -> ResponseActionSummaryResponse:
@@ -589,6 +630,7 @@ def to_response_action_summary_response(
     )
 
 
+# Converts audit log records into timeline-friendly response data.
 def to_audit_log_response(audit_log: AuditLog) -> AuditLogResponse:
     return AuditLogResponse(
         id=audit_log.id,
@@ -601,6 +643,7 @@ def to_audit_log_response(audit_log: AuditLog) -> AuditLogResponse:
     )
 
 
+# Converts analyst notes into API response objects.
 def to_analyst_note_response(note: AnalystNote) -> AnalystNoteResponse:
     return AnalystNoteResponse(
         id=str(note.id),
@@ -611,6 +654,7 @@ def to_analyst_note_response(note: AnalystNote) -> AnalystNoteResponse:
     )
 
 
+# Converts a response action into the detailed response object.
 def to_response_action_detail_response(
     response_action: ResponseAction,
 ) -> ResponseActionDetailResponse:
@@ -638,6 +682,7 @@ def to_response_action_detail_response(
     )
 
 
+# Converts audit logs into activity timeline entries.
 def to_activity_entry_response(audit_log: AuditLog) -> ActivityEntryResponse:
     description = (
         _pick_payload_value([audit_log.details], "summary", "result", "message", "note", "content")
@@ -655,6 +700,7 @@ def to_activity_entry_response(audit_log: AuditLog) -> ActivityEntryResponse:
     )
 
 
+# Converts notification records into API response objects.
 def to_notification_event_response(
     event: NotificationEvent,
 ) -> NotificationEventResponse:
@@ -673,6 +719,7 @@ def to_notification_event_response(
     )
 
 
+# Reads model probability values from the saved scoring explanation.
 def _class_probabilities_from_explanation(raw: object) -> dict[str, float] | None:
     if not isinstance(raw, dict):
         return None
@@ -687,6 +734,7 @@ def _class_probabilities_from_explanation(raw: object) -> dict[str, float] | Non
     return out or None
 
 
+# Reads the model priority tier from the saved explanation data.
 def _model_priority_tier_from_explanation(explanation: dict[str, Any]) -> str | None:
     tier = explanation.get("model_priority_tier") or explanation.get("predicted_class")
     if tier is None:
@@ -695,6 +743,7 @@ def _model_priority_tier_from_explanation(explanation: dict[str, Any]) -> str | 
     return text or None
 
 
+# Builds the explainable scoring section for the alert detail page.
 def _build_alert_score_explanation(
     alert: NormalizedAlert,
     priority_label: AlertSeverityLabel | None,
@@ -731,6 +780,7 @@ def _build_alert_score_explanation(
     )
 
 
+# Collects response actions connected to the alert or its incident.
 def _alert_related_responses(alert: NormalizedAlert) -> list[ResponseAction]:
     response_by_id: dict[str, ResponseAction] = {}
     for action in alert.response_actions:
@@ -745,6 +795,7 @@ def _alert_related_responses(alert: NormalizedAlert) -> list[ResponseAction]:
     )
 
 
+# Converts an alert and related investigation data into the full detail response.
 def to_alert_detail_response(
     alert: NormalizedAlert,
     audit_logs: list[AuditLog],
@@ -810,6 +861,7 @@ def to_alert_detail_response(
     )
 
 
+# Converts a linked alert into the incident detail alert table format.
 def to_incident_linked_alert_response(
     alert: NormalizedAlert,
 ) -> IncidentLinkedAlertResponse:
@@ -830,6 +882,7 @@ def to_incident_linked_alert_response(
     )
 
 
+# Converts an incident and all related evidence into the full detail response.
 def to_incident_detail_response(
     incident: Incident,
     audit_logs: list[AuditLog],

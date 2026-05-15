@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# Development seed data used to prepare a demo AegisCore environment.
+
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
@@ -39,11 +41,13 @@ from app.schemas.listing import AssetListQuery
 from app.services.scoring.rollup import refresh_incident_priority
 
 
+# Inserts default roles, users, assets, alerts, incidents, and policies for the demo system.
 def seed_database(session: Session) -> None:
     settings = get_settings()
     roles_repository = RolesRepository(session)
     users_repository = UsersRepository(session)
 
+    # Creates default roles if they are not already available.
     admin_role = roles_repository.get_by_name(RoleName.ADMIN)
     if admin_role is None:
         admin_role = roles_repository.create(
@@ -62,6 +66,7 @@ def seed_database(session: Session) -> None:
             )
         )
 
+    # Creates default admin and analyst users for development/testing.
     admin_user = users_repository.get_by_username(settings.dev_seed_admin_username)
     if admin_user is None:
         admin_user = users_repository.create(

@@ -17,6 +17,7 @@ from app.schemas.health import (
 
 
 def get_database_status() -> str:
+    # Checks whether the API can connect to the database.
     try:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
@@ -26,6 +27,7 @@ def get_database_status() -> str:
 
 
 def get_health_payload() -> HealthResponse:
+    # Builds the basic health response for the API.
     database_status = get_database_status()
     application_status = "ok" if database_status == "up" else "degraded"
 
@@ -37,6 +39,7 @@ def get_health_payload() -> HealthResponse:
 
 
 def _integration_dependency_status(connector: str, enabled: bool) -> DependencyStatusResponse:
+    # Returns the current status of an external connector like Wazuh or Suricata.
     if not enabled:
         return DependencyStatusResponse(
             enabled=False,
@@ -54,6 +57,7 @@ def _integration_dependency_status(connector: str, enabled: bool) -> DependencyS
             detail="Connector is enabled but has not recorded status yet.",
         )
 
+    # Adds useful detail about the last connector success or error.
     detail = None
     if state.last_error_message:
         detail = state.last_error_message
@@ -68,8 +72,10 @@ def _integration_dependency_status(connector: str, enabled: bool) -> DependencyS
 
 
 def get_readiness_payload() -> ReadinessResponse:
+    # Readiness checks database access and external connector states.
     settings = get_settings()
     database_status = get_database_status()
+
     dependencies = {
         "wazuh_connector": _integration_dependency_status(
             WAZUH_CONNECTOR_KEY,
@@ -80,11 +86,12 @@ def get_readiness_payload() -> ReadinessResponse:
             settings.suricata_connector_enabled,
         ),
     }
+
     overall_status = "ready" if database_status == "up" else "not_ready"
+
     return ReadinessResponse(
         status=overall_status,
         service="aegiscore-api",
         database=database_status,
         dependencies=dependencies,
     )
-

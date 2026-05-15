@@ -17,6 +17,7 @@ def authenticate_user(
     username: str,
     password: str,
 ) -> TokenResponse | LoginMfaRequiredResponse:
+    # Checks whether the username exists and the password is correct.
     users_repository = UsersRepository(session)
     user = users_repository.get_by_username(username)
 
@@ -26,11 +27,13 @@ def authenticate_user(
             detail="Invalid username or password",
         )
 
+    # If MFA is enabled, the user must verify the MFA code before receiving the access token.
     if user.mfa_enabled:
         return LoginMfaRequiredResponse(
             mfa_token=create_mfa_challenge_token(str(user.id)),
         )
 
+    # Updates login time and stores an audit log for tracking user activity.
     users_repository.touch_last_login(user)
     AuditLogsRepository(session).create(
         AuditLog(
@@ -43,6 +46,7 @@ def authenticate_user(
     )
     session.commit()
 
+    # Creates the JWT access token used by the frontend for authenticated requests.
     settings = get_settings()
     expires_delta = timedelta(minutes=settings.access_token_expire_minutes)
 
@@ -52,4 +56,3 @@ def authenticate_user(
         expires_in=settings.access_token_expire_minutes * 60,
         user=to_user_response(user),
     )
-

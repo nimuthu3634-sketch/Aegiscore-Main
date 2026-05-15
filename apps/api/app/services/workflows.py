@@ -1,8 +1,11 @@
+# Defines the allowed incident workflow transitions used by the SOC dashboard.
+
 from fastapi import HTTPException, status
 
 from app.models.enums import IncidentStatus
 from app.schemas.workflows import IncidentTransitionAction
 
+# Maps each workflow action to the incident state it should move to.
 INCIDENT_ACTION_TARGETS: dict[IncidentTransitionAction, IncidentStatus] = {
     IncidentTransitionAction.TRIAGE: IncidentStatus.TRIAGED,
     IncidentTransitionAction.INVESTIGATE: IncidentStatus.INVESTIGATING,
@@ -11,6 +14,7 @@ INCIDENT_ACTION_TARGETS: dict[IncidentTransitionAction, IncidentStatus] = {
     IncidentTransitionAction.MARK_FALSE_POSITIVE: IncidentStatus.FALSE_POSITIVE,
 }
 
+# Defines which actions are allowed from each incident state.
 INCIDENT_TRANSITION_RULES: dict[
     IncidentStatus, tuple[IncidentTransitionAction, ...]
 ] = {
@@ -40,12 +44,14 @@ INCIDENT_TRANSITION_RULES: dict[
 }
 
 
+# Returns workflow action names allowed for the current incident state.
 def get_available_incident_actions(
     current_state: IncidentStatus,
 ) -> list[str]:
     return [action.value for action in INCIDENT_TRANSITION_RULES[current_state]]
 
 
+# Returns the target states that can be reached from the current state.
 def get_allowed_incident_target_states(
     current_state: IncidentStatus,
 ) -> list[IncidentStatus]:
@@ -55,6 +61,7 @@ def get_allowed_incident_target_states(
     ]
 
 
+# Validates an incident workflow action and returns the next state.
 def resolve_incident_transition(
     current_state: IncidentStatus,
     action: IncidentTransitionAction,

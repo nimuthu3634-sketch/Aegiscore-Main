@@ -27,6 +27,7 @@ from app.services.serializers import (
 
 
 def _default_asset_criticality() -> AssetCriticality:
+    # Uses the configured default asset criticality, with medium as a safe fallback.
     settings = get_settings()
     try:
         return AssetCriticality(settings.ingestion_default_asset_criticality.lower())
@@ -35,6 +36,7 @@ def _default_asset_criticality() -> AssetCriticality:
 
 
 def _fallback_hostname(ip_address: str) -> str:
+    # Creates a simple hostname when the incoming event only has an IP address.
     normalized = ip_address.replace(".", "-").replace(":", "-").lower()
     return f"detected-{normalized}"
 
@@ -48,6 +50,7 @@ def _log_audit(
     action: str,
     details: dict[str, Any],
 ) -> None:
+    # Adds an audit log so ingestion actions can be traced later.
     AuditLogsRepository(session).create(
         AuditLog(
             actor=actor,
@@ -63,8 +66,10 @@ def _resolve_or_create_asset(
     session: Session,
     parsed_event: ParsedSecurityEvent,
 ) -> tuple[Asset | None, list[str]]:
+    # Tries to match the event to an existing asset, or creates one if allowed.
     warnings: list[str] = []
     repository = AssetsRepository(session)
+
     existing_asset = repository.get_by_hostname_or_ip(
         hostname=parsed_event.asset_hostname,
         ip_address=parsed_event.asset_ip,
@@ -80,6 +85,7 @@ def _resolve_or_create_asset(
             )
         return None, warnings
 
+    # Avoids creating incomplete asset records when there is no IP address.
     if parsed_event.asset_ip is None:
         if parsed_event.asset_hostname:
             warnings.append(
@@ -96,9 +102,11 @@ def _resolve_or_create_asset(
             criticality=parsed_event.asset_criticality or _default_asset_criticality(),
         )
     )
+
     try:
         session.flush()
     except IntegrityError:
+        # Handles cases where another process created the same asset at the same time.
         session.rollback()
         existing_after_race = repository.get_by_hostname_or_ip(
             hostname=parsed_event.asset_hostname,
@@ -119,6 +127,7 @@ def _resolve_or_create_asset(
 
 
 def _related_response_count(alert: NormalizedAlert) -> int:
+    # Counts unique response actions connected to the alert and its incident.
     response_ids = {str(action.id) for action in alert.response_actions}
     if alert.incident is not None:
         response_ids.update(str(action.id) for action in alert.incident.response_actions)
@@ -133,6 +142,7 @@ def _to_result_response(
     status_label: str,
     warnings: list[str],
 ) -> IngestionResultResponse:
+    # Converts the final ingestion result into the API response format.
     return IngestionResultResponse(
         source=source,
         external_id=external_id,
@@ -154,6 +164,7 @@ def _handle_parse_failure(
     error: IngestionParseError,
     actor: User | None,
 ) -> None:
+    # Stores failed ingestion attempts so they can be reviewed or retried later.
     failure = IngestionFailuresRepository(session).upsert_failure(
         source=source,
         external_id=error.external_id,
@@ -162,6 +173,7 @@ def _handle_parse_failure(
         error_message=error.message,
         raw_payload=payload,
     )
+
     _log_audit(
         session,
         actor=actor,
@@ -188,6 +200,7 @@ def _ingest_event(
     source: str,
     actor: User | None = None,
 ) -> IngestionResultResponse:
+    # Main shared ingestion flow used by both Wazuh and Suricata events.
     try:
         parsed_event = parser(payload)
     except IngestionParseError as exc:
@@ -204,6 +217,8 @@ def _ingest_event(
         ) from exc
 
     alerts_repository = AlertsRepository(session)
+
+    # Prevents duplicate source events from creating duplicate alerts.
     existing_raw_alert = alerts_repository.get_raw_alert_by_source_external_id(
         source=parsed_event.source,
         external_id=parsed_event.external_id,
@@ -222,6 +237,7 @@ def _ingest_event(
             },
         )
         session.commit()
+
         return _to_result_response(
             alert=existing_raw_alert.normalized_alert,
             source=parsed_event.source,
@@ -231,6 +247,8 @@ def _ingest_event(
         )
 
     asset, asset_warnings = _resolve_or_create_asset(session, parsed_event)
+
+    # Saves both the original raw alert and the cleaned normalized alert.
     raw_alert = RawAlert(
         asset=asset,
         source=parsed_event.source,
@@ -251,14 +269,18 @@ def _ingest_event(
         normalized_payload=parsed_event.normalized_payload,
         created_at=parsed_event.observed_at,
     )
+
     alerts_repository.create_raw_and_normalized(raw_alert, normalized_alert)
     session.flush()
+
+    # If this event previously failed ingestion, mark that failure as resolved.
     IngestionFailuresRepository(session).resolve_failure(
         source=parsed_event.source,
         external_id=parsed_event.external_id,
     )
 
     combined_warnings = [*parsed_event.warnings, *asset_warnings]
+
     _log_audit(
         session,
         actor=actor,
@@ -290,6 +312,7 @@ def ingest_wazuh_event(
     *,
     actor: User | None = None,
 ) -> IngestionResultResponse:
+    # Public function used when ingesting Wazuh alert events.
     return _ingest_event(
         session,
         payload=payload,
@@ -305,6 +328,7 @@ def ingest_suricata_event(
     *,
     actor: User | None = None,
 ) -> IngestionResultResponse:
+    # Public function used when ingesting Suricata IDS events.
     return _ingest_event(
         session,
         payload=payload,

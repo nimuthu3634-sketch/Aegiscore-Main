@@ -10,11 +10,13 @@ from typing import Any, Iterable
 from app.models.enums import AssetCriticality, DetectionType
 from app.services.ingestion.types import IngestionParseError, ParsedSecurityEvent
 
+# Maps supported detection names to the enum values used by AegisCore.
 SUPPORTED_DETECTION_VALUES = {
     detection.value: detection for detection in DetectionType
 }
 
 
+# Safely reads nested values from a dictionary payload.
 def _dig(payload: dict[str, Any], *path: str) -> Any | None:
     current: Any = payload
     for key in path:
@@ -24,6 +26,7 @@ def _dig(payload: dict[str, Any], *path: str) -> Any | None:
     return current
 
 
+# Returns the first available value from multiple possible payload paths.
 def _pick_first(payload: dict[str, Any], *paths: tuple[str, ...]) -> Any | None:
     for path in paths:
         value = _dig(payload, *path)
@@ -32,6 +35,7 @@ def _pick_first(payload: dict[str, Any], *paths: tuple[str, ...]) -> Any | None:
     return None
 
 
+# Collects string values from nested dicts/lists so detections can be inferred from text.
 def _flatten_strings(value: Any) -> Iterable[str]:
     if isinstance(value, str):
         yield value
@@ -45,12 +49,14 @@ def _flatten_strings(value: Any) -> Iterable[str]:
             yield from _flatten_strings(item)
 
 
+# Creates a stable ID when the source event does not provide one.
 def _payload_fingerprint(source: str, payload: dict[str, Any]) -> str:
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     digest = hashlib.sha256(encoded).hexdigest()
     return f"{source}-{digest}"
 
 
+# Converts text hints like brute-force or port scan into supported detection types.
 def _normalize_detection_hint(value: Any) -> DetectionType | None:
     if not isinstance(value, str):
         return None
@@ -58,6 +64,7 @@ def _normalize_detection_hint(value: Any) -> DetectionType | None:
     return SUPPORTED_DETECTION_VALUES.get(normalized)
 
 
+# Converts common numeric payload values into integers.
 def _coerce_int(value: Any) -> int | None:
     if value in (None, ""):
         return None
@@ -74,6 +81,7 @@ def _coerce_int(value: Any) -> int | None:
     return None
 
 
+# Converts timestamps from the source tools into UTC datetime values.
 def _coerce_datetime(value: Any) -> datetime | None:
     if value is None:
         return None
@@ -102,6 +110,7 @@ def _coerce_datetime(value: Any) -> datetime | None:
     return parsed.astimezone(UTC)
 
 
+# Keeps severity inside the 1-10 range used by the dashboard.
 def _clamp_severity(value: Any, *, default: int) -> int:
     normalized = _coerce_int(value)
     if normalized is None:
@@ -109,6 +118,7 @@ def _clamp_severity(value: Any, *, default: int) -> int:
     return max(1, min(10, normalized))
 
 
+# Converts Suricata severity values to the internal AegisCore severity scale.
 def _suricata_severity_to_internal(value: Any) -> int:
     severity = _coerce_int(value)
     mapping = {
@@ -122,6 +132,7 @@ def _suricata_severity_to_internal(value: Any) -> int:
     return mapping.get(severity, _clamp_severity(severity, default=5))
 
 
+# Tries to identify the supported detection type by checking useful words in the payload.
 def _infer_detection_from_text(*values: Any) -> DetectionType | None:
     combined = " ".join(
         text.lower()
@@ -195,6 +206,7 @@ def _infer_detection_from_text(*values: Any) -> DetectionType | None:
     return None
 
 
+# Extracts the event ID from the payload or generates one if it is missing.
 def _extract_external_id(source: str, payload: dict[str, Any]) -> tuple[str, bool]:
     external_id = _pick_first(
         payload,
@@ -210,6 +222,7 @@ def _extract_external_id(source: str, payload: dict[str, Any]) -> tuple[str, boo
     return str(external_id), False
 
 
+# Gives each detection type a readable alert title.
 def _title_for_detection(detection_type: DetectionType) -> str:
     return {
         DetectionType.BRUTE_FORCE: "Brute-force activity detected",
@@ -219,6 +232,7 @@ def _title_for_detection(detection_type: DetectionType) -> str:
     }[detection_type]
 
 
+# Builds a simple human-readable alert description for the analyst.
 def _description_for_detection(
     detection_type: DetectionType,
     *,
@@ -253,6 +267,7 @@ def _description_for_detection(
     )
 
 
+# Reads asset criticality from the payload when it is available.
 def _asset_criticality_from_payload(payload: dict[str, Any]) -> AssetCriticality | None:
     value = _pick_first(
         payload,
@@ -269,6 +284,7 @@ def _asset_criticality_from_payload(payload: dict[str, Any]) -> AssetCriticality
         return None
 
 
+# Parses a Wazuh event and converts it into the common AegisCore event format.
 def parse_wazuh_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
     if not isinstance(payload, dict):
         raise IngestionParseError(
@@ -284,6 +300,7 @@ def parse_wazuh_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
         _dig(payload, "syscheck") if isinstance(_dig(payload, "syscheck"), dict) else {}
     )
 
+    # Detection type can come directly from the payload or be inferred from rule text.
     detection_type = _normalize_detection_hint(
         _pick_first(payload, ("detection_type",), ("normalized", "detection_type"))
     ) or _infer_detection_from_text(
@@ -300,6 +317,7 @@ def parse_wazuh_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
             detection_hint=str(_pick_first(payload, ("event_type",), ("rule", "description")) or "unknown"),
         )
 
+    # Extracts the main network, user, rule, and asset fields from the Wazuh payload.
     source_ip = _pick_first(
         payload,
         ("data", "srcip"),
@@ -363,12 +381,15 @@ def parse_wazuh_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
         default=5,
     )
 
+    # Warnings let the API accept the event while still showing missing/derived fields.
+    # Warnings are returned when the event is usable but missing some context.
     warnings: list[str] = []
     if used_fingerprint:
         warnings.append("No source event ID was present; external_id was generated from a payload fingerprint.")
     if not asset_hostname and not asset_ip:
         warnings.append("No asset hostname or IP was provided; alert will be stored without asset linkage.")
 
+    # This is the cleaned payload stored with the normalized alert.
     normalized_payload = {
         "source_type": "wazuh",
         "asset_hostname": asset_hostname,
@@ -392,6 +413,7 @@ def parse_wazuh_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
     if detection_type == DetectionType.BRUTE_FORCE and failed_attempts is not None:
         normalized_payload["failed_logins_5m"] = failed_attempts
 
+    # Return one standard event object used by the ingestion service.
     return ParsedSecurityEvent(
         source="wazuh",
         external_id=external_id,
@@ -418,6 +440,7 @@ def parse_wazuh_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
     )
 
 
+# Parses a Suricata event and converts it into the common AegisCore event format.
 def parse_suricata_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
     if not isinstance(payload, dict):
         raise IngestionParseError(
@@ -428,6 +451,7 @@ def parse_suricata_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
 
     external_id, used_fingerprint = _extract_external_id("suricata", payload)
     alert_payload = _dig(payload, "alert") if isinstance(_dig(payload, "alert"), dict) else {}
+    # Detection type can be provided directly or inferred from the Suricata alert text.
     detection_type = _normalize_detection_hint(
         _pick_first(payload, ("detection_type",), ("normalized", "detection_type"))
     ) or _infer_detection_from_text(alert_payload, payload)
@@ -439,6 +463,7 @@ def parse_suricata_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
             detection_hint=str(_pick_first(payload, ("event_type",), ("alert", "signature")) or "unknown"),
         )
 
+    # Extracts the useful Suricata network and rule fields.
     source_ip = _pick_first(payload, ("src_ip",), ("source_ip",))
     destination_ip = _pick_first(payload, ("dest_ip",), ("destination_ip",))
     destination_port = _coerce_int(
@@ -458,6 +483,7 @@ def parse_suricata_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
     if destination_ip is None:
         warnings.append("No destination IP was provided; alert will be stored without asset linkage.")
 
+    # This is the cleaned Suricata data saved with the normalized alert.
     normalized_payload = {
         "source_type": "suricata",
         "source_ip": str(source_ip) if source_ip is not None else None,
@@ -474,6 +500,7 @@ def parse_suricata_event(payload: dict[str, Any]) -> ParsedSecurityEvent:
         "rule_level": severity,
     }
 
+    # Return one standard event object used by the ingestion service.
     return ParsedSecurityEvent(
         source="suricata",
         external_id=external_id,

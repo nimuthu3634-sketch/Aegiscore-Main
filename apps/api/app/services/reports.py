@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# Service logic for generating SOC report summaries and downloadable report exports.
+
 import csv
 import json
 from collections import Counter
@@ -42,13 +44,16 @@ from app.services.serializers import (
     to_response_action_summary_response,
 )
 
+# Alerts above this score are counted as high-risk in reports.
 HIGH_RISK_THRESHOLD = 70
+# Incident states that are treated as closed in report calculations.
 TERMINAL_INCIDENT_STATES = {
     IncidentStatus.RESOLVED,
     IncidentStatus.FALSE_POSITIVE,
 }
 
 
+# Prepares the report date range and validates invalid date inputs.
 def _normalize_window(
     *,
     date_from: date | None,
@@ -82,6 +87,7 @@ def _normalize_window(
     return start, min(end, now)
 
 
+# Converts a numeric alert severity into the label used in reports.
 def _severity_label(severity_score: int) -> AlertSeverityLabel:
     if severity_score >= 9:
         return AlertSeverityLabel.CRITICAL
@@ -92,6 +98,7 @@ def _severity_label(severity_score: int) -> AlertSeverityLabel:
     return AlertSeverityLabel.LOW
 
 
+# Converts stored response status values into export-friendly labels.
 def _response_execution_label(
     response_action: ResponseAction,
 ) -> ResponseExecutionStatusLabel:
@@ -104,10 +111,12 @@ def _response_execution_label(
     return ResponseExecutionStatusLabel.PENDING
 
 
+# Uses executed time when available, otherwise falls back to created time.
 def _execution_timestamp(response_action: ResponseAction) -> datetime:
     return response_action.executed_at or response_action.created_at
 
 
+# Collects response actions related to the alert and its linked incident.
 def _alert_related_responses(
     alerts: Iterable[NormalizedAlert],
     *,
@@ -130,6 +139,7 @@ def _alert_related_responses(
     return sorted(by_id.values(), key=_execution_timestamp, reverse=True)
 
 
+# Removes duplicate incidents while keeping their first appearance order.
 def _unique_incidents(alerts: Iterable[NormalizedAlert]):
     incidents: dict[str, Any] = {}
     for alert in alerts:
@@ -138,6 +148,7 @@ def _unique_incidents(alerts: Iterable[NormalizedAlert]):
     return list(incidents.values())
 
 
+# Converts a Counter object into label and total pairs for report charts.
 def _breakdown(counter: Counter[str]) -> list[ReportBreakdownItemResponse]:
     return [
         ReportBreakdownItemResponse(label=label, total=total)
@@ -148,6 +159,7 @@ def _breakdown(counter: Counter[str]) -> list[ReportBreakdownItemResponse]:
     ]
 
 
+# Rounds a timestamp down to the correct report bucket start time.
 def _bucket_floor(timestamp: datetime, *, granularity: str) -> datetime:
     normalized = timestamp.astimezone(UTC)
     if granularity == "day":
@@ -155,18 +167,21 @@ def _bucket_floor(timestamp: datetime, *, granularity: str) -> datetime:
     return normalized.replace(minute=0, second=0, microsecond=0)
 
 
+# Decides whether the alert volume chart should use hourly or daily buckets.
 def _bucket_step(*, granularity: str) -> timedelta:
     if granularity == "day":
         return timedelta(days=1)
     return timedelta(hours=1)
 
 
+# Creates a readable label for each report time bucket.
 def _bucket_label(bucket_start: datetime, *, granularity: str) -> str:
     if granularity == "day":
         return bucket_start.strftime("%m-%d")
     return bucket_start.strftime("%m-%d %H:00")
 
 
+# Builds the alert volume trend data for the summary report.
 def _build_alert_volume(
     alerts: Iterable[NormalizedAlert],
     *,
@@ -197,6 +212,7 @@ def _build_alert_volume(
     return buckets
 
 
+# Finds the assets with the highest alert and incident activity.
 def _build_top_assets(alerts: Iterable[NormalizedAlert]) -> list[ReportTopAssetResponse]:
     grouped: dict[str, dict[str, Any]] = {}
 
@@ -237,6 +253,7 @@ def _build_top_assets(alerts: Iterable[NormalizedAlert]) -> list[ReportTopAssetR
     ]
 
 
+# Converts filter values into simple text for export metadata.
 def _serialize_filter_value(value: Any) -> Any:
     if value is None:
         return None
@@ -247,6 +264,7 @@ def _serialize_filter_value(value: Any) -> Any:
     return value
 
 
+# Prepares the selected report filters for audit logs and exported files.
 def _serialize_filters(query: Any, fields: Iterable[str]) -> dict[str, Any]:
     return {
         field_name: _serialize_filter_value(getattr(query, field_name))
@@ -254,6 +272,7 @@ def _serialize_filters(query: Any, fields: Iterable[str]) -> dict[str, Any]:
     }
 
 
+# Formats Python values safely before writing them into CSV cells.
 def _csv_value(value: Any) -> str:
     if value is None:
         return ""
@@ -268,6 +287,7 @@ def _csv_value(value: Any) -> str:
     return str(value)
 
 
+# Builds CSV text from report rows and selected column names.
 def _build_csv_content(items: Iterable[dict[str, Any]], fieldnames: list[str]) -> str:
     buffer = StringIO()
     writer = csv.DictWriter(buffer, fieldnames=fieldnames)
@@ -277,11 +297,13 @@ def _build_csv_content(items: Iterable[dict[str, Any]], fieldnames: list[str]) -
     return buffer.getvalue()
 
 
+# Creates a consistent filename for downloaded reports.
 def _build_download_filename(prefix: str, export_format: ReportExportFormat) -> str:
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     return f"aegiscore-{prefix}-{stamp}.{export_format.value}"
 
 
+# Saves an audit log whenever a report export is generated.
 def _record_export_audit(
     session: Session,
     *,
@@ -307,6 +329,7 @@ def _record_export_audit(
     )
 
 
+# Converts one alert record into the alert export schema.
 def _alert_export_item(alert: NormalizedAlert) -> AlertExportItemResponse:
     summary = to_alert_summary_response(alert)
     return AlertExportItemResponse(
@@ -330,6 +353,7 @@ def _alert_export_item(alert: NormalizedAlert) -> AlertExportItemResponse:
     )
 
 
+# Converts one incident record into the incident export schema.
 def _incident_export_item(incident) -> IncidentExportItemResponse:
     summary = to_incident_summary_response(incident)
     detection_types = sorted({alert.detection_type.value for alert in incident.alerts})
@@ -356,6 +380,7 @@ def _incident_export_item(incident) -> IncidentExportItemResponse:
     )
 
 
+# Converts one response action into the response export schema.
 def _response_export_item(response_action: ResponseAction) -> ResponseExportItemResponse:
     summary = to_response_action_summary_response(response_action)
     return ResponseExportItemResponse(
@@ -375,6 +400,7 @@ def _response_export_item(response_action: ResponseAction) -> ResponseExportItem
     )
 
 
+# Converts alert export objects into flat rows for CSV output.
 def _alert_export_rows(items: list[AlertExportItemResponse]) -> list[dict[str, Any]]:
     return [
         {
@@ -400,6 +426,7 @@ def _alert_export_rows(items: list[AlertExportItemResponse]) -> list[dict[str, A
     ]
 
 
+# Converts incident export objects into flat rows for CSV output.
 def _incident_export_rows(items: list[IncidentExportItemResponse]) -> list[dict[str, Any]]:
     return [
         {
@@ -420,6 +447,7 @@ def _incident_export_rows(items: list[IncidentExportItemResponse]) -> list[dict[
     ]
 
 
+# Converts response export objects into flat rows for CSV output.
 def _response_export_rows(items: list[ResponseExportItemResponse]) -> list[dict[str, Any]]:
     return [
         {
@@ -441,6 +469,7 @@ def _response_export_rows(items: list[ResponseExportItemResponse]) -> list[dict[
     ]
 
 
+# Creates either a CSV or JSON download response based on the selected format.
 def _download_response(
     *,
     filename: str,
@@ -459,6 +488,7 @@ def _download_response(
     )
 
 
+# Builds a downloadable JSON response for report exports.
 def _json_download_response(
     *,
     filename: str,
@@ -470,6 +500,7 @@ def _json_download_response(
     )
 
 
+# Builds the daily or weekly SOC summary report from alert and incident data.
 def _build_report_summary(
     *,
     report_type: str,
@@ -537,6 +568,7 @@ def _build_report_summary(
     )
 
 
+# Service function used by the API to generate the daily SOC summary.
 def get_daily_summary(session: Session, query: ReportSummaryQuery) -> ReportSummaryResponse:
     window_start, window_end = _normalize_window(
         date_from=query.date_from,
@@ -557,6 +589,7 @@ def get_daily_summary(session: Session, query: ReportSummaryQuery) -> ReportSumm
     )
 
 
+# Service function used by the API to generate the weekly SOC summary.
 def get_weekly_summary(session: Session, query: ReportSummaryQuery) -> ReportSummaryResponse:
     window_start, window_end = _normalize_window(
         date_from=query.date_from,
@@ -577,6 +610,7 @@ def get_weekly_summary(session: Session, query: ReportSummaryQuery) -> ReportSum
     )
 
 
+# Exports filtered alert data and records the export action in the audit trail.
 def export_alert_report(
     session: Session,
     query: AlertReportExportQuery,
@@ -657,6 +691,7 @@ def export_alert_report(
     )
 
 
+# Exports filtered incident data and records the export action in the audit trail.
 def export_incident_report(
     session: Session,
     query: IncidentReportExportQuery,
@@ -729,6 +764,7 @@ def export_incident_report(
     )
 
 
+# Exports response action history and records the export action in the audit trail.
 def export_response_report(
     session: Session,
     query: ResponseReportExportQuery,
