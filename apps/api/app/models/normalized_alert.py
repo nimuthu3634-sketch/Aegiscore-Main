@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from app.models.risk_score import RiskScore
 
 
+# Stores cleaned and standardized alerts after they are processed from raw security logs.
 class NormalizedAlert(Base):
     __tablename__ = "normalized_alerts"
 
@@ -27,12 +28,16 @@ class NormalizedAlert(Base):
         primary_key=True,
         default=uuid.uuid4,
     )
+
+    # Connects this normalized alert to the original raw alert record.
     raw_alert_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("raw_alerts.id", ondelete="CASCADE"),
         unique=True,
         nullable=False,
     )
+
+    # Alert can be linked to an incident and an affected asset.
     incident_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("incidents.id", ondelete="SET NULL"),
@@ -43,9 +48,12 @@ class NormalizedAlert(Base):
         ForeignKey("assets.id", ondelete="SET NULL"),
         nullable=True,
     )
+
     source: Mapped[str] = mapped_column(String(64), nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Detection type and severity are used for filtering, scoring, and dashboard summaries.
     detection_type: Mapped[DetectionType] = mapped_column(
         Enum(DetectionType, name="detectiontype", values_callable=enum_values),
         nullable=False,
@@ -56,6 +64,7 @@ class NormalizedAlert(Base):
         default=AlertStatus.NEW,
         nullable=False,
     )
+
     normalized_payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -63,6 +72,7 @@ class NormalizedAlert(Base):
         nullable=False,
     )
 
+    # Relationships link the alert with raw data, assets, risk scores, incidents, and responses.
     raw_alert: Mapped["RawAlert"] = relationship(back_populates="normalized_alert")
     asset: Mapped["Asset | None"] = relationship(back_populates="normalized_alerts")
     risk_score: Mapped["RiskScore | None"] = relationship(

@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
+# Stores automated or manual actions taken for an incident.
 class ResponseAction(Base):
     __tablename__ = "response_actions"
 
@@ -27,6 +28,8 @@ class ResponseAction(Base):
         primary_key=True,
         default=uuid.uuid4,
     )
+
+    # Links the action to the related incident, alert, policy, and user.
     incident_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("incidents.id", ondelete="CASCADE"),
@@ -47,6 +50,7 @@ class ResponseAction(Base):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
+
     action_type: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[ResponseStatus] = mapped_column(
         Enum(ResponseStatus, name="responsestatus", values_callable=enum_values),
@@ -58,6 +62,8 @@ class ResponseAction(Base):
         default=ResponseMode.LIVE,
         nullable=False,
     )
+
+    # Stores the target and result of the response action.
     target_value: Mapped[str | None] = mapped_column(String(255), nullable=True)
     result_summary: Mapped[str | None] = mapped_column(String(255), nullable=True)
     result_message: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -67,6 +73,7 @@ class ResponseAction(Base):
         nullable=True,
     )
     details: Mapped[dict] = mapped_column(JSONB, nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -77,6 +84,7 @@ class ResponseAction(Base):
         nullable=True,
     )
 
+    # Relationships are used to access connected incident, alert, policy, user, and notifications.
     incident: Mapped["Incident"] = relationship(back_populates="response_actions")
     normalized_alert: Mapped["NormalizedAlert | None"] = relationship(
         back_populates="response_actions"

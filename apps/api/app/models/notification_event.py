@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
+# Stores notification records created by the SOC system.
 class NotificationEvent(Base):
     __tablename__ = "notification_events"
 
@@ -24,6 +25,8 @@ class NotificationEvent(Base):
         primary_key=True,
         default=uuid.uuid4,
     )
+
+    # Links the notification to the related incident and optional response action.
     incident_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("incidents.id", ondelete="CASCADE"),
@@ -34,23 +37,32 @@ class NotificationEvent(Base):
         ForeignKey("response_actions.id", ondelete="SET NULL"),
         nullable=True,
     )
+
+    # Stores how and why the notification was generated.
     channel: Mapped[str] = mapped_column(String(32), nullable=False)
     delivery_mode: Mapped[str] = mapped_column(String(32), nullable=False)
     trigger_type: Mapped[str] = mapped_column(String(32), nullable=False)
     trigger_value: Mapped[str] = mapped_column(String(128), nullable=False)
+
     recipient: Mapped[str] = mapped_column(String(255), nullable=False)
     subject: Mapped[str] = mapped_column(String(255), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # Status and error message help track whether the notification was sent successfully.
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     details: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     dedupe_key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Used by the frontend notification panel to show read and unread notifications.
     read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     read_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
@@ -58,6 +70,7 @@ class NotificationEvent(Base):
         nullable=True,
     )
 
+    # Relationships connect this notification back to its incident, response, and user.
     incident: Mapped["Incident"] = relationship(back_populates="notification_events")
     response_action: Mapped["ResponseAction | None"] = relationship(
         back_populates="notification_events"

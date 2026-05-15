@@ -10,9 +10,11 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import Base
 
 
+# Stores alerts or events that failed during the ingestion process.
 class IngestionFailure(Base):
     __tablename__ = "ingestion_failures"
     __table_args__ = (
+        # Prevents saving the same failed external alert more than once.
         UniqueConstraint(
             "source",
             "external_id",
@@ -25,13 +27,18 @@ class IngestionFailure(Base):
         primary_key=True,
         default=uuid.uuid4,
     )
+
+    # Source details help identify where the failed alert came from.
     source: Mapped[str] = mapped_column(String(64), nullable=False)
     external_id: Mapped[str] = mapped_column(String(255), nullable=False)
     detection_hint: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    # Error details are stored so the issue can be reviewed later.
     error_type: Mapped[str] = mapped_column(String(64), nullable=False)
     error_message: Mapped[str] = mapped_column(Text, nullable=False)
     raw_payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
     first_seen_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
