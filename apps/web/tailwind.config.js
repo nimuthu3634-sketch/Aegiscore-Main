@@ -1,5 +1,9 @@
+/*
+ * Tailwind configuration containing the design theme used by the dashboard.
+ */
 import defaultTheme from "tailwindcss/defaultTheme";
 
+// Helper function for with Opacity logic in this file.
 function withOpacity(variableName) {
   return `rgb(var(${variableName}) / <alpha-value>)`;
 }

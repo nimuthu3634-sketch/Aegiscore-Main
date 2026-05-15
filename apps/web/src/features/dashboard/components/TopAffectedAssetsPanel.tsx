@@ -1,3 +1,6 @@
+/*
+ * Top Affected Assets Panel reusable UI component used by the React dashboard.
+ */
 import { Button } from "../../../components/ui/Button";
 import {
   Card,
@@ -12,11 +15,13 @@ import {
 } from "../../assets/components/AssetBadges";
 import type { AssetRecord } from "../../assets/types";
 
+// Defines the Top Affected Assets Panel Props data shape used by this frontend module.
 type TopAffectedAssetsPanelProps = {
   assets: AssetRecord[];
   onViewAssets: () => void;
 };
 
+// Renders the Top Affected Assets Panel UI section.
 export function TopAffectedAssetsPanel({
   assets,
   onViewAssets

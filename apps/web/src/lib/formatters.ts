@@ -1,3 +1,6 @@
+/*
+ * Frontend helper utilities shared across the React application.
+ */
 export function formatTokenLabel(value: string | null | undefined) {
   if (!value) {
     return "n/a";
@@ -11,6 +14,7 @@ export function formatTokenLabel(value: string | null | undefined) {
     .replace(/\bSoc\b/g, "SOC");
 }
 
+// Formats score Method Label for display in the dashboard.
 export function formatScoreMethodLabel(value: string | null | undefined) {
   switch (value) {
     case "baseline_rules":
@@ -25,6 +29,7 @@ export function formatScoreMethodLabel(value: string | null | undefined) {
   }
 }
 
+// Formats driver Label for display in the dashboard.
 export function formatDriverLabel(driver: {
   label?: unknown;
   contribution?: unknown;

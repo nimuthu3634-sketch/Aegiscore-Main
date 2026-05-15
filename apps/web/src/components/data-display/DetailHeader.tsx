@@ -1,6 +1,10 @@
+/*
+ * Detail Header reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { Card, CardContent, CardHeader } from "../ui/Card";
 
+// Defines the Detail Header Props data shape used by this frontend module.
 type DetailHeaderProps = {
   eyebrow?: string;
   title: string;
@@ -10,6 +14,7 @@ type DetailHeaderProps = {
   children?: ReactNode;
 };
 
+// Renders the Detail Header UI section.
 export function DetailHeader({
   eyebrow,
   title,

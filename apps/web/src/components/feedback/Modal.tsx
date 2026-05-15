@@ -1,10 +1,15 @@
+/*
+ * Modal reusable UI component used by the React dashboard.
+ */
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../../lib/cn";
 import { Icon } from "../ui/Icon";
 
+// Defines the Modal Size data shape used by this frontend module.
 type ModalSize = "sm" | "md" | "lg";
 
+// Defines the Modal Props data shape used by this frontend module.
 type ModalProps = {
   open: boolean;
   title: string;
@@ -21,6 +26,7 @@ const sizeClasses: Record<ModalSize, string> = {
   lg: "max-w-[60rem]"
 };
 
+// Renders the Modal UI section.
 export function Modal({
   open,
   title,

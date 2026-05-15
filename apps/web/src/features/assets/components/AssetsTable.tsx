@@ -1,8 +1,12 @@
+/*
+ * Assets Table reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
 import type { AssetRecord } from "../types";
 import { AgentStatusBadge, CriticalityBadge } from "./AssetBadges";
 
+// Defines the Assets Table Props data shape used by this frontend module.
 type AssetsTableProps = {
   assets: AssetRecord[];
   selectedAssetId?: string;
@@ -58,6 +62,7 @@ const columns: TableColumn<AssetRecord>[] = [
   }
 ];
 
+// Renders the Assets Table UI section.
 export function AssetsTable({
   assets,
   selectedAssetId,

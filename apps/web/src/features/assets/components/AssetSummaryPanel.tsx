@@ -1,12 +1,17 @@
+/*
+ * Asset Summary Panel reusable UI component used by the React dashboard.
+ */
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/Card";
 import { Badge } from "../../../components/ui/Badge";
 import type { AssetRecord } from "../types";
 import { AgentStatusBadge, CriticalityBadge } from "./AssetBadges";
 
+// Defines the Asset Summary Panel Props data shape used by this frontend module.
 type AssetSummaryPanelProps = {
   asset: AssetRecord | null;
 };
 
+// Renders the Asset Summary Panel UI section.
 export function AssetSummaryPanel({ asset }: AssetSummaryPanelProps) {
   if (!asset) {
     return null;

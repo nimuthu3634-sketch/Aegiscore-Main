@@ -1,3 +1,6 @@
+/*
+ * Dashboard Page page component used to display one main dashboard screen.
+ */
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -49,10 +52,12 @@ const tooltipItemStyle = {
   padding: 0
 };
 
+// Formats compact Label for display in the dashboard.
 function formatCompactLabel(value: string) {
   return value.replace(/_/g, " ");
 }
 
+// Renders the Dashboard Page UI section.
 export function DashboardPage() {
   const navigate = useNavigate();
   const { data, isLoading, error, reload } = useDashboardOverview();

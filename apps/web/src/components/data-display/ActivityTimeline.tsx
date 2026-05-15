@@ -1,5 +1,9 @@
+/*
+ * Activity Timeline reusable UI component used by the React dashboard.
+ */
 import { Badge } from "../ui/Badge";
 
+// Defines the Timeline Item data shape used by this frontend module.
 export type TimelineItem = {
   id: string;
   timestamp: string;
@@ -9,10 +13,12 @@ export type TimelineItem = {
   tone?: "neutral" | "brand" | "warning" | "danger" | "success";
 };
 
+// Defines the Activity Timeline Props data shape used by this frontend module.
 type ActivityTimelineProps = {
   items: TimelineItem[];
 };
 
+// Renders the Activity Timeline UI section.
 export function ActivityTimeline({ items }: ActivityTimelineProps) {
   return (
     <div className="space-y-4">

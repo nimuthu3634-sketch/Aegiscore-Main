@@ -1,6 +1,10 @@
+/*
+ * Textarea reusable UI component used by the React dashboard.
+ */
 import type { TextareaHTMLAttributes } from "react";
 import { cn } from "../../lib/cn";
 
+// Defines the Textarea Props data shape used by this frontend module.
 type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label?: string;
   hint?: string;
@@ -8,6 +12,7 @@ type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   mono?: boolean;
 };
 
+// Renders the Textarea UI section.
 export function Textarea({
   className,
   label,

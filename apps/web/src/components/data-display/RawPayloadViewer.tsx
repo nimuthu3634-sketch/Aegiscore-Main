@@ -1,13 +1,18 @@
+/*
+ * Raw Payload Viewer reusable UI component used by the React dashboard.
+ */
 import { useState } from "react";
 import { Button } from "../ui/Button";
 import { EvidencePanel } from "./EvidencePanel";
 
+// Defines the Raw Payload Viewer Props data shape used by this frontend module.
 type RawPayloadViewerProps = {
   payload: unknown;
   title?: string;
   description?: string;
 };
 
+// Renders the Raw Payload Viewer UI section.
 export function RawPayloadViewer({
   payload,
   title = "Raw payload",

@@ -1,9 +1,13 @@
+/*
+ * Sidebar reusable UI component used by the React dashboard.
+ */
 import { AegisCoreLogo } from "../AegisCoreLogo";
 import type { NavigationItem, NavKey } from "../../lib/theme/tokens";
 import { cn } from "../../lib/cn";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 
+// Defines the Sidebar Props data shape used by this frontend module.
 type SidebarProps = {
   items: NavigationItem[];
   activeId: NavKey;
@@ -12,6 +16,7 @@ type SidebarProps = {
   className?: string;
 };
 
+// Renders the Sidebar UI section.
 export function Sidebar({
   items,
   activeId,

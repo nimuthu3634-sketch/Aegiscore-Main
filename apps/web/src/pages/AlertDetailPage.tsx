@@ -1,3 +1,6 @@
+/*
+ * Alert Detail Page page component used to display one main dashboard screen.
+ */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AnalystNotesPanel } from "../components/data-display/AnalystNotesPanel";
@@ -26,10 +29,12 @@ import {
   useAlertDetail
 } from "../features/alerts/detail/service";
 
+// Helper function for fallback Value logic in this file.
 function fallbackValue(value: string | null | undefined) {
   return value ?? "n/a";
 }
 
+// Renders the Alert Detail Page UI section.
 export function AlertDetailPage() {
   const navigate = useNavigate();
   const { alertId } = useParams<{ alertId: string }>();

@@ -1,3 +1,6 @@
+/*
+ * Helper functions for transforming or querying backend API data.
+ */
 import type { AlertsListApiResponse, AlertsListResponse } from "../../features/alerts/types";
 import type { AssetsListApiResponse, AssetsListResponse } from "../../features/assets/types";
 import type { IncidentsListApiResponse, IncidentsListResponse } from "../../features/incidents/types";
@@ -6,6 +9,7 @@ import { summarizeMlBruteForceBlock } from "../aiPrioritization";
 import { formatUtcDateTime } from "../api";
 import { mapListQueryMeta } from "./query";
 
+// Converts API data into the frontend format for to Asset Criticality.
 function toAssetCriticality(
   value: AssetsListApiResponse["items"][number]["criticality"]
 ): AssetsListResponse["items"][number]["criticality"] {
@@ -21,6 +25,7 @@ function toAssetCriticality(
   }
 }
 
+// Converts API data into the frontend format for map Alerts List Response.
 export function mapAlertsListResponse(
   payload: AlertsListApiResponse
 ): AlertsListResponse {
@@ -46,6 +51,7 @@ export function mapAlertsListResponse(
   };
 }
 
+// Converts API data into the frontend format for map Incidents List Response.
 export function mapIncidentsListResponse(
   payload: IncidentsListApiResponse
 ): IncidentsListResponse {
@@ -69,6 +75,7 @@ export function mapIncidentsListResponse(
   };
 }
 
+// Converts API data into the frontend format for map Assets List Response.
 export function mapAssetsListResponse(
   payload: AssetsListApiResponse
 ): AssetsListResponse {
@@ -91,6 +98,7 @@ export function mapAssetsListResponse(
   };
 }
 
+// Converts API data into the frontend format for map Responses List Response.
 export function mapResponsesListResponse(
   payload: ResponsesListApiResponse
 ): ResponsesListResponse {

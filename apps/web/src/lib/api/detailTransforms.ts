@@ -1,3 +1,6 @@
+/*
+ * Helper functions for transforming or querying backend API data.
+ */
 import type { AnalystNote } from "../../components/data-display/AnalystNotesPanel";
 import type { KeyValueItem } from "../../components/data-display/KeyValueGrid";
 import type { TimelineItem } from "../../components/data-display/ActivityTimeline";
@@ -10,11 +13,13 @@ import type {
 import { formatUtcDateTime } from "../api";
 import { formatDriverLabel, formatScoreMethodLabel, formatTokenLabel } from "../formatters";
 
+// Defines the Api User Summary data shape used by this frontend module.
 type ApiUserSummary = {
   username: string;
   full_name: string | null;
 } | null;
 
+// Defines the Api Related Response data shape used by this frontend module.
 type ApiRelatedResponse = {
   id: string;
   action_type: string;
@@ -44,6 +49,7 @@ type ApiRelatedResponse = {
   }>;
 };
 
+// Defines the Api Note data shape used by this frontend module.
 type ApiNote = {
   id: string;
   author: ApiUserSummary;
@@ -51,6 +57,7 @@ type ApiNote = {
   created_at: string;
 };
 
+// Defines the Api Timeline Entry data shape used by this frontend module.
 type ApiTimelineEntry = {
   id: string;
   timestamp: string;
@@ -60,6 +67,7 @@ type ApiTimelineEntry = {
   actor: ApiUserSummary;
 };
 
+// Converts API data into the frontend format for to Display Value.
 function toDisplayValue(value: unknown): string {
   if (value == null) {
     return "n/a";
@@ -80,16 +88,19 @@ function toDisplayValue(value: unknown): string {
   return JSON.stringify(value, null, 2);
 }
 
+// Helper function for is Monospace Key logic in this file.
 function isMonospaceKey(key: string) {
   return /(ip|port|user|timestamp|time|rule|id|path|hash|ref|event|asset_hostname)/i.test(
     key
   );
 }
 
+// Converts API data into the frontend format for to Source Type.
 export function toSourceType(value: string | null | undefined): "Wazuh" | "Suricata" {
   return value?.toLowerCase() === "suricata" ? "Suricata" : "Wazuh";
 }
 
+// Converts API data into the frontend format for to Actor Label.
 export function toActorLabel(actor: ApiUserSummary) {
   return actor?.full_name ?? actor?.username ?? "AegisCore System";
 }

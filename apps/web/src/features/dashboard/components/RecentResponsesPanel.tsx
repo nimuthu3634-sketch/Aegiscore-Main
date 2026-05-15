@@ -1,3 +1,6 @@
+/*
+ * Recent Responses Panel reusable UI component used by the React dashboard.
+ */
 import { Button } from "../../../components/ui/Button";
 import {
   Card,
@@ -14,11 +17,13 @@ import type { ResponseRecord } from "../../responses/types";
 import { Badge } from "../../../components/ui/Badge";
 import { formatTokenLabel } from "../../../lib/formatters";
 
+// Defines the Recent Responses Panel Props data shape used by this frontend module.
 type RecentResponsesPanelProps = {
   responses: ResponseRecord[];
   onViewResponses: () => void;
 };
 
+// Renders the Recent Responses Panel UI section.
 export function RecentResponsesPanel({
   responses,
   onViewResponses

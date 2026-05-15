@@ -1,5 +1,9 @@
+/*
+ * TypeScript types used by the users feature area.
+ */
 export type UserRole = "admin" | "analyst";
 
+// Defines the Create User Payload data shape used by this frontend module.
 export type CreateUserPayload = {
   username: string;
   password: string;
@@ -7,6 +11,7 @@ export type CreateUserPayload = {
   role: UserRole;
 };
 
+// Defines the User Record data shape used by this frontend module.
 export type UserRecord = {
   id: string;
   username: string;
@@ -20,6 +25,7 @@ export type UserRecord = {
   };
 };
 
+// Defines the Create User Response data shape used by this frontend module.
 export type CreateUserResponse = {
   user: UserRecord;
   message: string;

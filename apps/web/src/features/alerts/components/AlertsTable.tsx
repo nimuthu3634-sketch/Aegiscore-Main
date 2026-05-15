@@ -1,3 +1,6 @@
+/*
+ * Alerts Table reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { Badge } from "../../../components/ui/Badge";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
@@ -6,6 +9,7 @@ import { StatusChip } from "../../../components/ui/StatusChip";
 import { formatTokenLabel } from "../../../lib/formatters";
 import type { AlertRecord } from "../types";
 
+// Defines the Alerts Table Props data shape used by this frontend module.
 type AlertsTableProps = {
   alerts: AlertRecord[];
   selectedAlertId?: string;
@@ -84,6 +88,7 @@ const columns: TableColumn<AlertRecord>[] = [
   }
 ];
 
+// Renders the Alerts Table UI section.
 export function AlertsTable({
   alerts,
   selectedAlertId,

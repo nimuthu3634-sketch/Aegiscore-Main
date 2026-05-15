@@ -1,3 +1,6 @@
+/*
+ * Incidents Table reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { Badge } from "../../../components/ui/Badge";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
@@ -6,6 +9,7 @@ import { PriorityChip } from "../../../components/ui/PriorityChip";
 import { formatTokenLabel } from "../../../lib/formatters";
 import type { IncidentRecord } from "../types";
 
+// Defines the Incidents Table Props data shape used by this frontend module.
 type IncidentsTableProps = {
   incidents: IncidentRecord[];
   selectedIncidentId?: string;
@@ -75,6 +79,7 @@ const columns: TableColumn<IncidentRecord>[] = [
   }
 ];
 
+// Renders the Incidents Table UI section.
 export function IncidentsTable({
   incidents,
   selectedIncidentId,

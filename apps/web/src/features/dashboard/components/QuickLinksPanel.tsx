@@ -1,3 +1,6 @@
+/*
+ * Quick Links Panel reusable UI component used by the React dashboard.
+ */
 import type { IconName } from "../../../lib/theme/tokens";
 import { Button } from "../../../components/ui/Button";
 import {
@@ -9,6 +12,7 @@ import {
 } from "../../../components/ui/Card";
 import { Icon } from "../../../components/ui/Icon";
 
+// Defines the Quick Link Item data shape used by this frontend module.
 type QuickLinkItem = {
   id: string;
   label: string;
@@ -18,10 +22,12 @@ type QuickLinkItem = {
   onClick: () => void;
 };
 
+// Defines the Quick Links Panel Props data shape used by this frontend module.
 type QuickLinksPanelProps = {
   items: QuickLinkItem[];
 };
 
+// Renders the Quick Links Panel UI section.
 export function QuickLinksPanel({ items }: QuickLinksPanelProps) {
   return (
     <Card className="h-full">

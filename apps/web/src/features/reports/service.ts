@@ -1,3 +1,6 @@
+/*
+ * API helper functions for the reports feature area.
+ */
 import { useCallback } from "react";
 import { downloadApiFile, fetchApiJson, formatUtcDateTime } from "../../lib/api";
 import { buildApiPath } from "../../lib/api/query";
@@ -44,10 +47,12 @@ const responseStatusPalette = {
 
 const fallbackPalette = ["#F97316", "#F59E0B", "#22C55E", "#9CA3AF", "#D1D5DB"];
 
+// Helper function for pick Color logic in this file.
 function pickColor(label: string, index: number, paletteMap: Record<string, string>) {
   return paletteMap[label] ?? fallbackPalette[index % fallbackPalette.length];
 }
 
+// Converts API data into the frontend format for map Distribution.
 function mapDistribution(
   items: Array<{ label: string; total: number }>,
   paletteMap: Record<string, string>
@@ -59,6 +64,7 @@ function mapDistribution(
   }));
 }
 
+// Converts API data into the frontend format for map Report Summary.
 function mapReportSummary(payload: ReportSummaryApiResponse): ReportSummary {
   return {
     reportType: payload.report_type,
@@ -98,6 +104,7 @@ function mapReportSummary(payload: ReportSummaryApiResponse): ReportSummary {
   };
 }
 
+// Builds report Query data used by the UI.
 function buildReportQuery(query: ReportsQuery) {
   return {
     date_from: query.dateFrom,
@@ -141,6 +148,7 @@ export async function exportReportDataset(
   );
 }
 
+// Helper function for use Reports Overview logic in this file.
 export function useReportsOverview(query: ReportsQuery) {
   const loader = useCallback(() => fetchReportsOverview(query), [query]);
   return useAsyncResource(loader);

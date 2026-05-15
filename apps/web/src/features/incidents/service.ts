@@ -1,3 +1,6 @@
+/*
+ * API helper functions for the incidents feature area.
+ */
 import { useCallback } from "react";
 import { useAsyncResource } from "../../lib/data/useAsyncResource";
 import { fetchApiJson } from "../../lib/api";
@@ -28,6 +31,7 @@ async function listIncidents(
   return mapIncidentsListResponse(response);
 }
 
+// Helper function for use Incidents List logic in this file.
 export function useIncidentsList(query: IncidentsListQuery) {
   const loader = useCallback(() => listIncidents(query), [query]);
   return useAsyncResource(loader);

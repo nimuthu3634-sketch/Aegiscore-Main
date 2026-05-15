@@ -1,10 +1,15 @@
+/*
+ * Loading State reusable UI component used by the React dashboard.
+ */
 import { cn } from "../../lib/cn";
 import { Card, CardContent, CardHeader } from "../ui/Card";
 
+// Defines the Skeleton Props data shape used by this frontend module.
 type SkeletonProps = {
   className?: string;
 };
 
+// Renders the Skeleton UI section.
 export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
@@ -17,10 +22,12 @@ export function Skeleton({ className }: SkeletonProps) {
   );
 }
 
+// Defines the Loading Card Props data shape used by this frontend module.
 type LoadingCardProps = {
   className?: string;
 };
 
+// Renders the Loading Card UI section.
 export function LoadingCard({ className }: LoadingCardProps) {
   return (
     <Card className={cn("h-full", className)}>
@@ -36,11 +43,13 @@ export function LoadingCard({ className }: LoadingCardProps) {
   );
 }
 
+// Defines the Loading Table Props data shape used by this frontend module.
 type LoadingTableProps = {
   rows?: number;
   columns?: number;
 };
 
+// Renders the Loading Table UI section.
 export function LoadingTable({
   rows = 4,
   columns = 5

@@ -1,3 +1,6 @@
+/*
+ * Playwright end-to-end tests for checking frontend user workflows.
+ */
 import { expect, test } from "@playwright/test";
 import {
   attachAuthenticatedSession,
@@ -7,10 +10,12 @@ import {
 
 const UNKNOWN_RECORD_UUID = "00000000-0000-0000-0000-000000000001";
 
+// Defines the Alerts List Response data shape used by this frontend module.
 type AlertsListResponse = {
   items: Array<{ id: string; incident: { id: string } | null }>;
 };
 
+// Defines the Incidents List Response data shape used by this frontend module.
 type IncidentsListResponse = {
   items: Array<{ id: string }>;
 };
@@ -21,6 +26,7 @@ test.beforeAll(async ({ request }) => {
   await seedThreatScenarios(request);
 });
 
+// Test case for an important user workflow.
 test("detail routes show not-found empty state for unknown ids", async ({
   page,
   request
@@ -40,6 +46,7 @@ test("detail routes show not-found empty state for unknown ids", async ({
   ).toBeVisible();
 });
 
+// Test case for an important user workflow.
 test("analyst note save rejects empty draft with visible validation feedback", async ({
   page,
   request
@@ -65,6 +72,7 @@ test("analyst note save rejects empty draft with visible validation feedback", a
   );
 });
 
+// Test case for an important user workflow.
 test("notification panels render on incident and linked-alert detail; responses history is reachable", async ({
   page,
   request

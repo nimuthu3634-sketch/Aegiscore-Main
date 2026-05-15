@@ -1,3 +1,6 @@
+/*
+ * Frontend helper utilities shared across the React application.
+ */
 import { formatTokenLabel } from "./formatters";
 
 /** Standard product copy for panels, login, and examiner-facing UI (aligned with documentation). */
@@ -19,8 +22,10 @@ export const SUPPORTED_DETECTION_TYPES = [
   "unauthorized_user_creation"
 ] as const;
 
+// Defines the Supported Detection Type data shape used by this frontend module.
 export type SupportedDetectionType = (typeof SUPPORTED_DETECTION_TYPES)[number];
 
+// Helper function for supported Detection Select Options logic in this file.
 export function supportedDetectionSelectOptions(): Array<{
   value: string;
   label: string;

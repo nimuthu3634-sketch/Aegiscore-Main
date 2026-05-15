@@ -1,12 +1,18 @@
+/*
+ * TypeScript types used by the incidents feature area.
+ */
 import type { Severity, StatusTone } from "../../lib/theme/tokens";
 import type { ListQueryMeta, SortDirection } from "../../lib/api/query";
 
+// Defines the Incident State Filter data shape used by this frontend module.
 export type IncidentStateFilter = Extract<
   StatusTone,
   "new" | "triaged" | "investigating" | "contained" | "resolved"
 >;
+// Defines the Incidents Sort Field data shape used by this frontend module.
 export type IncidentsSortField = "updated_at" | "created_at" | "priority";
 
+// Defines the Incidents List Query data shape used by this frontend module.
 export type IncidentsListQuery = {
   search: string;
   priority: Severity | "";
@@ -19,6 +25,7 @@ export type IncidentsListQuery = {
   pageSize: number;
 };
 
+// Defines the Incident Record data shape used by this frontend module.
 export type IncidentRecord = {
   id: string;
   title: string;
@@ -33,6 +40,7 @@ export type IncidentRecord = {
   summary: string;
 };
 
+// Defines the Incidents List Response data shape used by this frontend module.
 export type IncidentsListResponse = {
   items: IncidentRecord[];
   total: number;
@@ -40,6 +48,7 @@ export type IncidentsListResponse = {
   meta: ListQueryMeta;
 };
 
+// Defines the Incidents List Api Response data shape used by this frontend module.
 export type IncidentsListApiResponse = {
   meta: {
     page: number;

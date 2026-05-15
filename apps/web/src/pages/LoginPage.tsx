@@ -1,3 +1,6 @@
+/*
+ * Login Page page component used to display one main dashboard screen.
+ */
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { AegisCoreLogo } from "../components/AegisCoreLogo";
@@ -22,6 +25,7 @@ const defaultPassword = devAuthBootstrapEnabled
   ? import.meta.env.VITE_DEV_API_PASSWORD ?? "AegisCore123!"
   : "";
 
+// Renders the Login Page UI section.
 export function LoginPage() {
   const navigate = useNavigate();
   const [username, setUsername] = useState(defaultUsername);

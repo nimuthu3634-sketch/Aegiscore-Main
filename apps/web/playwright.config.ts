@@ -1,3 +1,6 @@
+/*
+ * Playwright configuration used for end-to-end browser tests.
+ */
 import { defineConfig } from "@playwright/test";
 
 export default defineConfig({

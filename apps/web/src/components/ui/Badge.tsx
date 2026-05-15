@@ -1,6 +1,10 @@
+/*
+ * Badge reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { cn } from "../../lib/cn";
 
+// Defines the Badge Tone data shape used by this frontend module.
 type BadgeTone =
   | "neutral"
   | "brand"
@@ -9,6 +13,7 @@ type BadgeTone =
   | "danger"
   | "outline";
 
+// Defines the Badge Props data shape used by this frontend module.
 type BadgeProps = {
   tone?: BadgeTone;
   icon?: ReactNode;
@@ -25,6 +30,7 @@ const toneClasses: Record<BadgeTone, string> = {
   outline: "border-border-subtle bg-white text-content-secondary"
 };
 
+// Renders the Badge UI section.
 export function Badge({
   tone = "neutral",
   icon,

@@ -1,3 +1,6 @@
+/*
+ * Alerts Page page component used to display one main dashboard screen.
+ */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MetricCard } from "../components/data-display/MetricCard";
@@ -20,6 +23,7 @@ import { supportedDetectionSelectOptions } from "../lib/supportedDetections";
 import { pageBlueprints } from "../lib/theme/tokens";
 import { downloadApiFile } from "../lib/api";
 
+// Renders the Alerts Page UI section.
 export function AlertsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");

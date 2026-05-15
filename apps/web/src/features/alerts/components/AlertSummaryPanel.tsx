@@ -1,13 +1,18 @@
+/*
+ * Alert Summary Panel reusable UI component used by the React dashboard.
+ */
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/Card";
 import { Badge } from "../../../components/ui/Badge";
 import { SeverityChip } from "../../../components/ui/SeverityChip";
 import { StatusChip } from "../../../components/ui/StatusChip";
 import type { AlertRecord } from "../types";
 
+// Defines the Alert Summary Panel Props data shape used by this frontend module.
 type AlertSummaryPanelProps = {
   alert: AlertRecord | null;
 };
 
+// Renders the Alert Summary Panel UI section.
 export function AlertSummaryPanel({ alert }: AlertSummaryPanelProps) {
   if (!alert) {
     return null;

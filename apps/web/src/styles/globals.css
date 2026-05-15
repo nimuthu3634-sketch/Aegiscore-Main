@@ -1,3 +1,6 @@
+/*
+ * Global CSS styles and Tailwind base styles for the frontend.
+ */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Orbitron:wght@600;700&family=Saira+Stencil+One&family=Space+Grotesk:wght@500;600;700&display=swap");
 
 @tailwind base;

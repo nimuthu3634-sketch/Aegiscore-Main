@@ -1,9 +1,14 @@
+/*
+ * Query Warnings reusable UI component used by the React dashboard.
+ */
 import { Card } from "../ui/Card";
 
+// Defines the Query Warnings Props data shape used by this frontend module.
 type QueryWarningsProps = {
   warnings: string[];
 };
 
+// Renders the Query Warnings UI section.
 export function QueryWarnings({ warnings }: QueryWarningsProps) {
   if (!warnings.length) {
     return null;

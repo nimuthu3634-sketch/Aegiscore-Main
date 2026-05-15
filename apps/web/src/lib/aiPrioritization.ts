@@ -4,15 +4,18 @@
  * built-in IP block may apply only to brute_force under strict gates.
  */
 
+// Defines the Ai Priority Tier data shape used by this frontend module.
 export type AiPriorityTier = "low" | "medium" | "high" | "critical";
 
 const ML_BRUTE_RULE = "ml_brute_force_auto_block_v1";
 const AI_DIRECT_BRUTE_RULE = "ai_direct_brute_force_block";
 
+// Helper function for is Tensor Flow Scoring Method logic in this file.
 export function isTensorFlowScoringMethod(value: string | null | undefined): boolean {
   return (value ?? "").toLowerCase() === "tensorflow_model";
 }
 
+// Helper function for normalize Ai Tier logic in this file.
 export function normalizeAiTier(raw: string | null | undefined): AiPriorityTier | null {
   if (!raw) {
     return null;
@@ -24,10 +27,12 @@ export function normalizeAiTier(raw: string | null | undefined): AiPriorityTier 
   return null;
 }
 
+// Formats ai Tier Title Case for display in the dashboard.
 export function formatAiTierTitleCase(tier: AiPriorityTier): "Low" | "Medium" | "High" {
   return tier === "low" ? "Low" : tier === "medium" ? "Medium" : "High";
 }
 
+// Formats class Probabilities Line for display in the dashboard.
 export function formatClassProbabilitiesLine(
   probs: Record<string, number> | null | undefined
 ): string | null {
@@ -45,6 +50,7 @@ export function formatClassProbabilitiesLine(
   return parts.length ? parts.join(" · ") : null;
 }
 
+// Helper function for summarize Ml Brute Force Block logic in this file.
 export function summarizeMlBruteForceBlock(details: Record<string, unknown> | undefined): string | null {
   if (!details || typeof details !== "object") {
     return null;
@@ -95,5 +101,6 @@ export function summarizeMlBruteForceBlock(details: Record<string, unknown> | un
   return parts.join(" ");
 }
 
+// Helper function for aUTOMATED BLOCK SCOPE NOTE logic in this file.
 export const AUTOMATED_BLOCK_SCOPE_NOTE =
   "Built-in automated IP blocking applies only to brute_force alerts when TensorFlow prioritization is High and login-density gates pass. Port scan, file integrity, and unauthorized user creation are never auto-blocked by this rule.";

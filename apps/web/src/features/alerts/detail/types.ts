@@ -1,3 +1,6 @@
+/*
+ * TypeScript types used by the alerts feature area.
+ */
 import type { AnalystNote } from "../../../components/data-display/AnalystNotesPanel";
 import type { RelatedResponseItem } from "../../../components/data-display/RelatedResponsesPanel";
 import type { KeyValueItem } from "../../../components/data-display/KeyValueGrid";
@@ -5,6 +8,7 @@ import type { AiPriorityTier } from "../../../lib/aiPrioritization";
 import type { Severity, StatusTone } from "../../../lib/theme/tokens";
 import type { IncidentNotificationItem } from "../../incidents/detail/types";
 
+// Defines the Alert Score Explanation data shape used by this frontend module.
 export type AlertScoreExplanation = {
   score: number | null;
   label: string;
@@ -22,6 +26,7 @@ export type AlertScoreExplanation = {
   classProbabilitiesSummary?: string | null;
 };
 
+// Defines the Alert Audit History Item data shape used by this frontend module.
 export type AlertAuditHistoryItem = {
   id: string;
   timestamp: string;
@@ -31,6 +36,7 @@ export type AlertAuditHistoryItem = {
   actor: string;
 };
 
+// Defines the Alert Detail Record data shape used by this frontend module.
 export type AlertDetailRecord = {
   id: string;
   title?: string;
@@ -61,11 +67,13 @@ export type AlertDetailRecord = {
   auditHistory?: AlertAuditHistoryItem[];
 };
 
+// Defines the Alert Detail Response data shape used by this frontend module.
 export type AlertDetailResponse = {
   alert: AlertDetailRecord;
   fetchedAt: string;
 };
 
+// Defines the Alert Detail Api Response data shape used by this frontend module.
 export type AlertDetailApiResponse = {
   id: string;
   title: string;
@@ -218,6 +226,7 @@ export type AlertDetailApiResponse = {
   }>;
 };
 
+// Defines the Alert Lifecycle Api Response data shape used by this frontend module.
 export type AlertLifecycleApiResponse = {
   alert_id: string;
   previous_status: string;
@@ -226,6 +235,7 @@ export type AlertLifecycleApiResponse = {
   message: string;
 };
 
+// Defines the Alert Link Incident Api Response data shape used by this frontend module.
 export type AlertLinkIncidentApiResponse = {
   incident_id: string;
   title: string;
@@ -235,6 +245,7 @@ export type AlertLinkIncidentApiResponse = {
   message: string;
 };
 
+// Defines the Alert Link Incident Api Request data shape used by this frontend module.
 export type AlertLinkIncidentApiRequest = {
   incident_id?: string;
   create_new?: boolean;

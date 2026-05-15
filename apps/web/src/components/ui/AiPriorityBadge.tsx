@@ -1,7 +1,11 @@
+/*
+ * Ai Priority Badge reusable UI component used by the React dashboard.
+ */
 import { Badge } from "./Badge";
 import type { AiPriorityTier } from "../../lib/aiPrioritization";
 import { formatAiTierTitleCase } from "../../lib/aiPrioritization";
 
+// Defines the Ai Priority Badge Props data shape used by this frontend module.
 type AiPriorityBadgeProps = {
   tier: AiPriorityTier;
 };

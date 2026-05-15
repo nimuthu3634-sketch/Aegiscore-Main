@@ -1,9 +1,13 @@
+/*
+ * Alert Ai Context Banner reusable UI component used by the React dashboard.
+ */
 import { Badge } from "../ui/Badge";
 import { AiPriorityBadge } from "../ui/AiPriorityBadge";
 import type { AiPriorityTier } from "../../lib/aiPrioritization";
 import { isTensorFlowScoringMethod } from "../../lib/aiPrioritization";
 import { AUTOMATED_BLOCK_SCOPE_NOTE } from "../../lib/aiPrioritization";
 
+// Defines the Alert Ai Context Banner Props data shape used by this frontend module.
 type AlertAiContextBannerProps = {
   sourceType: "Wazuh" | "Suricata";
   detectionType: string;

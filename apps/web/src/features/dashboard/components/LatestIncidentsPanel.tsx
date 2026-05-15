@@ -1,3 +1,6 @@
+/*
+ * Latest Incidents Panel reusable UI component used by the React dashboard.
+ */
 import { Badge } from "../../../components/ui/Badge";
 import { Button } from "../../../components/ui/Button";
 import { IncidentStateBadge } from "../../../components/ui/IncidentStateBadge";
@@ -12,12 +15,14 @@ import {
 import type { IncidentRecord } from "../../incidents/types";
 import { formatTokenLabel } from "../../../lib/formatters";
 
+// Defines the Latest Incidents Panel Props data shape used by this frontend module.
 type LatestIncidentsPanelProps = {
   incidents: IncidentRecord[];
   onOpenIncident: (incidentId: string) => void;
   onViewQueue: () => void;
 };
 
+// Renders the Latest Incidents Panel UI section.
 export function LatestIncidentsPanel({
   incidents,
   onOpenIncident,

@@ -1,3 +1,6 @@
+/*
+ * Incident Detail Page page component used to display one main dashboard screen.
+ */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ActivityTimeline } from "../components/data-display/ActivityTimeline";
@@ -24,6 +27,7 @@ import {
 } from "../features/incidents/detail/service";
 import { formatTokenLabel } from "../lib/formatters";
 
+// Renders the Incident Detail Page UI section.
 export function IncidentDetailPage() {
   const navigate = useNavigate();
   const { incidentId } = useParams<{ incidentId: string }>();

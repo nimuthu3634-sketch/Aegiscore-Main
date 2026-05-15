@@ -1,6 +1,10 @@
+/*
+ * Key Value Grid reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { cn } from "../../lib/cn";
 
+// Defines the Key Value Item data shape used by this frontend module.
 export type KeyValueItem = {
   label: string;
   value: ReactNode;
@@ -8,6 +12,7 @@ export type KeyValueItem = {
   emphasized?: boolean;
 };
 
+// Defines the Key Value Grid Props data shape used by this frontend module.
 type KeyValueGridProps = {
   items: KeyValueItem[];
   columns?: 2 | 3 | 4;
@@ -20,6 +25,7 @@ const columnClasses: Record<NonNullable<KeyValueGridProps["columns"]>, string> =
   4: "md:grid-cols-2 xl:grid-cols-4"
 };
 
+// Renders the Key Value Grid UI section.
 export function KeyValueGrid({
   items,
   columns = 3,

@@ -1,3 +1,6 @@
+/*
+ * Playwright end-to-end tests for checking frontend user workflows.
+ */
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -15,12 +18,14 @@ const fixturesDir = path.resolve(
   "../api/tests/fixtures/ingestion"
 );
 
+// Defines the Scenario Key data shape used by this frontend module.
 export type ScenarioKey =
   | "brute_force"
   | "port_scan"
   | "file_integrity_violation"
   | "unauthorized_user_creation";
 
+// Defines the Scenario Definition data shape used by this frontend module.
 type ScenarioDefinition = {
   key: ScenarioKey;
   fixtureFile: string;
@@ -31,12 +36,14 @@ type ScenarioDefinition = {
   expectedEvidenceText: string;
 };
 
+// Defines the Login Api Response data shape used by this frontend module.
 type LoginApiResponse = {
   access_token?: string;
   mfa_required?: boolean;
   mfa_token?: string;
 };
 
+// Defines the Ingestion Api Response data shape used by this frontend module.
 type IngestionApiResponse = {
   alert: {
     id: string;
@@ -47,6 +54,7 @@ type IngestionApiResponse = {
   } | null;
 };
 
+// Defines the Seeded Scenario data shape used by this frontend module.
 export type SeededScenario = {
   alertId: string;
   incidentId: string | null;
@@ -96,6 +104,7 @@ const scenarioDefinitions: ScenarioDefinition[] = [
   }
 ];
 
+// Helper function for with Unique External Id logic in this file.
 function withUniqueExternalId(
   payload: Record<string, unknown>,
   source: "wazuh" | "suricata",
@@ -126,6 +135,7 @@ function withUniqueExternalId(
   return cloned;
 }
 
+// Helper function for load Fixture Payload logic in this file.
 function loadFixturePayload(
   fixtureFile: string,
   source: "wazuh" | "suricata"

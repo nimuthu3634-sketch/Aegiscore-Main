@@ -1,3 +1,6 @@
+/*
+ * API helper functions for the responses feature area.
+ */
 import { useCallback } from "react";
 import { useAsyncResource } from "../../lib/data/useAsyncResource";
 import { fetchApiJson } from "../../lib/api";
@@ -27,6 +30,7 @@ async function listResponses(
   return mapResponsesListResponse(response);
 }
 
+// Helper function for use Responses List logic in this file.
 export function useResponsesList(query: ResponsesListQuery) {
   const loader = useCallback(() => listResponses(query), [query]);
   return useAsyncResource(loader);

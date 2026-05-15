@@ -1,3 +1,6 @@
+/*
+ * React entry point that mounts the AegisCore frontend into the browser.
+ */
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";

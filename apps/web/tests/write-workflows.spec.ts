@@ -1,3 +1,6 @@
+/*
+ * Playwright end-to-end tests for checking frontend user workflows.
+ */
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import {
   analystPassword,
@@ -8,6 +11,7 @@ import {
   seedThreatScenarios
 } from "./support/e2e";
 
+// Defines the Alert List Item data shape used by this frontend module.
 type AlertListItem = {
   id: string;
   detection_type: string;
@@ -15,19 +19,23 @@ type AlertListItem = {
   incident: { id: string } | null;
 };
 
+// Defines the Alerts List Api Response data shape used by this frontend module.
 type AlertsListApiResponse = {
   items: AlertListItem[];
 };
 
+// Defines the Incident List Item data shape used by this frontend module.
 type IncidentListItem = {
   id: string;
   state_label: string;
 };
 
+// Defines the Incidents List Api Response data shape used by this frontend module.
 type IncidentsListApiResponse = {
   items: IncidentListItem[];
 };
 
+// Defines the Incident Detail Api Response data shape used by this frontend module.
 type IncidentDetailApiResponse = {
   state_transition_capabilities: {
     available_actions: Array<
@@ -36,11 +44,13 @@ type IncidentDetailApiResponse = {
   };
 };
 
+// Defines the Alert Detail Api Response data shape used by this frontend module.
 type AlertDetailApiResponse = {
   id: string;
   status_label: string;
 };
 
+// Defines the Ingestion Api Response data shape used by this frontend module.
 type IngestionApiResponse = {
   alert: { id: string };
   linked_incident?: { id: string } | null;
@@ -54,6 +64,7 @@ const transitionTargetStateByAction = {
   mark_false_positive: "false_positive"
 } as const;
 
+// Test case for an important frontend workflow.
 function isTerminalIncidentState(stateLabel: string) {
   const normalized = stateLabel.toLowerCase();
   return normalized === "resolved" || normalized === "false positive" || normalized === "false_positive";
@@ -148,6 +159,7 @@ async function resolveIncidentIdForWorkflow(
   return null;
 }
 
+// Test case for an important user workflow.
 test("alerts support acknowledge, close, note, and link-to-incident write flows", async ({
   page,
   request
@@ -297,6 +309,7 @@ test("alerts support acknowledge, close, note, and link-to-incident write flows"
   ).toBeVisible({ timeout: 15000 });
 });
 
+// Test case for an important user workflow.
 test("incident transitions, policy toggles, and reports export trigger stay operational", async ({
   page,
   request
@@ -359,6 +372,7 @@ test("incident transitions, policy toggles, and reports export trigger stay oper
   }
 });
 
+// Test case for an important user workflow.
 test("incident transition invalid action is rejected and shown to operator", async ({
   page,
   request
@@ -408,6 +422,7 @@ test("incident transition invalid action is rejected and shown to operator", asy
   expect(payload.detail.toLowerCase()).toContain("cannot transition");
 });
 
+// Test case for an important user workflow.
 test("analyst role cannot mutate policy enabled state", async ({
   page,
   request

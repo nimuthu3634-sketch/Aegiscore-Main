@@ -1,3 +1,6 @@
+/*
+ * Rules Page page component used to display one main dashboard screen.
+ */
 import { useMemo, useState } from "react";
 import { MetricCard } from "../components/data-display/MetricCard";
 import { SearchFilterToolbar } from "../components/data-display/SearchFilterToolbar";
@@ -17,8 +20,10 @@ import { formatTokenLabel } from "../lib/formatters";
 import { supportedDetectionSelectOptions } from "../lib/supportedDetections";
 import { pageBlueprints } from "../lib/theme/tokens";
 
+// Defines the Enabled Filter data shape used by this frontend module.
 type EnabledFilter = "" | "enabled" | "disabled";
 
+// Renders the Rules Page UI section.
 export function RulesPage() {
   const [search, setSearch] = useState("");
   const [detectionType, setDetectionType] = useState("");

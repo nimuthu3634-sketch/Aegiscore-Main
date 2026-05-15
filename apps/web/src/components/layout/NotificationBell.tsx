@@ -1,3 +1,6 @@
+/*
+ * Notification Bell reusable UI component used by the React dashboard.
+ */
 import {
   useCallback,
   useEffect,
@@ -17,8 +20,10 @@ import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { cn } from "../../lib/cn";
 
+// Renders the DEFAULT POLL MS UI section.
 const DEFAULT_POLL_MS = 30_000;
 
+// Formats relative Time for display in the dashboard.
 function formatRelativeTime(iso: string): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) {
@@ -48,6 +53,7 @@ function formatRelativeTime(iso: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+// Helper function for trigger Icon Name logic in this file.
 function triggerIconName(triggerType: string): IconName {
   switch (triggerType) {
     case "risk_threshold":
@@ -63,14 +69,17 @@ function triggerIconName(triggerType: string): IconName {
   }
 }
 
+// Formats trigger Label for display in the dashboard.
 function formatTriggerLabel(triggerType: string): string {
   return triggerType.replace(/_/g, " ");
 }
 
+// Defines the Notification Bell Props data shape used by this frontend module.
 type NotificationBellProps = {
   pollIntervalMs?: number;
 };
 
+// Renders the Notification Bell UI section.
 export function NotificationBell({
   pollIntervalMs = DEFAULT_POLL_MS
 }: NotificationBellProps) {

@@ -1,3 +1,6 @@
+/*
+ * Main React application component that controls routing, session checks, and layout rendering.
+ */
 import { startTransition, useCallback, useEffect, useState } from "react";
 import {
   Navigate,
@@ -39,6 +42,7 @@ import {
   type NavKey
 } from "./lib/theme/tokens";
 
+// Resolves active Page based on the current page state.
 function resolveActivePage(pathname: string): NavKey {
   const match = primaryNavigation.find(
     (item) => pathname === item.path || pathname.startsWith(`${item.path}/`)
@@ -47,6 +51,7 @@ function resolveActivePage(pathname: string): NavKey {
   return match?.id ?? "overview";
 }
 
+// Renders the App UI section.
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();

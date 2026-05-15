@@ -1,8 +1,12 @@
+/*
+ * Empty State reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import type { IconName } from "../../lib/theme/tokens";
 import { Card } from "../ui/Card";
 import { Icon } from "../ui/Icon";
 
+// Defines the Empty State Props data shape used by this frontend module.
 type EmptyStateProps = {
   title: string;
   description: string;
@@ -11,6 +15,7 @@ type EmptyStateProps = {
   dataTestId?: string;
 };
 
+// Renders the Empty State UI section.
 export function EmptyState({
   title,
   description,

@@ -1,3 +1,6 @@
+/*
+ * TypeScript types used by the incidents feature area.
+ */
 import type { AnalystNote } from "../../../components/data-display/AnalystNotesPanel";
 import type { LinkedAlertRow } from "../../../components/data-display/LinkedAlertsTable";
 import type { TimelineItem } from "../../../components/data-display/ActivityTimeline";
@@ -5,6 +8,7 @@ import type { RelatedResponseItem } from "../../../components/data-display/Relat
 import type { Severity, StatusTone } from "../../../lib/theme/tokens";
 import type { AssetCriticality } from "../../assets/types";
 
+// Defines the Incident Asset Summary data shape used by this frontend module.
 export type IncidentAssetSummary = {
   hostname: string;
   ipAddress: string;
@@ -12,6 +16,7 @@ export type IncidentAssetSummary = {
   recentAlertsCount: number;
 };
 
+// Defines the Incident Priority Explanation data shape used by this frontend module.
 export type IncidentPriorityExplanation = {
   label: string;
   summary: string;
@@ -22,6 +27,7 @@ export type IncidentPriorityExplanation = {
   scoringMethods: string[];
 };
 
+// Defines the Incident Notification Item data shape used by this frontend module.
 export type IncidentNotificationItem = {
   id: string;
   channel: string;
@@ -36,6 +42,7 @@ export type IncidentNotificationItem = {
   errorMessage: string | null;
 };
 
+// Defines the Incident Detail Record data shape used by this frontend module.
 export type IncidentDetailRecord = {
   id: string;
   title: string;
@@ -62,11 +69,13 @@ export type IncidentDetailRecord = {
   notifications: IncidentNotificationItem[];
 };
 
+// Defines the Incident Detail Response data shape used by this frontend module.
 export type IncidentDetailResponse = {
   incident: IncidentDetailRecord;
   fetchedAt: string;
 };
 
+// Defines the Incident Detail Api Response data shape used by this frontend module.
 export type IncidentDetailApiResponse = {
   id: string;
   title: string;
@@ -207,6 +216,7 @@ export type IncidentDetailApiResponse = {
   };
 };
 
+// Defines the Incident Transition Api Response data shape used by this frontend module.
 export type IncidentTransitionApiResponse = {
   incident_id: string;
   previous_state: string;
@@ -214,6 +224,7 @@ export type IncidentTransitionApiResponse = {
   message: string;
 };
 
+// Defines the Incident Analyst Note Create Api Response data shape used by this frontend module.
 export type IncidentAnalystNoteCreateApiResponse = {
   note: IncidentDetailApiResponse["analyst_notes"][number];
   message: string;

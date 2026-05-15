@@ -1,13 +1,20 @@
+/*
+ * TypeScript types used by the alerts feature area.
+ */
 import type { Severity, StatusTone } from "../../lib/theme/tokens";
 import type { ListQueryMeta, SortDirection } from "../../lib/api/query";
 
+// Defines the Alerts Date Range data shape used by this frontend module.
 export type AlertsDateRange = "4h" | "12h" | "24h" | "all";
+// Defines the Alerts Sort Field data shape used by this frontend module.
 export type AlertsSortField = "timestamp" | "severity" | "risk_score";
+// Defines the Alert Status Filter data shape used by this frontend module.
 export type AlertStatusFilter = Extract<
   StatusTone,
   "new" | "triaged" | "investigating" | "contained" | "resolved" | "pending_response"
 >;
 
+// Defines the Alerts List Query data shape used by this frontend module.
 export type AlertsListQuery = {
   search: string;
   severity: Severity | "";
@@ -22,6 +29,7 @@ export type AlertsListQuery = {
   pageSize: number;
 };
 
+// Defines the Alert Record data shape used by this frontend module.
 export type AlertRecord = {
   id: string;
   detectionType: string;
@@ -37,6 +45,7 @@ export type AlertRecord = {
   eventId: string;
 };
 
+// Defines the Alerts List Response data shape used by this frontend module.
 export type AlertsListResponse = {
   items: AlertRecord[];
   total: number;
@@ -44,6 +53,7 @@ export type AlertsListResponse = {
   meta: ListQueryMeta;
 };
 
+// Defines the Alerts List Api Response data shape used by this frontend module.
 export type AlertsListApiResponse = {
   meta: {
     page: number;

@@ -1,6 +1,10 @@
+/*
+ * Table Pagination reusable UI component used by the React dashboard.
+ */
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 
+// Defines the Table Pagination Props data shape used by this frontend module.
 type TablePaginationProps = {
   page: number;
   pageSize: number;
@@ -10,6 +14,7 @@ type TablePaginationProps = {
   onPageChange: (page: number) => void;
 };
 
+// Renders the Table Pagination UI section.
 export function TablePagination({
   page,
   pageSize,

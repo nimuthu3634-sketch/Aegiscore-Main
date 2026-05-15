@@ -1,16 +1,22 @@
+/*
+ * Distribution Bars reusable UI component used by the React dashboard.
+ */
 import { cn } from "../../../lib/cn";
 import type { DashboardDistributionPoint } from "../types";
 
+// Defines the Distribution Bars Props data shape used by this frontend module.
 type DistributionBarsProps = {
   title: string;
   items: DashboardDistributionPoint[];
   className?: string;
 };
 
+// Formats label for display in the dashboard.
 function formatLabel(label: string) {
   return label.replace(/_/g, " ");
 }
 
+// Renders the Distribution Bars UI section.
 export function DistributionBars({
   title,
   items,

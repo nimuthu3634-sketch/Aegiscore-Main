@@ -1,3 +1,6 @@
+/*
+ * API helper functions for the alerts feature area.
+ */
 import { useEffect, useState } from "react";
 import { ApiRequestError, fetchApiJson, formatUtcDateTime } from "../../../lib/api";
 import {
@@ -22,6 +25,7 @@ import type {
   AnalystNoteCreateApiResponse
 } from "./types";
 
+// Defines the Alert Detail State data shape used by this frontend module.
 type AlertDetailState = {
   data: AlertDetailResponse | null;
   isLoading: boolean;
@@ -30,6 +34,7 @@ type AlertDetailState = {
   reload: () => void;
 };
 
+// Converts API data into the frontend format for map Alert Detail Response.
 function mapAlertDetailResponse(payload: AlertDetailApiResponse): AlertDetailResponse {
   return {
     fetchedAt: formatUtcDateTime(new Date().toISOString()),
@@ -168,6 +173,7 @@ export async function saveAlertNote(alertId: string, content: string) {
   });
 }
 
+// Helper function for use Alert Detail logic in this file.
 export function useAlertDetail(alertId: string | undefined): AlertDetailState {
   const [data, setData] = useState<AlertDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -1,3 +1,6 @@
+/*
+ * Mfa Setup Modal component used inside one frontend feature module.
+ */
 import { QRCodeSVG } from "qrcode.react";
 import { useCallback, useState } from "react";
 import { Modal } from "../../components/feedback/Modal";
@@ -11,6 +14,7 @@ import {
   verifyMfaSetup
 } from "../../lib/api";
 
+// Defines the Mfa Setup Modal Props data shape used by this frontend module.
 type MfaSetupModalProps = {
   open: boolean;
   onClose: () => void;
@@ -19,6 +23,7 @@ type MfaSetupModalProps = {
   onProfileChanged: () => void;
 };
 
+// Renders the Mfa Setup Modal UI section.
 export function MfaSetupModal({
   open,
   onClose,

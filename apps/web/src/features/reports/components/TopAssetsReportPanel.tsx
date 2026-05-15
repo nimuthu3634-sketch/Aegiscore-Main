@@ -1,3 +1,6 @@
+/*
+ * Top Assets Report Panel reusable UI component used by the React dashboard.
+ */
 import { Button } from "../../../components/ui/Button";
 import {
   Card,
@@ -8,11 +11,13 @@ import {
 } from "../../../components/ui/Card";
 import type { ReportTopAsset } from "../types";
 
+// Defines the Top Assets Report Panel Props data shape used by this frontend module.
 type TopAssetsReportPanelProps = {
   assets: ReportTopAsset[];
   onViewAssets: () => void;
 };
 
+// Renders the Top Assets Report Panel UI section.
 export function TopAssetsReportPanel({
   assets,
   onViewAssets

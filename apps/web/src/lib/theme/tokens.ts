@@ -1,3 +1,6 @@
+/*
+ * Frontend helper utilities shared across the React application.
+ */
 export type NavKey =
   | "overview"
   | "alerts"
@@ -9,6 +12,7 @@ export type NavKey =
   | "settings"
   | "users";
 
+// Defines the Icon Name data shape used by this frontend module.
 export type IconName =
   | "dashboard"
   | "alerts"
@@ -35,7 +39,9 @@ export type IconName =
   | "logout"
   | "bell";
 
+// Defines the Severity data shape used by this frontend module.
 export type Severity = "critical" | "high" | "medium" | "low";
+// Defines the Status Tone data shape used by this frontend module.
 export type StatusTone =
   | "new"
   | "triaged"
@@ -47,8 +53,10 @@ export type StatusTone =
   | "failed"
   | "disabled";
 
+// Defines the Health Tone data shape used by this frontend module.
 export type HealthTone = "healthy" | "degraded" | "down";
 
+// Defines the Navigation Item data shape used by this frontend module.
 export type NavigationItem = {
   id: NavKey;
   label: string;
@@ -58,6 +66,7 @@ export type NavigationItem = {
   badgeCount?: number;
 };
 
+// Helper function for theme Tokens logic in this file.
 export const themeTokens = {
   colors: {
     brandPrimary: "#F97316",
@@ -90,6 +99,7 @@ export const themeTokens = {
   }
 } as const;
 
+// Helper function for primary Navigation logic in this file.
 export const primaryNavigation: NavigationItem[] = [
   {
     id: "overview",
@@ -156,6 +166,7 @@ export const primaryNavigation: NavigationItem[] = [
   }
 ];
 
+// Helper function for analyst Navigation logic in this file.
 export const analystNavigation = primaryNavigation.filter((item) =>
   ["overview", "alerts", "incidents", "assets", "responses", "rules", "reports"].includes(item.id)
 );

@@ -1,3 +1,6 @@
+/*
+ * Playwright end-to-end tests for checking frontend user workflows.
+ */
 import { expect, test } from "@playwright/test";
 import {
   apiPassword,
@@ -14,6 +17,7 @@ test.beforeAll(async ({ request }) => {
   await seedThreatScenarios(request);
 });
 
+// Test case for an important user workflow.
 test("login route authenticates and opens the overview dashboard", async ({
   page
 }) => {
@@ -34,6 +38,7 @@ test("login route authenticates and opens the overview dashboard", async ({
   await expect(page.getByTestId("aegiscore-logo").nth(1)).toBeVisible();
 });
 
+// Test case for an important user workflow.
 test("login route shows clear error on invalid credentials", async ({ page }) => {
   await clearStoredSession(page);
   await page.goto("/login");
@@ -48,6 +53,7 @@ test("login route shows clear error on invalid credentials", async ({ page }) =>
   ).toBeVisible();
 });
 
+// Test case for an important user workflow.
 test("invalid stored session is redirected back to login", async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem("aegiscore.access_token", "expired-or-invalid-token");
@@ -57,6 +63,7 @@ test("invalid stored session is redirected back to login", async ({ page }) => {
   await expectPageHeading(page, "Sign in to AegisCore");
 });
 
+// Test case for an important user workflow.
 test("overview, alerts, and incidents support route-level investigation workflows", async ({
   page,
   request
@@ -98,6 +105,7 @@ test("overview, alerts, and incidents support route-level investigation workflow
   await expect(page.getByText("Incident queue filters")).toBeVisible();
 });
 
+// Test case for an important user workflow.
 test("assets, responses, rules, and reports render live backend-backed operational data", async ({
   page,
   request

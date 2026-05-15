@@ -1,7 +1,11 @@
+/*
+ * Analyst Notes Panel reusable UI component used by the React dashboard.
+ */
 import { Button } from "../ui/Button";
 import { Textarea } from "../ui/Textarea";
 import { EvidencePanel } from "./EvidencePanel";
 
+// Defines the Analyst Note data shape used by this frontend module.
 export type AnalystNote = {
   id: string;
   author: string;
@@ -9,6 +13,7 @@ export type AnalystNote = {
   content: string;
 };
 
+// Defines the Analyst Notes Panel Props data shape used by this frontend module.
 type AnalystNotesPanelProps = {
   notes: AnalystNote[];
   composerLabel?: string;
@@ -21,6 +26,7 @@ type AnalystNotesPanelProps = {
   saveDisabled?: boolean;
 };
 
+// Renders the Analyst Notes Panel UI section.
 export function AnalystNotesPanel({
   notes,
   composerLabel = "Add analyst note",

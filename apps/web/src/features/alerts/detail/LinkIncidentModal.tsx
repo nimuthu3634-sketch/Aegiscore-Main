@@ -1,3 +1,6 @@
+/*
+ * Link Incident Modal component used inside one frontend feature module.
+ */
 import {
   startTransition,
   useDeferredValue,
@@ -23,8 +26,10 @@ import { useIncidentsList } from "../../incidents/service";
 import type { IncidentRecord, IncidentsListQuery } from "../../incidents/types";
 import { linkAlertToIncident } from "./service";
 
+// Defines the Link Mode data shape used by this frontend module.
 type LinkMode = "existing" | "new";
 
+// Defines the Link Incident Modal Props data shape used by this frontend module.
 type LinkIncidentModalProps = {
   open: boolean;
   alertId: string;
@@ -34,16 +39,19 @@ type LinkIncidentModalProps = {
   onSuccess: (message: string) => void;
 };
 
+// Defines the Incident Candidate List Props data shape used by this frontend module.
 type IncidentCandidateListProps = {
   incidents: IncidentRecord[];
   selectedIncidentId: string | null;
   onSelect: (incident: IncidentRecord) => void;
 };
 
+// Defines the Incident Preview Card Props data shape used by this frontend module.
 type IncidentPreviewCardProps = {
   incident: IncidentRecord | null;
 };
 
+// Renders the Incident Candidate List UI section.
 function IncidentCandidateList({
   incidents,
   selectedIncidentId,
@@ -101,6 +109,7 @@ function IncidentCandidateList({
   );
 }
 
+// Renders the Incident Preview Card UI section.
 function IncidentPreviewCard({ incident }: IncidentPreviewCardProps) {
   if (!incident) {
     return (
@@ -185,6 +194,7 @@ function IncidentPreviewCard({ incident }: IncidentPreviewCardProps) {
   );
 }
 
+// Renders the New Incident Preview Card UI section.
 function NewIncidentPreviewCard({
   title,
   summary
@@ -235,6 +245,7 @@ function NewIncidentPreviewCard({
   );
 }
 
+// Renders the Link Incident Modal UI section.
 export function LinkIncidentModal({
   open,
   alertId,

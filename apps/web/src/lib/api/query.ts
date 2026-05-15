@@ -1,5 +1,9 @@
+/*
+ * Helper functions for transforming or querying backend API data.
+ */
 export type SortDirection = "asc" | "desc";
 
+// Defines the List Query Meta data shape used by this frontend module.
 export type ListQueryMeta = {
   page: number;
   pageSize: number;
@@ -10,8 +14,10 @@ export type ListQueryMeta = {
   warnings: string[];
 };
 
+// Defines the Query Param Value data shape used by this frontend module.
 type QueryParamValue = string | number | boolean | null | undefined;
 
+// Builds api Path data used by the UI.
 export function buildApiPath(
   path: string,
   params: Record<string, QueryParamValue>
@@ -30,6 +36,7 @@ export function buildApiPath(
   return queryString ? `${path}?${queryString}` : path;
 }
 
+// Converts API data into the frontend format for map List Query Meta.
 export function mapListQueryMeta(meta: {
   page: number;
   page_size: number;

@@ -1,3 +1,6 @@
+/*
+ * Related Responses Panel reusable UI component used by the React dashboard.
+ */
 import { EvidencePanel } from "./EvidencePanel";
 import { ModeBadge, ExecutionStatusBadge } from "../../features/responses/components/ResponseBadges";
 import type { ResponseExecutionStatus, ResponseMode } from "../../features/responses/types";
@@ -5,6 +8,7 @@ import { Badge } from "../ui/Badge";
 import { formatTokenLabel } from "../../lib/formatters";
 import { summarizeMlBruteForceBlock } from "../../lib/aiPrioritization";
 
+// Defines the Response Related Notification data shape used by this frontend module.
 export type ResponseRelatedNotification = {
   id: string;
   recipient: string;
@@ -14,6 +18,7 @@ export type ResponseRelatedNotification = {
   subject: string;
 };
 
+// Defines the Related Response Item data shape used by this frontend module.
 export type RelatedResponseItem = {
   id: string;
   actionType: string;
@@ -31,6 +36,7 @@ export type RelatedResponseItem = {
   details?: Record<string, unknown>;
 };
 
+// Defines the Related Responses Panel Props data shape used by this frontend module.
 type RelatedResponsesPanelProps = {
   responses: RelatedResponseItem[];
   title?: string;
@@ -38,6 +44,7 @@ type RelatedResponsesPanelProps = {
   automationScopeFootnote?: string | null;
 };
 
+// Renders the Related Responses Panel UI section.
 export function RelatedResponsesPanel({
   responses,
   title = "Related response actions",

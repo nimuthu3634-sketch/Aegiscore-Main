@@ -1,9 +1,16 @@
+/*
+ * TypeScript types used by the responses feature area.
+ */
 import type { ListQueryMeta, SortDirection } from "../../lib/api/query";
 
+// Defines the Response Mode data shape used by this frontend module.
 export type ResponseMode = "dry-run" | "live";
+// Defines the Response Execution Status data shape used by this frontend module.
 export type ResponseExecutionStatus = "succeeded" | "warning" | "failed" | "pending";
+// Defines the Responses Sort Field data shape used by this frontend module.
 export type ResponsesSortField = "executed_at" | "status";
 
+// Defines the Responses List Query data shape used by this frontend module.
 export type ResponsesListQuery = {
   search: string;
   actionType: string;
@@ -15,6 +22,7 @@ export type ResponsesListQuery = {
   pageSize: number;
 };
 
+// Defines the Response Record data shape used by this frontend module.
 export type ResponseRecord = {
   id: string;
   actionType: string;
@@ -34,6 +42,7 @@ export type ResponseRecord = {
   mlBruteBlockSummary: string | null;
 };
 
+// Defines the Responses List Response data shape used by this frontend module.
 export type ResponsesListResponse = {
   items: ResponseRecord[];
   total: number;
@@ -41,6 +50,7 @@ export type ResponsesListResponse = {
   meta: ListQueryMeta;
 };
 
+// Defines the Responses List Api Response data shape used by this frontend module.
 export type ResponsesListApiResponse = {
   meta: {
     page: number;

@@ -1,3 +1,6 @@
+/*
+ * App Shell reusable UI component used by the React dashboard.
+ */
 import { useState } from "react";
 import type { ChangeEventHandler, ReactNode } from "react";
 import { NotificationBell } from "./NotificationBell";
@@ -9,6 +12,7 @@ import type {
 import { Sidebar } from "./Sidebar";
 import { TopNavigation } from "./TopNavigation";
 
+// Defines the App Shell Props data shape used by this frontend module.
 type AppShellProps = {
   items: NavigationItem[];
   activeId: NavKey;
@@ -28,6 +32,7 @@ type AppShellProps = {
   notificationPollIntervalMs?: number;
 };
 
+// Renders the App Shell UI section.
 export function AppShell({
   items,
   activeId,

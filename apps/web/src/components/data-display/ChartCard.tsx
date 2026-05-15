@@ -1,7 +1,11 @@
+/*
+ * Chart Card reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { cn } from "../../lib/cn";
 import { Card, CardContent } from "../ui/Card";
 
+// Defines the Chart Card Props data shape used by this frontend module.
 type ChartCardProps = {
   eyebrow?: string;
   title: string;
@@ -13,6 +17,7 @@ type ChartCardProps = {
   bodyClassName?: string;
 };
 
+// Renders the Chart Card UI section.
 export function ChartCard({
   eyebrow,
   title,

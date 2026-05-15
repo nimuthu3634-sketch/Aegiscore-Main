@@ -1,6 +1,11 @@
+/*
+ * TypeScript types used by the policies feature area.
+ */
 export type PolicyTarget = "alert" | "incident";
+// Defines the Policy Mode data shape used by this frontend module.
 export type PolicyMode = "dry-run" | "live";
 
+// Defines the Policy Record data shape used by this frontend module.
 export type PolicyRecord = {
   id: string;
   name: string;
@@ -14,11 +19,13 @@ export type PolicyRecord = {
   lastUpdated: string;
 };
 
+// Defines the Policies Response data shape used by this frontend module.
 export type PoliciesResponse = {
   items: PolicyRecord[];
   fetchedAt: string;
 };
 
+// Defines the Policies Api Response data shape used by this frontend module.
 export type PoliciesApiResponse = {
   items: Array<{
     id: string;
@@ -34,6 +41,7 @@ export type PoliciesApiResponse = {
   }>;
 };
 
+// Defines the Policy Update Api Response data shape used by this frontend module.
 export type PolicyUpdateApiResponse = {
   policy: PoliciesApiResponse["items"][number];
   message: string;

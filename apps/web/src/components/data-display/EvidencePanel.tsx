@@ -1,6 +1,10 @@
+/*
+ * Evidence Panel reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/Card";
 
+// Defines the Evidence Panel Props data shape used by this frontend module.
 type EvidencePanelProps = {
   eyebrow?: string;
   title: string;
@@ -10,6 +14,7 @@ type EvidencePanelProps = {
   dataTestId?: string;
 };
 
+// Renders the Evidence Panel UI section.
 export function EvidencePanel({
   eyebrow,
   title,

@@ -1,13 +1,19 @@
+/*
+ * Aegis Core Logo reusable UI component used by the React dashboard.
+ */
 import { cn } from "../lib/cn";
 
+// Defines the Aegis Core Logo Mode data shape used by this frontend module.
 type AegisCoreLogoMode = "full" | "compact" | "mark";
 
+// Defines the Aegis Core Logo Props data shape used by this frontend module.
 type AegisCoreLogoProps = {
   mode?: AegisCoreLogoMode;
   titleAs?: "div" | "h1" | "h2";
   className?: string;
 };
 
+// Renders the Aegis Core Logo UI section.
 export function AegisCoreLogo({
   mode = "full",
   titleAs = "div",

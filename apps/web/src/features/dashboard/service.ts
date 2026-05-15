@@ -1,3 +1,6 @@
+/*
+ * API helper functions for the dashboard feature area.
+ */
 import { useCallback } from "react";
 import { fetchApiJson, formatUtcDateTime } from "../../lib/api";
 import { buildApiPath } from "../../lib/api/query";
@@ -37,10 +40,13 @@ const riskPalette = {
   "<60": "#9CA3AF"
 } as const;
 
+// Defines the Severity Bucket data shape used by this frontend module.
 type SeverityBucket = keyof typeof severityPalette;
+// Defines the Incident State Bucket data shape used by this frontend module.
 type IncidentStateBucket = keyof typeof incidentStatePalette;
 const dashboardPageSize = 100;
 
+// Formats short Time for display in the dashboard.
 function formatShortTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -52,6 +58,7 @@ function formatShortTime(value: string) {
   return `${hours}:${minutes}`;
 }
 
+// Builds alert Volume data used by the UI.
 function buildAlertVolume(createdAtValues: string[]): DashboardTrendPoint[] {
   const totals = new Map<string, number>();
   const bucketByHour = createdAtValues.length > 12;
@@ -74,6 +81,7 @@ function buildAlertVolume(createdAtValues: string[]): DashboardTrendPoint[] {
     .map(([label, total]) => ({ label, total }));
 }
 
+// Builds severity Distribution data used by the UI.
 function buildSeverityDistribution(
   severities: Array<"critical" | "high" | "medium" | "low">
 ): DashboardDistributionPoint[] {
@@ -86,6 +94,7 @@ function buildSeverityDistribution(
   }));
 }
 
+// Builds risk Distribution data used by the UI.
 function buildRiskDistribution(riskScores: Array<number | null>): DashboardDistributionPoint[] {
   const buckets = {
     "80+": 0,
@@ -110,6 +119,7 @@ function buildRiskDistribution(riskScores: Array<number | null>): DashboardDistr
   }));
 }
 
+// Builds incident State Distribution data used by the UI.
 function buildIncidentStateDistribution(
   states: Array<
     | "new"
@@ -157,6 +167,7 @@ function buildIncidentStateDistribution(
   }));
 }
 
+// Builds alerts By Detection data used by the UI.
 function buildAlertsByDetection(
   detectionTotals: DashboardSummaryApiResponse["alerts_by_detection"]
 ): DashboardDetectionPoint[] {

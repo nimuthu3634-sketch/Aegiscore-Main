@@ -1,9 +1,13 @@
+/*
+ * Search Filter Toolbar reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { cn } from "../../lib/cn";
 import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { Icon } from "../ui/Icon";
 
+// Defines the Search Filter Toolbar Props data shape used by this frontend module.
 type SearchFilterToolbarProps = {
   title?: string;
   description?: string;
@@ -14,6 +18,7 @@ type SearchFilterToolbarProps = {
   className?: string;
 };
 
+// Renders the Search Filter Toolbar UI section.
 export function SearchFilterToolbar({
   title,
   description,

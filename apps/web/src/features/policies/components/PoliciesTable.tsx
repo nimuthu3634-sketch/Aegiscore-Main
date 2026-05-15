@@ -1,3 +1,6 @@
+/*
+ * Policies Table reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
 import { Badge } from "../../../components/ui/Badge";
@@ -6,6 +9,7 @@ import { ModeBadge } from "../../responses/components/ResponseBadges";
 import type { PolicyRecord } from "../types";
 import { formatTokenLabel } from "../../../lib/formatters";
 
+// Defines the Policies Table Props data shape used by this frontend module.
 type PoliciesTableProps = {
   policies: PolicyRecord[];
   pendingPolicyId?: string | null;
@@ -14,6 +18,7 @@ type PoliciesTableProps = {
   footer?: ReactNode;
 };
 
+// Renders the Policies Table UI section.
 export function PoliciesTable({
   policies,
   pendingPolicyId,

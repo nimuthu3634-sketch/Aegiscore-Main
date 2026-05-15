@@ -1,3 +1,6 @@
+/*
+ * Reports Page page component used to display one main dashboard screen.
+ */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -60,8 +63,10 @@ const tooltipItemStyle = {
 
 const detectionOptions = supportedDetectionSelectOptions();
 
+// Defines the Source Filter data shape used by this frontend module.
 type SourceFilter = "" | "wazuh" | "suricata";
 
+// Renders the Reports Page UI section.
 export function ReportsPage() {
   const navigate = useNavigate();
   const [dateFrom, setDateFrom] = useState("");

@@ -1,3 +1,6 @@
+/*
+ * Playwright end-to-end tests for checking frontend user workflows.
+ */
 import { expect, test } from "@playwright/test";
 import {
   attachAuthenticatedSession,
@@ -15,15 +18,18 @@ test.beforeAll(async ({ request }) => {
   await seedThreatScenarios(request);
 });
 
+// Defines the Alerts List Item data shape used by this frontend module.
 type AlertsListItem = {
   id: string;
   status_label: string;
 };
 
+// Defines the Alerts List Api Response data shape used by this frontend module.
 type AlertsListApiResponse = {
   items: AlertsListItem[];
 };
 
+// Test case for an important user workflow.
 test("alert acknowledge surfaces server error in workflow feedback", async ({
   page,
   request

@@ -1,6 +1,10 @@
+/*
+ * Input reusable UI component used by the React dashboard.
+ */
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { cn } from "../../lib/cn";
 
+// Defines the Input Props data shape used by this frontend module.
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
   hint?: string;
@@ -10,6 +14,7 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   mono?: boolean;
 };
 
+// Renders the Input UI section.
 export function Input({
   className,
   label,

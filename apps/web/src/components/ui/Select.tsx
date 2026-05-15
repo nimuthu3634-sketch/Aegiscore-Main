@@ -1,12 +1,17 @@
+/*
+ * Select reusable UI component used by the React dashboard.
+ */
 import type { ReactNode, SelectHTMLAttributes } from "react";
 import { cn } from "../../lib/cn";
 import { Icon } from "./Icon";
 
+// Defines the Select Option data shape used by this frontend module.
 type SelectOption = {
   label: string;
   value: string;
 };
 
+// Defines the Select Props data shape used by this frontend module.
 type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   label?: string;
   hint?: string;
@@ -16,6 +21,7 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   prefix?: ReactNode;
 };
 
+// Renders the Select UI section.
 export function Select({
   className,
   label,

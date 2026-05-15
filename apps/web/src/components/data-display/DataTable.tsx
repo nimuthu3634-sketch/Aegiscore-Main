@@ -1,7 +1,11 @@
+/*
+ * Data Table reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { cn } from "../../lib/cn";
 import { Card } from "../ui/Card";
 
+// Defines the Table Column data shape used by this frontend module.
 export type TableColumn<T> = {
   id: string;
   header: ReactNode;
@@ -11,6 +15,7 @@ export type TableColumn<T> = {
   cellClassName?: string;
 };
 
+// Defines the Data Table Props data shape used by this frontend module.
 type DataTableProps<T> = {
   ariaLabel: string;
   columns: TableColumn<T>[];
@@ -24,6 +29,7 @@ type DataTableProps<T> = {
   className?: string;
 };
 
+// Renders the Data Table UI section.
 export function DataTable<T>({
   ariaLabel,
   columns,

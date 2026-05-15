@@ -1,3 +1,6 @@
+/*
+ * Responses Table reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { DataTable, type TableColumn } from "../../../components/data-display/DataTable";
 import type { ResponseRecord } from "../types";
@@ -8,6 +11,7 @@ import {
 import { Badge } from "../../../components/ui/Badge";
 import { formatTokenLabel } from "../../../lib/formatters";
 
+// Defines the Responses Table Props data shape used by this frontend module.
 type ResponsesTableProps = {
   responses: ResponseRecord[];
   footer?: ReactNode;
@@ -97,6 +101,7 @@ const columns: TableColumn<ResponseRecord>[] = [
   }
 ];
 
+// Renders the Responses Table UI section.
 export function ResponsesTable({ responses, footer }: ResponsesTableProps) {
   return (
     <DataTable

@@ -1,7 +1,11 @@
+/*
+ * Metric Card reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { cn } from "../../lib/cn";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
 
+// Defines the Metric Card Props data shape used by this frontend module.
 type MetricCardProps = {
   label: string;
   value: string;
@@ -25,6 +29,7 @@ const toneIndicatorClasses = {
   danger: "bg-status-danger"
 } as const;
 
+// Renders the Metric Card UI section.
 export function MetricCard({
   label,
   value,

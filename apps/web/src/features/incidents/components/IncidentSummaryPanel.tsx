@@ -1,13 +1,18 @@
+/*
+ * Incident Summary Panel reusable UI component used by the React dashboard.
+ */
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/Card";
 import { Badge } from "../../../components/ui/Badge";
 import { SeverityChip } from "../../../components/ui/SeverityChip";
 import { StatusChip } from "../../../components/ui/StatusChip";
 import type { IncidentRecord } from "../types";
 
+// Defines the Incident Summary Panel Props data shape used by this frontend module.
 type IncidentSummaryPanelProps = {
   incident: IncidentRecord | null;
 };
 
+// Renders the Incident Summary Panel UI section.
 export function IncidentSummaryPanel({ incident }: IncidentSummaryPanelProps) {
   if (!incident) {
     return null;

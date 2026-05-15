@@ -1,3 +1,6 @@
+/*
+ * API helper functions for the incidents feature area.
+ */
 import { useEffect, useState } from "react";
 import { ApiRequestError, fetchApiJson, formatUtcDateTime } from "../../../lib/api";
 import {
@@ -15,6 +18,7 @@ import type {
   IncidentTransitionApiResponse
 } from "./types";
 
+// Defines the Incident Detail State data shape used by this frontend module.
 type IncidentDetailState = {
   data: IncidentDetailResponse | null;
   isLoading: boolean;
@@ -23,6 +27,7 @@ type IncidentDetailState = {
   reload: () => void;
 };
 
+// Helper function for count Alerts For Asset logic in this file.
 function countAlertsForAsset(
   hostname: string,
   linkedAlerts: IncidentDetailApiResponse["linked_alerts"]
@@ -30,6 +35,7 @@ function countAlertsForAsset(
   return linkedAlerts.filter((alert) => alert.asset_hostname === hostname).length;
 }
 
+// Converts API data into the frontend format for map Incident Detail Response.
 function mapIncidentDetailResponse(
   payload: IncidentDetailApiResponse
 ): IncidentDetailResponse {
@@ -172,6 +178,7 @@ export async function saveIncidentNote(incidentId: string, content: string) {
   });
 }
 
+// Helper function for use Incident Detail logic in this file.
 export function useIncidentDetail(
   incidentId: string | undefined
 ): IncidentDetailState {

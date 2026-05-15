@@ -1,3 +1,6 @@
+/*
+ * API helper functions for the policies feature area.
+ */
 import { useCallback } from "react";
 import { fetchApiJson, formatUtcDateTime } from "../../lib/api";
 import { useAsyncResource } from "../../lib/data/useAsyncResource";
@@ -7,6 +10,7 @@ import type {
   PolicyUpdateApiResponse
 } from "./types";
 
+// Converts API data into the frontend format for map Policies Response.
 function mapPoliciesResponse(payload: PoliciesApiResponse): PoliciesResponse {
   return {
     fetchedAt: formatUtcDateTime(new Date().toISOString()),
@@ -40,6 +44,7 @@ export async function updatePolicyEnabled(policyId: string, enabled: boolean) {
   });
 }
 
+// Helper function for use Policies logic in this file.
 export function usePolicies() {
   const loader = useCallback(() => fetchPolicies(), []);
   return useAsyncResource(loader);

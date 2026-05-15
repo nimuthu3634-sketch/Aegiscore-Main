@@ -1,9 +1,13 @@
+/*
+ * Frontend helper utilities shared across the React application.
+ */
 export type HealthResponse = {
   status: string;
   service: string;
   database: string;
 };
 
+// Defines the Auth User Response data shape used by this frontend module.
 export type AuthUserResponse = {
   id: string;
   username: string;
@@ -18,6 +22,7 @@ export type AuthUserResponse = {
   };
 };
 
+// Defines the Auth Token Response data shape used by this frontend module.
 export type AuthTokenResponse = {
   mfa_required?: false;
   access_token: string;
@@ -26,20 +31,25 @@ export type AuthTokenResponse = {
   user: AuthUserResponse;
 };
 
+// Defines the Login Mfa Challenge data shape used by this frontend module.
 export type LoginMfaChallenge = {
   mfa_required: true;
   mfa_token: string;
 };
 
+// Defines the Login Result data shape used by this frontend module.
 export type LoginResult = AuthTokenResponse | LoginMfaChallenge;
 
+// Defines the Mfa Setup Payload data shape used by this frontend module.
 export type MfaSetupPayload = {
   secret: string;
   provisioning_uri: string;
 };
 
+// Helper function for aUTH REQUIRED EVENT logic in this file.
 export const AUTH_REQUIRED_EVENT = "aegiscore:auth-required";
 
+// Defines the Fetch Api Json Options data shape used by this frontend module.
 type FetchApiJsonOptions = {
   auth?: boolean;
 };
@@ -61,6 +71,7 @@ const devApiPassword =
     : undefined;
 let devAccessTokenPromise: Promise<string | null> | null = null;
 
+// Builds url data used by the UI.
 function buildUrl(path: string) {
   return `${apiBaseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 }

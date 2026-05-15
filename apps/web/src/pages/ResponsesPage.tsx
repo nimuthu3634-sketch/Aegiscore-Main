@@ -1,3 +1,6 @@
+/*
+ * Responses Page page component used to display one main dashboard screen.
+ */
 import { useMemo, useState } from "react";
 import { MetricCard } from "../components/data-display/MetricCard";
 import { SearchFilterToolbar } from "../components/data-display/SearchFilterToolbar";
@@ -25,6 +28,7 @@ const supportedActionTypes = [
   "notify_admin"
 ];
 
+// Renders the Responses Page UI section.
 export function ResponsesPage() {
   const [search, setSearch] = useState("");
   const [actionType, setActionType] = useState("");

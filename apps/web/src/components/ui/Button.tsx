@@ -1,9 +1,15 @@
+/*
+ * Button reusable UI component used by the React dashboard.
+ */
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "../../lib/cn";
 
+// Defines the Button Variant data shape used by this frontend module.
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "quiet";
+// Defines the Button Size data shape used by this frontend module.
 type ButtonSize = "sm" | "md" | "lg" | "icon";
 
+// Defines the Button Props data shape used by this frontend module.
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -32,6 +38,7 @@ const sizeClasses: Record<ButtonSize, string> = {
   icon: "h-10 w-10"
 };
 
+// Renders the Button UI section.
 export function Button({
   className,
   variant = "secondary",

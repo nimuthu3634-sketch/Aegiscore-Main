@@ -1,7 +1,11 @@
+/*
+ * Icon reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import type { IconName } from "../../lib/theme/tokens";
 import { cn } from "../../lib/cn";
 
+// Defines the Icon Props data shape used by this frontend module.
 type IconProps = {
   name: IconName;
   className?: string;
@@ -73,6 +77,7 @@ const iconPaths: Record<IconName, ReactNode> = {
   )
 };
 
+// Renders the Icon UI section.
 export function Icon({ name, className }: IconProps) {
   return (
     <svg

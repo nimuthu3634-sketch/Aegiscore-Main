@@ -1,8 +1,15 @@
+/*
+ * TypeScript types used by the reports feature area.
+ */
 export type ReportPeriod = "daily" | "weekly";
+// Defines the Report Source Type data shape used by this frontend module.
 export type ReportSourceType = "" | "wazuh" | "suricata";
+// Defines the Report Export Format data shape used by this frontend module.
 export type ReportExportFormat = "csv" | "json";
+// Defines the Report Export Entity data shape used by this frontend module.
 export type ReportExportEntity = "alerts" | "incidents" | "responses";
 
+// Defines the Reports Query data shape used by this frontend module.
 export type ReportsQuery = {
   dateFrom: string;
   dateTo: string;
@@ -10,17 +17,20 @@ export type ReportsQuery = {
   sourceType: ReportSourceType;
 };
 
+// Defines the Report Distribution Point data shape used by this frontend module.
 export type ReportDistributionPoint = {
   label: string;
   total: number;
   color: string;
 };
 
+// Defines the Report Trend Point data shape used by this frontend module.
 export type ReportTrendPoint = {
   label: string;
   total: number;
 };
 
+// Defines the Report Top Asset data shape used by this frontend module.
 export type ReportTopAsset = {
   assetId: string;
   hostname: string;
@@ -29,6 +39,7 @@ export type ReportTopAsset = {
   incidentCount: number;
 };
 
+// Defines the Report Summary data shape used by this frontend module.
 export type ReportSummary = {
   reportType: ReportPeriod;
   generatedAt: string;

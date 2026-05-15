@@ -1,10 +1,15 @@
+/*
+ * Error State reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 import { cn } from "../../lib/cn";
 import { Card } from "../ui/Card";
 import { Icon } from "../ui/Icon";
 
+// Defines the Error State Tone data shape used by this frontend module.
 type ErrorStateTone = "danger" | "warning";
 
+// Defines the Error State Props data shape used by this frontend module.
 type ErrorStateProps = {
   title: string;
   description: string;
@@ -18,6 +23,7 @@ const toneClasses: Record<ErrorStateTone, string> = {
   warning: "border-status-warning/30 bg-surface-warningSoft/40"
 };
 
+// Renders the Error State UI section.
 export function ErrorState({
   title,
   description,

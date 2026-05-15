@@ -1,3 +1,6 @@
+/*
+ * Linked Alerts Table reusable UI component used by the React dashboard.
+ */
 import type { Severity, StatusTone } from "../../lib/theme/tokens";
 import { Badge } from "../ui/Badge";
 import { formatTokenLabel } from "../../lib/formatters";
@@ -5,6 +8,7 @@ import { DataTable, type TableColumn } from "./DataTable";
 import { SeverityChip } from "../ui/SeverityChip";
 import { StatusChip } from "../ui/StatusChip";
 
+// Defines the Linked Alert Row data shape used by this frontend module.
 export type LinkedAlertRow = {
   id: string;
   detectionType: string;
@@ -18,6 +22,7 @@ export type LinkedAlertRow = {
   eventId?: string | null;
 };
 
+// Defines the Linked Alerts Table Props data shape used by this frontend module.
 type LinkedAlertsTableProps = {
   alerts: LinkedAlertRow[];
   onRowClick?: (alert: LinkedAlertRow) => void;
@@ -85,6 +90,7 @@ const columns: TableColumn<LinkedAlertRow>[] = [
   }
 ];
 
+// Renders the Linked Alerts Table UI section.
 export function LinkedAlertsTable({
   alerts,
   onRowClick

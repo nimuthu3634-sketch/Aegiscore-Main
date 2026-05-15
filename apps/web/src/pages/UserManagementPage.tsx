@@ -1,3 +1,6 @@
+/*
+ * User Management Page page component used to display one main dashboard screen.
+ */
 import { useState } from "react";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
@@ -9,6 +12,7 @@ import { getStoredSessionRole } from "../lib/api";
 import { createUser } from "../features/users/service";
 import type { CreateUserPayload, UserRecord, UserRole } from "../features/users/types";
 
+// Defines the Role Option data shape used by this frontend module.
 type RoleOption = { value: UserRole; label: string; description: string };
 
 const roleOptions: RoleOption[] = [
@@ -24,6 +28,7 @@ const roleOptions: RoleOption[] = [
   },
 ];
 
+// Renders the User Management Page UI section.
 export function UserManagementPage() {
   const sessionRole = getStoredSessionRole();
   const isAdmin = sessionRole === "admin";

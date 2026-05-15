@@ -1,3 +1,6 @@
+/*
+ * Incidents Page page component used to display one main dashboard screen.
+ */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MetricCard } from "../components/data-display/MetricCard";
@@ -19,6 +22,7 @@ import { formatTokenLabel } from "../lib/formatters";
 import { supportedDetectionSelectOptions } from "../lib/supportedDetections";
 import { pageBlueprints } from "../lib/theme/tokens";
 
+// Renders the Incidents Page UI section.
 export function IncidentsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");

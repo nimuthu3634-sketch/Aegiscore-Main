@@ -1,5 +1,9 @@
+/*
+ * Frontend helper utilities shared across the React application.
+ */
 import { useEffect, useState } from "react";
 
+// Defines the Async Resource State data shape used by this frontend module.
 type AsyncResourceState<T> = {
   data: T | null;
   isLoading: boolean;
@@ -7,6 +11,7 @@ type AsyncResourceState<T> = {
   reload: () => void;
 };
 
+// Helper function for use Async Resource logic in this file.
 export function useAsyncResource<T>(
   loader: () => Promise<T>
 ): AsyncResourceState<T> {

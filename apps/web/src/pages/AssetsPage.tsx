@@ -1,3 +1,6 @@
+/*
+ * Assets Page page component used to display one main dashboard screen.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { MetricCard } from "../components/data-display/MetricCard";
 import { SearchFilterToolbar } from "../components/data-display/SearchFilterToolbar";
@@ -17,6 +20,7 @@ import { useAssetsList } from "../features/assets/service";
 import type { AssetEnvironment, AssetRecord, AssetsListQuery, AssetsSortField } from "../features/assets/types";
 import { pageBlueprints } from "../lib/theme/tokens";
 
+// Renders the Assets Page UI section.
 export function AssetsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<AssetsListQuery["status"]>("");

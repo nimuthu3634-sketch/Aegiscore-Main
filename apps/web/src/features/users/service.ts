@@ -1,3 +1,6 @@
+/*
+ * API helper functions for the users feature area.
+ */
 import { fetchApiJson } from "../../lib/api";
 import type { CreateUserPayload, CreateUserResponse } from "./types";
 

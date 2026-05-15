@@ -1,5 +1,9 @@
+/*
+ * Page Header reusable UI component used by the React dashboard.
+ */
 import type { ReactNode } from "react";
 
+// Defines the Page Header Props data shape used by this frontend module.
 type PageHeaderProps = {
   eyebrow?: string;
   title: string;
@@ -8,6 +12,7 @@ type PageHeaderProps = {
   actions?: ReactNode;
 };
 
+// Renders the Page Header UI section.
 export function PageHeader({
   eyebrow,
   title,
