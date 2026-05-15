@@ -1,11 +1,14 @@
+# Web container image for the React frontend.
 FROM node:24-alpine
 
 WORKDIR /srv/apps/web
 
+# Install frontend dependencies first so Docker can cache this layer.
 COPY apps/web/package.json ./package.json
 COPY apps/web/package-lock.json ./package-lock.json
 RUN npm install --no-fund --no-audit
 
+# Copy the frontend source and startup script.
 COPY apps/web ./
 COPY infra/docker/web-entrypoint.sh /usr/local/bin/web-entrypoint.sh
 RUN chmod +x /usr/local/bin/web-entrypoint.sh

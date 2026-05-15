@@ -4,6 +4,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+# Stores configuration values needed by the worker service.
 class Settings(BaseSettings):
     app_env: str = Field(default="development", alias="APP_ENV")
     database_url: str = Field(
@@ -15,6 +16,7 @@ class Settings(BaseSettings):
         alias="WORKER_POLL_INTERVAL_SECONDS",
     )
 
+    # Loads environment values from the project .env file.
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -25,5 +27,5 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
+    # Caches settings so the worker does not recreate them every time.
     return Settings()
-

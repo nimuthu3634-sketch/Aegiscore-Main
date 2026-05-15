@@ -5,6 +5,7 @@ param(
   [int]$DelaySeconds = 2
 )
 
+# This script waits until a web endpoint becomes reachable.
 $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
 
 while ((Get-Date) -lt $deadline) {
@@ -15,10 +16,10 @@ while ((Get-Date) -lt $deadline) {
       exit 0
     }
   } catch {
+    # If the request fails, wait briefly and try again.
     Start-Sleep -Seconds $DelaySeconds
   }
 }
 
 Write-Error "Timed out waiting for $Url"
 exit 1
-
