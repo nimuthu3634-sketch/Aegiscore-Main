@@ -1,3 +1,5 @@
+# This test file checks workflow rules for incident state transitions.
+
 from fastapi import HTTPException
 from pydantic import ValidationError
 
@@ -10,6 +12,7 @@ from app.services.workflows import (
 )
 
 
+# Checks incident transition rules allow expected progression.
 def test_incident_transition_rules_allow_expected_progression() -> None:
     assert resolve_incident_transition(
         IncidentStatus.NEW,
@@ -25,6 +28,7 @@ def test_incident_transition_rules_allow_expected_progression() -> None:
     ) == IncidentStatus.RESOLVED
 
 
+# Checks incident transition rules reject invalid transition.
 def test_incident_transition_rules_reject_invalid_transition() -> None:
     try:
         resolve_incident_transition(
@@ -38,6 +42,7 @@ def test_incident_transition_rules_reject_invalid_transition() -> None:
         raise AssertionError("Expected invalid transition to raise HTTPException")
 
 
+# Checks incident transition capabilities match workflow map.
 def test_incident_transition_capabilities_match_workflow_map() -> None:
     assert get_available_incident_actions(IncidentStatus.INVESTIGATING) == [
         "contain",
@@ -52,6 +57,7 @@ def test_incident_transition_capabilities_match_workflow_map() -> None:
     ]
 
 
+# Checks alert link incident request requires explicit mode.
 def test_alert_link_incident_request_requires_explicit_mode() -> None:
     try:
         AlertLinkIncidentRequest()
@@ -61,6 +67,7 @@ def test_alert_link_incident_request_requires_explicit_mode() -> None:
         raise AssertionError("Expected invalid alert link request to fail validation")
 
 
+# Checks alert link incident request rejects mixed modes.
 def test_alert_link_incident_request_rejects_mixed_modes() -> None:
     try:
         AlertLinkIncidentRequest(
@@ -73,6 +80,7 @@ def test_alert_link_incident_request_rejects_mixed_modes() -> None:
         raise AssertionError("Expected mixed incident link modes to fail validation")
 
 
+# Checks alert link incident request accepts existing or new modes.
 def test_alert_link_incident_request_accepts_existing_or_new_modes() -> None:
     existing = AlertLinkIncidentRequest(
         incident_id="2ef3a70c-2bf8-4c92-bd71-e6e37f0cbb0c",

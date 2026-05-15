@@ -1,3 +1,5 @@
+# This test file checks serializer output used by alert and incident detail pages.
+
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -212,6 +214,7 @@ def _build_fixture() -> tuple[NormalizedAlert, Incident, list[AuditLog], list[An
     return alert, incident, audit_logs, analyst_notes
 
 
+# Checks alert detail tensorflow score explanation includes scoring method.
 def test_alert_detail_tensorflow_score_explanation_includes_scoring_method() -> None:
     now = datetime.now(UTC)
     asset = Asset(
@@ -289,6 +292,7 @@ def test_alert_detail_tensorflow_score_explanation_includes_scoring_method() -> 
     assert dumped["score_explanation"]["class_probabilities"]["high"] == 0.30
 
 
+# Checks alert detail response includes observables and related workflow.
 def test_alert_detail_response_includes_observables_and_related_workflow() -> None:
     alert, _, audit_logs, analyst_notes = _build_fixture()
 
@@ -312,6 +316,7 @@ def test_alert_detail_response_includes_observables_and_related_workflow() -> No
     assert response.notifications == []
 
 
+# Checks incident detail response builds evidence timeline and capabilities.
 def test_incident_detail_response_builds_evidence_timeline_and_capabilities() -> None:
     _, incident, audit_logs, analyst_notes = _build_fixture()
 

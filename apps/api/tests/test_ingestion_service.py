@@ -1,3 +1,5 @@
+# This test file checks ingestion service behavior including parsing, duplicate handling, and failures.
+
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -99,6 +101,7 @@ def _fixture(name: str) -> dict:
         ),
     ],
 )
+# Checks supported fixture scenarios parse expected identity and key field.
 def test_supported_fixture_scenarios_parse_expected_identity_and_key_field(
     fixture_name: str,
     parser,
@@ -112,6 +115,7 @@ def test_supported_fixture_scenarios_parse_expected_identity_and_key_field(
     assert parsed.normalized_payload[field_name] == expected_value
 
 
+# Checks parse wazuh supported detections from fixtures.
 def test_parse_wazuh_supported_detections_from_fixtures() -> None:
     brute_force = parse_wazuh_event(_fixture("wazuh_brute_force.json"))
     file_integrity = parse_wazuh_event(_fixture("wazuh_file_integrity_violation.json"))
@@ -126,6 +130,7 @@ def test_parse_wazuh_supported_detections_from_fixtures() -> None:
     assert user_creation.normalized_payload["username"] == "unknown-admin"
 
 
+# Checks parse suricata port scan fixture.
 def test_parse_suricata_port_scan_fixture() -> None:
     parsed = parse_suricata_event(_fixture("suricata_port_scan.json"))
 
@@ -134,6 +139,7 @@ def test_parse_suricata_port_scan_fixture() -> None:
     assert parsed.normalized_payload["destination_port"] == 3389
 
 
+# Checks parse suricata rejects unsupported detection fixture.
 def test_parse_suricata_rejects_unsupported_detection_fixture() -> None:
     with pytest.raises(IngestionParseError) as exc_info:
         parse_suricata_event(_fixture("suricata_unsupported_detection.json"))
@@ -141,6 +147,7 @@ def test_parse_suricata_rejects_unsupported_detection_fixture() -> None:
     assert exc_info.value.error_type == "unsupported_detection"
 
 
+# Checks ingest wazuh event persists and returns scored alert.
 def test_ingest_wazuh_event_persists_and_returns_scored_alert(monkeypatch) -> None:
     session = FakeSession()
     actor = User(
@@ -247,6 +254,7 @@ def test_ingest_wazuh_event_persists_and_returns_scored_alert(monkeypatch) -> No
     assert session.commits == 1
 
 
+# Checks ingest suricata event returns duplicate existing alert.
 def test_ingest_suricata_event_returns_duplicate_existing_alert(monkeypatch) -> None:
     session = FakeSession()
     payload = _fixture("suricata_port_scan.json")
@@ -299,6 +307,7 @@ def test_ingest_suricata_event_returns_duplicate_existing_alert(monkeypatch) -> 
     assert "Duplicate source event ignored" in result.warnings[0]
 
 
+# Checks ingest suricata event logs failure for malformed payload.
 def test_ingest_suricata_event_logs_failure_for_malformed_payload(monkeypatch) -> None:
     session = FakeSession()
     recorded: dict[str, object] = {}
@@ -338,6 +347,7 @@ def test_ingest_suricata_event_logs_failure_for_malformed_payload(monkeypatch) -
     assert session.commits == 1
 
 
+# Checks resolve or create asset reuses existing asset after unique race.
 def test_resolve_or_create_asset_reuses_existing_asset_after_unique_race(
     monkeypatch,
 ) -> None:

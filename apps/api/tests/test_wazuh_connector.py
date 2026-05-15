@@ -1,3 +1,5 @@
+# This test file checks Wazuh connector behavior, pagination, authentication, and failure handling.
+
 from __future__ import annotations
 
 import json
@@ -65,6 +67,7 @@ def _test_settings(**overrides):
     return SimpleNamespace(**defaults)
 
 
+# Checks wazuh api client fetches alert items with checkpoint param.
 def test_wazuh_api_client_fetches_alert_items_with_checkpoint_param(monkeypatch) -> None:
     client = wazuh_connector.WazuhAPIClient(_test_settings(wazuh_page_size=2))
     captured: dict[str, object] = {}
@@ -100,6 +103,7 @@ def test_wazuh_api_client_fetches_alert_items_with_checkpoint_param(monkeypatch)
     ]
 
 
+# Checks run wazuh poll cycle uses mocked live api client path.
 def test_run_wazuh_poll_cycle_uses_mocked_live_api_client_path(monkeypatch) -> None:
     session = FakeSession()
     payload = _fixture("wazuh_file_integrity_violation.json")
@@ -201,6 +205,7 @@ def test_run_wazuh_poll_cycle_uses_mocked_live_api_client_path(monkeypatch) -> N
     assert saved["metrics"]["total_ingested"] == 1
 
 
+# Checks run wazuh poll cycle reuses ingestion pipeline.
 def test_run_wazuh_poll_cycle_reuses_ingestion_pipeline(monkeypatch) -> None:
     session = FakeSession()
     payload = _fixture("wazuh_brute_force.json")
@@ -319,6 +324,7 @@ def test_run_wazuh_poll_cycle_reuses_ingestion_pipeline(monkeypatch) -> None:
     assert saved["metrics"]["total_failed"] == 1
 
 
+# Checks get wazuh connector status returns persisted state.
 def test_get_wazuh_connector_status_returns_persisted_state(monkeypatch) -> None:
     monkeypatch.setattr(wazuh_connector, "get_settings", lambda: _test_settings())
     state = SimpleNamespace(
@@ -354,6 +360,7 @@ def test_get_wazuh_connector_status_returns_persisted_state(monkeypatch) -> None
     assert result.metrics["total_ingested"] == 80
 
 
+# Checks wazuh api client retries page after token refresh.
 def test_wazuh_api_client_retries_page_after_token_refresh(monkeypatch) -> None:
     client = wazuh_connector.WazuhAPIClient(
         _test_settings(

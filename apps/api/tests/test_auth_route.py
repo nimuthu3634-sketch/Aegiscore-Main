@@ -1,3 +1,5 @@
+# This test file checks authentication API routes such as login and current-user lookup.
+
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -10,6 +12,7 @@ from app.schemas.auth import TokenResponse
 from app.schemas.common import RoleResponse, UserResponse
 
 
+# Checks login route returns token payload.
 def test_login_route_returns_token_payload(monkeypatch) -> None:
     expected = TokenResponse(
         access_token="token-123",

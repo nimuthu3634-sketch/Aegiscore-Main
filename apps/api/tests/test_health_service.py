@@ -1,7 +1,10 @@
+# This test file checks health service checks such as database and connector status.
+
 from app.services.health import get_health_payload
 from app.services import health as health_service
 
 
+# Checks health payload is ok when database is available.
 def test_health_payload_is_ok_when_database_is_available(monkeypatch) -> None:
     monkeypatch.setattr(health_service, "get_database_status", lambda: "up")
 
@@ -11,6 +14,7 @@ def test_health_payload_is_ok_when_database_is_available(monkeypatch) -> None:
     assert payload.database == "up"
 
 
+# Checks health payload is degraded when database is unavailable.
 def test_health_payload_is_degraded_when_database_is_unavailable(monkeypatch) -> None:
     monkeypatch.setattr(health_service, "get_database_status", lambda: "down")
 
@@ -20,6 +24,7 @@ def test_health_payload_is_degraded_when_database_is_unavailable(monkeypatch) ->
     assert payload.database == "down"
 
 
+# Checks readiness payload is ready when database is available.
 def test_readiness_payload_is_ready_when_database_is_available(monkeypatch) -> None:
     monkeypatch.setattr(health_service, "get_database_status", lambda: "up")
     monkeypatch.setattr(
@@ -51,6 +56,7 @@ def test_readiness_payload_is_ready_when_database_is_available(monkeypatch) -> N
     assert payload.dependencies["wazuh_connector"].status == "disabled"
 
 
+# Checks readiness payload is not ready when database is down.
 def test_readiness_payload_is_not_ready_when_database_is_down(monkeypatch) -> None:
     monkeypatch.setattr(health_service, "get_database_status", lambda: "down")
     monkeypatch.setattr(

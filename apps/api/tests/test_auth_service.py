@@ -1,3 +1,5 @@
+# This test file checks authentication service logic including password checks and login token handling.
+
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -42,6 +44,7 @@ def build_user() -> User:
     )
 
 
+# Checks authenticate user returns token response.
 def test_authenticate_user_returns_token_response(monkeypatch) -> None:
     session = DummySession()
     user = build_user()
@@ -64,6 +67,7 @@ def test_authenticate_user_returns_token_response(monkeypatch) -> None:
     assert session.did_commit is True
 
 
+# Checks authenticate user returns mfa challenge without commit.
 def test_authenticate_user_returns_mfa_challenge_without_commit(monkeypatch) -> None:
     session = DummySession()
     user = build_user()
@@ -80,6 +84,7 @@ def test_authenticate_user_returns_mfa_challenge_without_commit(monkeypatch) -> 
     assert session.did_commit is False
 
 
+# Checks authenticate user raises for invalid credentials.
 def test_authenticate_user_raises_for_invalid_credentials(monkeypatch) -> None:
     session = DummySession()
     user = build_user()

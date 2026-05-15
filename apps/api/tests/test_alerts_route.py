@@ -1,3 +1,5 @@
+# This test file checks alert API routes such as listing, detail viewing, and alert workflow actions.
+
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -174,6 +176,7 @@ def _sample_alert_detail() -> AlertDetailResponse:
     )
 
 
+# Checks alert detail route returns rich payload.
 def test_alert_detail_route_returns_rich_payload(monkeypatch) -> None:
     detail = _sample_alert_detail()
     _override_dependencies()
@@ -196,6 +199,7 @@ def test_alert_detail_route_returns_rich_payload(monkeypatch) -> None:
     assert payload["source_rule"]["rule_id"] == "60115"
 
 
+# Checks alert detail route returns not found.
 def test_alert_detail_route_returns_not_found(monkeypatch) -> None:
     _override_dependencies()
 
@@ -214,6 +218,7 @@ def test_alert_detail_route_returns_not_found(monkeypatch) -> None:
     assert response.json() == {"detail": "Alert not found"}
 
 
+# Checks alert acknowledge route returns lifecycle response.
 def test_alert_acknowledge_route_returns_lifecycle_response(monkeypatch) -> None:
     response_payload = AlertLifecycleResponse(
         alert_id=uuid4(),
@@ -239,6 +244,7 @@ def test_alert_acknowledge_route_returns_lifecycle_response(monkeypatch) -> None
     assert response.json()["current_status"] == "investigating"
 
 
+# Checks alert link incident route returns summary.
 def test_alert_link_incident_route_returns_summary(monkeypatch) -> None:
     response_payload = AlertLinkIncidentResponse(
         incident_id=uuid4(),
@@ -269,6 +275,7 @@ def test_alert_link_incident_route_returns_summary(monkeypatch) -> None:
     assert response.json()["linked_alerts_count"] == 2
 
 
+# Checks alert link incident route returns conflict.
 def test_alert_link_incident_route_returns_conflict(monkeypatch) -> None:
     _override_dependencies()
 
@@ -297,6 +304,7 @@ def test_alert_link_incident_route_returns_conflict(monkeypatch) -> None:
     assert "already linked" in response.json()["detail"]
 
 
+# Checks alert note route returns created note.
 def test_alert_note_route_returns_created_note(monkeypatch) -> None:
     role = RoleResponse(id=uuid4(), name=RoleName.ANALYST)
     analyst = UserBriefResponse(

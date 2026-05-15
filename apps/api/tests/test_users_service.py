@@ -1,3 +1,5 @@
+# This test file checks user service behavior such as account creation and validation.
+
 """Tests for POST /users user creation endpoint."""
 
 from datetime import UTC, datetime
@@ -157,6 +159,7 @@ def test_schema_rejects_short_username() -> None:
     assert "at least 3 characters" in str(exc_info.value)
 
 
+# Checks schema rejects short password.
 def test_schema_rejects_short_password() -> None:
     with pytest.raises(ValidationError) as exc_info:
         UserCreateRequest(
@@ -166,6 +169,7 @@ def test_schema_rejects_short_password() -> None:
     assert "at least 8 characters" in str(exc_info.value)
 
 
+# Checks schema rejects invalid username chars.
 def test_schema_rejects_invalid_username_chars() -> None:
     with pytest.raises(ValidationError) as exc_info:
         UserCreateRequest(
@@ -175,6 +179,7 @@ def test_schema_rejects_invalid_username_chars() -> None:
     assert "letters, numbers, hyphens" in str(exc_info.value)
 
 
+# Checks schema defaults role to analyst.
 def test_schema_defaults_role_to_analyst() -> None:
     payload = UserCreateRequest(
         username="default-role-user",

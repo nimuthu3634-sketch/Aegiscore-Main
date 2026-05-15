@@ -1,3 +1,5 @@
+# This test file checks notification service behavior and message creation.
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -76,6 +78,7 @@ def _build_response_action(incident: Incident, status: ResponseStatus) -> Respon
     )
 
 
+# Checks notify for high risk incident records log mode events.
 def test_notify_for_high_risk_incident_records_log_mode_events(monkeypatch) -> None:
     session = FakeSession()
     incident = _build_incident()
@@ -94,6 +97,7 @@ def test_notify_for_high_risk_incident_records_log_mode_events(monkeypatch) -> N
     assert all(event.trigger_type == "risk_threshold" for event in events)
 
 
+# Checks notify for response result records failure when smtp fails.
 def test_notify_for_response_result_records_failure_when_smtp_fails(monkeypatch) -> None:
     session = FakeSession()
     incident = _build_incident()
@@ -122,6 +126,7 @@ def test_notify_for_response_result_records_failure_when_smtp_fails(monkeypatch)
     assert "SMTP unavailable" in (events[0].error_message or "")
 
 
+# Checks notify for response result smtp success.
 def test_notify_for_response_result_smtp_success(monkeypatch) -> None:
     session = FakeSession()
     incident = _build_incident()
@@ -153,6 +158,7 @@ def test_notify_for_response_result_smtp_success(monkeypatch) -> None:
     assert "AegisCore" in str(sent.get("subject", ""))
 
 
+# Checks notify for response result skips disallowed action types.
 def test_notify_for_response_result_skips_disallowed_action_types(monkeypatch) -> None:
     session = FakeSession()
     incident = _build_incident()
@@ -176,6 +182,7 @@ def test_notify_for_response_result_skips_disallowed_action_types(monkeypatch) -
     assert events == []
 
 
+# Checks log mode delivery writes audit entries.
 def test_log_mode_delivery_writes_audit_entries(monkeypatch) -> None:
     session = FakeSession()
     incident = _build_incident()
@@ -204,6 +211,7 @@ def test_log_mode_delivery_writes_audit_entries(monkeypatch) -> None:
     assert any(getattr(log, "entity_type", None) == "incident" for log in audit_creates)
 
 
+# Checks notify for incident state respects state filter.
 def test_notify_for_incident_state_respects_state_filter(monkeypatch) -> None:
     session = FakeSession()
     incident = _build_incident()

@@ -1,3 +1,5 @@
+# This test file checks AI/ML readiness checks for model artifacts and training outputs.
+
 """AI/ML submission readiness: script parity, artifact load, and automation test pointers."""
 
 from __future__ import annotations
@@ -22,12 +24,14 @@ def _load_validate_script():
     return module
 
 
+# Checks validate ai ml script reports no errors.
 def test_validate_ai_ml_script_reports_no_errors() -> None:
     mod = _load_validate_script()
     errors = mod.validate_ai_ml_readiness(REPO_ROOT)
     assert not errors, ";\n".join(errors)
 
 
+# Checks load priority model from committed artifacts.
 def test_load_priority_model_from_committed_artifacts() -> None:
     pytest.importorskip("sqlalchemy", reason="API deps not installed (use Docker image for full run)")
     keras_path = REPO_ROOT / "ai" / "models" / "aegiscore-risk-priority-model.keras"
@@ -45,6 +49,7 @@ def test_load_priority_model_from_committed_artifacts() -> None:
     assert set(metadata.get("label_classes", [])) == {"low", "medium", "high", "critical"}
 
 
+# Checks load priority model rejects non keras suffix.
 def test_load_priority_model_rejects_non_keras_suffix(tmp_path) -> None:
     pytest.importorskip("sqlalchemy", reason="API deps not installed (use Docker image for full run)")
     pytest.importorskip("tensorflow", reason="TensorFlow not installed")
@@ -59,6 +64,7 @@ def test_load_priority_model_rejects_non_keras_suffix(tmp_path) -> None:
         load_priority_model(model_path=joblib_like, metadata_path=meta)
 
 
+# Checks committed metadata json has valid label classes.
 def test_committed_metadata_json_has_valid_label_classes() -> None:
     meta_path = REPO_ROOT / "ai" / "models" / "aegiscore-risk-priority-model.metadata.json"
     if not meta_path.is_file():

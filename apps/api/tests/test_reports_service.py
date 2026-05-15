@@ -1,3 +1,5 @@
+# This test file checks report service calculations and export formatting.
+
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
@@ -181,6 +183,7 @@ def _sample_alert_fixture() -> tuple[NormalizedAlert, NormalizedAlert]:
     return alert_one, alert_two
 
 
+# Checks get daily summary compiles operational metrics.
 def test_get_daily_summary_compiles_operational_metrics(monkeypatch) -> None:
     alert_one, alert_two = _sample_alert_fixture()
     session = FakeSession()
@@ -209,6 +212,7 @@ def test_get_daily_summary_compiles_operational_metrics(monkeypatch) -> None:
     assert any(item.label == "critical" for item in summary.severity_distribution)
 
 
+# Checks export alert report returns json and audits.
 def test_export_alert_report_returns_json_and_audits(monkeypatch) -> None:
     alert_one, alert_two = _sample_alert_fixture()
     session = FakeSession()
@@ -232,6 +236,7 @@ def test_export_alert_report_returns_json_and_audits(monkeypatch) -> None:
     assert any(isinstance(item, AuditLog) for item in session.added)
 
 
+# Checks export responses report returns csv.
 def test_export_responses_report_returns_csv(monkeypatch) -> None:
     alert_one, _ = _sample_alert_fixture()
     session = FakeSession()
@@ -256,6 +261,7 @@ def test_export_responses_report_returns_csv(monkeypatch) -> None:
     assert session.commits == 1
 
 
+# Checks export incidents report returns csv.
 def test_export_incidents_report_returns_csv(monkeypatch) -> None:
     alert_one, _ = _sample_alert_fixture()
     incident = alert_one.incident

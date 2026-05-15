@@ -1,3 +1,5 @@
+# This test file checks Suricata connector behavior and event reading.
+
 from __future__ import annotations
 
 import json
@@ -53,6 +55,7 @@ def _test_settings(**overrides):
     return SimpleNamespace(**defaults)
 
 
+# Checks run suricata poll cycle tails eve file and updates checkpoint.
 def test_run_suricata_poll_cycle_tails_eve_file_and_updates_checkpoint(
     monkeypatch,
     tmp_path,
@@ -166,6 +169,7 @@ def test_run_suricata_poll_cycle_tails_eve_file_and_updates_checkpoint(
     assert recorded["metrics"]["total_failed"] == 2
 
 
+# Checks run suricata poll cycle reuses offset checkpoint.
 def test_run_suricata_poll_cycle_reuses_offset_checkpoint(monkeypatch, tmp_path) -> None:
     session = FakeSession()
     payload = _fixture("suricata_port_scan.json")
@@ -198,6 +202,7 @@ def test_run_suricata_poll_cycle_reuses_offset_checkpoint(monkeypatch, tmp_path)
     assert summary == {"fetched": 0, "ingested": 0, "duplicates": 0, "failed": 0}
 
 
+# Checks get suricata connector status returns checkpoint and metrics.
 def test_get_suricata_connector_status_returns_checkpoint_and_metrics(monkeypatch) -> None:
     monkeypatch.setattr(suricata_connector, "get_settings", lambda: _test_settings())
     state = SimpleNamespace(
@@ -231,6 +236,7 @@ def test_get_suricata_connector_status_returns_checkpoint_and_metrics(monkeypatc
     assert result.metrics["total_ingested"] == 82
 
 
+# Checks run suricata poll cycle raises when source missing.
 def test_run_suricata_poll_cycle_raises_when_source_missing(monkeypatch, tmp_path) -> None:
     session = FakeSession()
     missing_path = tmp_path / "missing-eve.json"
@@ -262,6 +268,7 @@ def test_run_suricata_poll_cycle_raises_when_source_missing(monkeypatch, tmp_pat
         raise AssertionError("Expected FileNotFoundError for missing eve.json source")
 
 
+# Checks run suricata poll cycle handles missing source in fallback mode.
 def test_run_suricata_poll_cycle_handles_missing_source_in_fallback_mode(
     monkeypatch,
     tmp_path,

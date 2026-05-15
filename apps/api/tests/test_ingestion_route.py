@@ -1,3 +1,5 @@
+# This test file checks ingestion API routes for incoming Wazuh and Suricata events.
+
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -119,6 +121,7 @@ def _sample_result(source: str, detection_type: DetectionType) -> IngestionResul
     )
 
 
+# Checks wazuh ingestion route accepts fixture payload.
 def test_wazuh_ingestion_route_accepts_fixture_payload(monkeypatch) -> None:
     payload = _fixture_payload("wazuh_brute_force.json")
     result = _sample_result("wazuh", DetectionType.BRUTE_FORCE)
@@ -140,6 +143,7 @@ def test_wazuh_ingestion_route_accepts_fixture_payload(monkeypatch) -> None:
     assert response.json()["alert"]["detection_type"] == "brute_force"
 
 
+# Checks suricata ingestion route returns validation error.
 def test_suricata_ingestion_route_returns_validation_error(monkeypatch) -> None:
     payload = _fixture_payload("suricata_unsupported_detection.json")
     _override_dependencies()
@@ -159,6 +163,7 @@ def test_suricata_ingestion_route_returns_validation_error(monkeypatch) -> None:
     assert "supported AegisCore detection scope" in response.json()["detail"]
 
 
+# Checks wazuh connector status route returns connector health.
 def test_wazuh_connector_status_route_returns_connector_health(monkeypatch) -> None:
     _override_dependencies()
     monkeypatch.setattr(
@@ -194,6 +199,7 @@ def test_wazuh_connector_status_route_returns_connector_health(monkeypatch) -> N
     assert response.json()["status"] == "healthy"
 
 
+# Checks suricata connector status route returns connector health.
 def test_suricata_connector_status_route_returns_connector_health(monkeypatch) -> None:
     _override_dependencies()
     monkeypatch.setattr(
@@ -231,6 +237,7 @@ def test_suricata_connector_status_route_returns_connector_health(monkeypatch) -
     assert response.json()["mode"] == "file_tail"
 
 
+# Checks ingestion routes reject analyst role.
 def test_ingestion_routes_reject_analyst_role() -> None:
     payload = _fixture_payload("wazuh_brute_force.json")
     app.dependency_overrides[deps.get_current_user] = lambda: SimpleNamespace(
@@ -249,6 +256,7 @@ def test_ingestion_routes_reject_analyst_role() -> None:
     assert "Insufficient role permissions" in response.json()["detail"]
 
 
+# Checks connector status routes allow analyst role.
 def test_connector_status_routes_allow_analyst_role(monkeypatch) -> None:
     app.dependency_overrides[deps.get_current_user] = lambda: SimpleNamespace(
         username="analyst",

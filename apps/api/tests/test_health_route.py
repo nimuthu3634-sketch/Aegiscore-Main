@@ -1,3 +1,5 @@
+# This test file checks health and readiness API endpoints.
+
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -5,6 +7,7 @@ from app.api.routes import health as health_routes
 from app.services import health as health_service
 
 
+# Checks health route reports api status.
 def test_health_route_reports_api_status(monkeypatch) -> None:
     monkeypatch.setattr(health_service, "get_database_status", lambda: "up")
 
@@ -19,6 +22,7 @@ def test_health_route_reports_api_status(monkeypatch) -> None:
     }
 
 
+# Checks health live route reports liveness.
 def test_health_live_route_reports_liveness() -> None:
     client = TestClient(app)
     response = client.get("/health/live")
@@ -28,6 +32,7 @@ def test_health_live_route_reports_liveness() -> None:
     assert response.json()["service"] == "aegiscore-api"
 
 
+# Checks health ready route reports readiness.
 def test_health_ready_route_reports_readiness(monkeypatch) -> None:
     monkeypatch.setattr(
         health_routes,

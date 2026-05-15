@@ -1,3 +1,5 @@
+# This test file checks incident API routes, state changes, and notes.
+
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -165,6 +167,7 @@ def _sample_incident_detail() -> IncidentDetailResponse:
     )
 
 
+# Checks incident detail route returns rich payload.
 def test_incident_detail_route_returns_rich_payload(monkeypatch) -> None:
     detail = _sample_incident_detail()
     _override_dependencies()
@@ -184,6 +187,7 @@ def test_incident_detail_route_returns_rich_payload(monkeypatch) -> None:
     assert payload["state_transition_capabilities"]["available_actions"][0] == "contain"
 
 
+# Checks incident detail route returns not found.
 def test_incident_detail_route_returns_not_found(monkeypatch) -> None:
     _override_dependencies()
 
@@ -202,6 +206,7 @@ def test_incident_detail_route_returns_not_found(monkeypatch) -> None:
     assert response.json() == {"detail": "Incident not found"}
 
 
+# Checks incident transition route returns summary.
 def test_incident_transition_route_returns_summary(monkeypatch) -> None:
     response_payload = IncidentTransitionResponse(
         incident_id=uuid4(),
@@ -229,6 +234,7 @@ def test_incident_transition_route_returns_summary(monkeypatch) -> None:
     assert response.json()["current_state"] == "investigating"
 
 
+# Checks incident transition route returns invalid transition.
 def test_incident_transition_route_returns_invalid_transition(monkeypatch) -> None:
     _override_dependencies()
 
@@ -253,6 +259,7 @@ def test_incident_transition_route_returns_invalid_transition(monkeypatch) -> No
     assert "cannot transition" in response.json()["detail"]
 
 
+# Checks incident note route returns created note.
 def test_incident_note_route_returns_created_note(monkeypatch) -> None:
     role = RoleResponse(id=uuid4(), name=RoleName.ANALYST)
     analyst = UserBriefResponse(

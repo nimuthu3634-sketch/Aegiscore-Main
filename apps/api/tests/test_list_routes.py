@@ -1,3 +1,5 @@
+# This test file checks list endpoints used by the dashboard tables.
+
 from fastapi.testclient import TestClient
 
 from app.api import deps
@@ -48,6 +50,7 @@ def _meta(sort_by: str, direction: SortDirection = SortDirection.DESC) -> ListMe
     )
 
 
+# Checks alerts route parses query params.
 def test_alerts_route_parses_query_params(monkeypatch) -> None:
     captured = {}
     _override_dependencies()
@@ -91,6 +94,7 @@ def test_alerts_route_parses_query_params(monkeypatch) -> None:
     assert query.page_size == 5
 
 
+# Checks incidents route parses query params.
 def test_incidents_route_parses_query_params(monkeypatch) -> None:
     captured = {}
     _override_dependencies()
@@ -126,6 +130,7 @@ def test_incidents_route_parses_query_params(monkeypatch) -> None:
     assert query.detection_type == DetectionType.FILE_INTEGRITY_VIOLATION
 
 
+# Checks assets route parses query params.
 def test_assets_route_parses_query_params(monkeypatch) -> None:
     captured = {}
     _override_dependencies()
@@ -161,6 +166,7 @@ def test_assets_route_parses_query_params(monkeypatch) -> None:
     assert query.environment == AssetEnvironmentLabel.REMOTE
 
 
+# Checks responses route parses query params.
 def test_responses_route_parses_query_params(monkeypatch) -> None:
     captured = {}
     _override_dependencies()

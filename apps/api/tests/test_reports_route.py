@@ -1,3 +1,5 @@
+# This test file checks report API routes and export endpoints.
+
 from datetime import UTC, datetime
 
 from fastapi.testclient import TestClient
@@ -41,6 +43,7 @@ def _sample_summary(report_type: str) -> ReportSummaryResponse:
     )
 
 
+# Checks daily summary route parses query params.
 def test_daily_summary_route_parses_query_params(monkeypatch) -> None:
     captured = {}
     _override_dependencies()
@@ -73,6 +76,7 @@ def test_daily_summary_route_parses_query_params(monkeypatch) -> None:
     assert query.source_type.value == "suricata"
 
 
+# Checks alert export route parses query params.
 def test_alert_export_route_parses_query_params(monkeypatch) -> None:
     captured = {}
     _override_dependencies()
@@ -112,6 +116,7 @@ def test_alert_export_route_parses_query_params(monkeypatch) -> None:
     assert query.format.value == "csv"
 
 
+# Checks incident export route parses query params.
 def test_incident_export_route_parses_query_params(monkeypatch) -> None:
     captured = {}
     _override_dependencies()
@@ -152,6 +157,7 @@ def test_incident_export_route_parses_query_params(monkeypatch) -> None:
     assert query.format.value == "json"
 
 
+# Checks response export route parses query params.
 def test_response_export_route_parses_query_params(monkeypatch) -> None:
     captured = {}
     _override_dependencies()

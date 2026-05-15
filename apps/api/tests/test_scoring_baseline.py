@@ -1,3 +1,5 @@
+# This test file checks baseline scoring logic for alert prioritization.
+
 from datetime import UTC, datetime
 
 from app.models.enums import IncidentPriority
@@ -9,6 +11,7 @@ from app.services.scoring.baseline import (
 from app.services.scoring.types import AlertRiskFeatures
 
 
+# Checks incident priority from three class tier never critical.
 def test_incident_priority_from_three_class_tier_never_critical() -> None:
     assert incident_priority_from_three_class_tier("low") == IncidentPriority.LOW
     assert incident_priority_from_three_class_tier("medium") == IncidentPriority.MEDIUM
@@ -16,6 +19,7 @@ def test_incident_priority_from_three_class_tier_never_critical() -> None:
     assert incident_priority_from_three_class_tier("unknown-tier") == IncidentPriority.LOW
 
 
+# Checks priority from score thresholds.
 def test_priority_from_score_thresholds() -> None:
     assert priority_from_score(91) == IncidentPriority.CRITICAL
     assert priority_from_score(74) == IncidentPriority.HIGH
@@ -23,6 +27,7 @@ def test_priority_from_score_thresholds() -> None:
     assert priority_from_score(18) == IncidentPriority.LOW
 
 
+# Checks score with baseline returns explainable critical score.
 def test_score_with_baseline_returns_explainable_critical_score() -> None:
     features = AlertRiskFeatures(
         observed_at=datetime.now(UTC),

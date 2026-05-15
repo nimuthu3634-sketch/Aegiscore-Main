@@ -1,3 +1,5 @@
+# This test file checks automated response policy execution logic.
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -228,6 +230,7 @@ def _audit_actions(session: FakeSession) -> list[str]:
     return [obj.action for obj in session.added if isinstance(obj, AuditLog)]
 
 
+# Checks evaluate alert policies executes dry run for high risk alert.
 def test_evaluate_alert_policies_executes_dry_run_for_high_risk_alert(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -279,6 +282,7 @@ def test_evaluate_alert_policies_executes_dry_run_for_high_risk_alert(monkeypatc
     assert "response.execution_completed" in audit_actions
 
 
+# Checks evaluate alert policies blocks live destructive action by default.
 def test_evaluate_alert_policies_blocks_live_destructive_action_by_default(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -319,6 +323,7 @@ def test_evaluate_alert_policies_blocks_live_destructive_action_by_default(monke
     assert "response.execution_warning" in _audit_actions(session)
 
 
+# Checks evaluate incident policies uses stubbed live adapter.
 def test_evaluate_incident_policies_uses_stubbed_live_adapter(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -367,6 +372,7 @@ def test_evaluate_incident_policies_uses_stubbed_live_adapter(monkeypatch) -> No
     assert response.attempt_count == 1
 
 
+# Checks evaluate incident policies retries and logs failed execution.
 def test_evaluate_incident_policies_retries_and_logs_failed_execution(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -420,6 +426,7 @@ def test_evaluate_incident_policies_retries_and_logs_failed_execution(monkeypatc
     assert "response.execution_failed" in audit_actions
 
 
+# Checks evaluate incident policies for alert auto creates incident for port scan.
 def test_evaluate_incident_policies_for_alert_auto_creates_incident_for_port_scan(
     monkeypatch,
 ) -> None:
@@ -466,6 +473,7 @@ def test_evaluate_incident_policies_for_alert_auto_creates_incident_for_port_sca
     assert "incident.created.automated_response" in _audit_actions(session)
 
 
+# Checks evaluate alert policies records live manual review for file integrity.
 def test_evaluate_alert_policies_records_live_manual_review_for_file_integrity(
     monkeypatch,
 ) -> None:
@@ -507,6 +515,7 @@ def test_evaluate_alert_policies_records_live_manual_review_for_file_integrity(
     assert "response.execution_completed" in _audit_actions(session)
 
 
+# Checks evaluate alert policies records live admin notification for user creation.
 def test_evaluate_alert_policies_records_live_admin_notification_for_user_creation(
     monkeypatch,
 ) -> None:
@@ -557,6 +566,7 @@ def test_evaluate_alert_policies_records_live_admin_notification_for_user_creati
     assert "response.execution_completed" in _audit_actions(session)
 
 
+# Checks ml brute force auto block executes when all gates met.
 def test_ml_brute_force_auto_block_executes_when_all_gates_met(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -606,6 +616,7 @@ def test_ml_brute_force_auto_block_executes_when_all_gates_met(monkeypatch) -> N
     assert "alert.builtin_ml_brute_force.evaluation" in _audit_actions(session)
 
 
+# Checks ml brute force auto block skipped when failed logins below threshold.
 def test_ml_brute_force_auto_block_skipped_when_failed_logins_below_threshold(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -627,6 +638,7 @@ def test_ml_brute_force_auto_block_skipped_when_failed_logins_below_threshold(mo
     assert audits.count("alert.builtin_ml_brute_force.evaluation") == 1
 
 
+# Checks ml brute force auto block skipped for non brute high risk.
 def test_ml_brute_force_auto_block_skipped_for_non_brute_high_risk(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -646,6 +658,7 @@ def test_ml_brute_force_auto_block_skipped_for_non_brute_high_risk(monkeypatch) 
     assert "alert.builtin_ml_brute_force.evaluation" not in _audit_actions(session)
 
 
+# Checks ml brute force auto block skipped for file integrity high even with failed lo....
 def test_ml_brute_force_auto_block_skipped_for_file_integrity_high_even_with_failed_logins(
     monkeypatch,
 ) -> None:
@@ -670,6 +683,7 @@ def test_ml_brute_force_auto_block_skipped_for_file_integrity_high_even_with_fai
     assert execution.evaluate_alert_policies(session, alert) == []
 
 
+# Checks ml brute force auto block skipped for unauthorized user creation high.
 def test_ml_brute_force_auto_block_skipped_for_unauthorized_user_creation_high(
     monkeypatch,
 ) -> None:
@@ -694,6 +708,7 @@ def test_ml_brute_force_auto_block_skipped_for_unauthorized_user_creation_high(
     assert execution.evaluate_alert_policies(session, alert) == []
 
 
+# Checks ml brute force auto block skipped when source ip missing.
 def test_ml_brute_force_auto_block_skipped_when_source_ip_missing(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -715,6 +730,7 @@ def test_ml_brute_force_auto_block_skipped_when_source_ip_missing(monkeypatch) -
     assert audits.count("alert.builtin_ml_brute_force.evaluation") == 1
 
 
+# Checks ml brute force not duplicated when policy already blocks ip.
 def test_ml_brute_force_not_duplicated_when_policy_already_blocks_ip(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -756,6 +772,7 @@ def test_ml_brute_force_not_duplicated_when_policy_already_blocks_ip(monkeypatch
     assert (responses[0].details or {}).get("policy_snapshot") is not None
 
 
+# Checks ml brute force auto block skipped when disabled.
 def test_ml_brute_force_auto_block_skipped_when_disabled(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -778,6 +795,7 @@ def test_ml_brute_force_auto_block_skipped_when_disabled(monkeypatch) -> None:
     assert execution.evaluate_alert_policies(session, alert) == []
 
 
+# Checks ml brute force skipped for loopback source.
 def test_ml_brute_force_skipped_for_loopback_source(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -804,6 +822,7 @@ def test_ml_brute_force_skipped_for_loopback_source(monkeypatch) -> None:
     )
 
 
+# Checks ml brute force auto block adapter invoked only once on repeat evaluation.
 def test_ml_brute_force_auto_block_adapter_invoked_only_once_on_repeat_evaluation(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -846,6 +865,7 @@ def test_ml_brute_force_auto_block_adapter_invoked_only_once_on_repeat_evaluatio
     assert len(adapter_calls) == 1
 
 
+# Checks ml brute force skipped when prior policy block ip recorded.
 def test_ml_brute_force_skipped_when_prior_policy_block_ip_recorded(monkeypatch) -> None:
     session = FakeSession()
 
@@ -872,6 +892,7 @@ def test_ml_brute_force_skipped_when_prior_policy_block_ip_recorded(monkeypatch)
     assert "alert.builtin_ml_brute_force.skipped" in _audit_actions(session)
 
 
+# Checks ai direct brute force block executes when enabled.
 def test_ai_direct_brute_force_block_executes_when_enabled(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -906,6 +927,7 @@ def test_ai_direct_brute_force_block_executes_when_enabled(monkeypatch) -> None:
     assert "alert.ai_direct_block.executed" in audits
 
 
+# Checks ai direct skipped for medium tier brute force.
 def test_ai_direct_skipped_for_medium_tier_brute_force(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -926,6 +948,7 @@ def test_ai_direct_skipped_for_medium_tier_brute_force(monkeypatch) -> None:
     assert "alert.ai_direct_block.skipped" in _audit_actions(session)
 
 
+# Checks ai direct no op for high non brute.
 def test_ai_direct_no_op_for_high_non_brute(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -946,6 +969,7 @@ def test_ai_direct_no_op_for_high_non_brute(monkeypatch) -> None:
     assert "alert.ai_direct_block.evaluation" not in _audit_actions(session)
 
 
+# Checks ai direct skipped loopback after gates.
 def test_ai_direct_skipped_loopback_after_gates(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -971,6 +995,7 @@ def test_ai_direct_skipped_loopback_after_gates(monkeypatch) -> None:
     )
 
 
+# Checks ai direct adapter invoked only once on repeat.
 def test_ai_direct_adapter_invoked_only_once_on_repeat(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -1006,6 +1031,7 @@ def test_ai_direct_adapter_invoked_only_once_on_repeat(monkeypatch) -> None:
     assert len(adapter_calls) == 1
 
 
+# Checks ai direct critical model tier executes.
 def test_ai_direct_critical_model_tier_executes(monkeypatch) -> None:
     session = FakeSession()
     alert = _build_alert(
@@ -1028,6 +1054,7 @@ def test_ai_direct_critical_model_tier_executes(monkeypatch) -> None:
     assert (out[0].details or {}).get("model_priority_tier") == "critical"
 
 
+# Checks score alert calls ai direct before alert policies.
 def test_score_alert_calls_ai_direct_before_alert_policies(monkeypatch) -> None:
     from app.services.scoring.service import score_alert
     from app.services.scoring.types import AlertRiskFeatures, ScoringResult

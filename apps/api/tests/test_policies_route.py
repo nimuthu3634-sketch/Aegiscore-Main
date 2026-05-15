@@ -1,3 +1,5 @@
+# This test file checks response policy route behavior.
+
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from uuid import uuid4
@@ -53,6 +55,7 @@ def _sample_policy() -> ResponsePolicySummaryResponse:
     )
 
 
+# Checks policies route returns policy list.
 def test_policies_route_returns_policy_list(monkeypatch) -> None:
     policy = _sample_policy()
     _override_dependencies()
@@ -74,6 +77,7 @@ def test_policies_route_returns_policy_list(monkeypatch) -> None:
     assert payload["items"][0]["action_type"] == "block_ip"
 
 
+# Checks policies route updates enabled flag.
 def test_policies_route_updates_enabled_flag(monkeypatch) -> None:
     policy = _sample_policy()
     policy.enabled = False
@@ -99,6 +103,7 @@ def test_policies_route_updates_enabled_flag(monkeypatch) -> None:
     assert payload["message"] == "Policy disabled successfully."
 
 
+# Checks policies route returns not found.
 def test_policies_route_returns_not_found(monkeypatch) -> None:
     _override_dependencies()
 
@@ -117,6 +122,7 @@ def test_policies_route_returns_not_found(monkeypatch) -> None:
     assert response.json() == {"detail": "Policy not found"}
 
 
+# Checks policies patch route rejects analyst role.
 def test_policies_patch_route_rejects_analyst_role(monkeypatch) -> None:
     policy = _sample_policy()
     app.dependency_overrides[deps.get_current_user] = lambda: SimpleNamespace(
@@ -135,6 +141,7 @@ def test_policies_patch_route_rejects_analyst_role(monkeypatch) -> None:
     assert "Insufficient role permissions" in response.json()["detail"]
 
 
+# Checks policies list route allows analyst role.
 def test_policies_list_route_allows_analyst_role(monkeypatch) -> None:
     policy = _sample_policy()
     app.dependency_overrides[deps.get_current_user] = lambda: SimpleNamespace(

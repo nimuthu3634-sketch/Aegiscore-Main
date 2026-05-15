@@ -1,3 +1,5 @@
+# This test file checks risk scoring service behavior and persistence.
+
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -33,6 +35,7 @@ class FakeSession:
         self.flush_count += 1
 
 
+# Checks incident rollup uses real linked alert scores.
 def test_incident_rollup_uses_real_linked_alert_scores() -> None:
     asset = Asset(
         id=uuid4(),
@@ -137,6 +140,7 @@ def test_incident_rollup_uses_real_linked_alert_scores() -> None:
     assert "Linked alert count: 2" in summary["factors"]
 
 
+# Checks persist and score alert links raw and normalized records.
 def test_persist_and_score_alert_links_raw_and_normalized_records(monkeypatch) -> None:
     session = FakeSession()
     raw_alert = RawAlert(

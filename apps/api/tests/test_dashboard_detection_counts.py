@@ -1,7 +1,10 @@
+# This test file checks dashboard detection count helpers so every supported attack type is shown.
+
 from app.models.enums import DetectionType
 from app.repositories.dashboard_detection_counts import complete_alerts_by_detection_counts
 
 
+# Checks complete alerts by detection counts fills zeros and orders enum.
 def test_complete_alerts_by_detection_counts_fills_zeros_and_orders_enum() -> None:
     rows = [
         (DetectionType.PORT_SCAN, 4),

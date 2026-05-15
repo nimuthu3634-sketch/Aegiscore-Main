@@ -1,3 +1,5 @@
+# This test file checks notification API routes and read status behavior.
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -48,6 +50,7 @@ def _sample_row(*, read: bool = False) -> NotificationBellRow:
     )
 
 
+# Checks notifications recent returns payload.
 def test_notifications_recent_returns_payload(monkeypatch) -> None:
     _override_dependencies()
 
@@ -88,6 +91,7 @@ def test_notifications_recent_returns_payload(monkeypatch) -> None:
     assert item["read"] is False
 
 
+# Checks notifications mark read returns 204.
 def test_notifications_mark_read_returns_204(monkeypatch) -> None:
     _override_dependencies(with_session=True)
     captured: dict[str, object] = {}
@@ -114,6 +118,7 @@ def test_notifications_mark_read_returns_204(monkeypatch) -> None:
     assert captured["uid"] == USER_ID
 
 
+# Checks notifications mark read missing returns 404.
 def test_notifications_mark_read_missing_returns_404(monkeypatch) -> None:
     _override_dependencies(with_session=True)
 
@@ -135,6 +140,7 @@ def test_notifications_mark_read_missing_returns_404(monkeypatch) -> None:
     assert response.status_code == 404
 
 
+# Checks notifications read all returns 204.
 def test_notifications_read_all_returns_204(monkeypatch) -> None:
     _override_dependencies(with_session=True)
     captured: dict[str, object] = {}

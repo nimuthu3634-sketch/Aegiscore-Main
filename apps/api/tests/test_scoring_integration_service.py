@@ -1,3 +1,5 @@
+# This test file checks integration between scoring and alert/incident processing.
+
 """``score_alert`` integration: model strategy + baseline fallback."""
 
 from __future__ import annotations
@@ -25,6 +27,7 @@ from app.services.scoring.service import score_alert
 from app.services.scoring.types import AlertRiskFeatures, ScoringResult
 
 
+# Fixture used to prepare test data or dependencies for this test file.
 @pytest.fixture
 def minimal_alert() -> NormalizedAlert:
     now = datetime.now(UTC)
@@ -63,6 +66,7 @@ def minimal_alert() -> NormalizedAlert:
     return alert
 
 
+# Checks score alert falls back to baseline when model artifacts missing.
 def test_score_alert_falls_back_to_baseline_when_model_artifacts_missing(
     monkeypatch: pytest.MonkeyPatch,
     minimal_alert: NormalizedAlert,
@@ -151,6 +155,7 @@ def test_score_alert_falls_back_to_baseline_when_model_artifacts_missing(
     assert "missing keras" in result.explanation["fallback_reason"]
 
 
+# Checks score alert uses model when load succeeds.
 def test_score_alert_uses_model_when_load_succeeds(
     monkeypatch: pytest.MonkeyPatch,
     minimal_alert: NormalizedAlert,

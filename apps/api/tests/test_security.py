@@ -1,3 +1,5 @@
+# This test file checks security helper functions such as password hashing and tokens.
+
 import jwt
 import pytest
 
@@ -11,6 +13,7 @@ from app.core.security import (
 )
 
 
+# Checks hash password and verify password round trip.
 def test_hash_password_and_verify_password_round_trip() -> None:
     password = "AegisCore123!"
 
@@ -21,6 +24,7 @@ def test_hash_password_and_verify_password_round_trip() -> None:
     assert verify_password("wrong-password", password_hash) is False
 
 
+# Checks create access token and decode access token.
 def test_create_access_token_and_decode_access_token() -> None:
     token = create_access_token("user-123")
 
@@ -30,6 +34,7 @@ def test_create_access_token_and_decode_access_token() -> None:
     assert "exp" in payload
 
 
+# Checks decode bearer access token rejects mfa challenge token.
 def test_decode_bearer_access_token_rejects_mfa_challenge_token() -> None:
     mfa_token = create_mfa_challenge_token("user-456")
 

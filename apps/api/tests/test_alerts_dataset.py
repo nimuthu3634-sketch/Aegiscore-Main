@@ -1,3 +1,5 @@
+# This test file checks AI training dataset validation.
+
 """Synthetic alerts training CSV contract (see ``ai/datasets/``)."""
 
 from __future__ import annotations
@@ -21,15 +23,18 @@ def _dataset_csv() -> Path:
     return _repo_root() / "ai" / "datasets" / "alerts_dataset.csv"
 
 
+# Checks alerts dataset csv exists.
 def test_alerts_dataset_csv_exists() -> None:
     path = _dataset_csv()
     assert path.is_file(), f"Expected committed dataset at {path}"
 
 
+# Checks alerts dataset generator script exists.
 def test_alerts_dataset_generator_script_exists() -> None:
     assert _generator_script().is_file()
 
 
+# Checks alerts dataset includes threat types labels and counts.
 def test_alerts_dataset_includes_threat_types_labels_and_counts() -> None:
     path = _dataset_csv()
     with path.open(encoding="utf-8", newline="") as handle:
@@ -80,6 +85,7 @@ def test_alerts_dataset_includes_threat_types_labels_and_counts() -> None:
     assert set(reader.fieldnames or []) == expected_cols
 
 
+# Checks generate alerts dataset script writes contract csv.
 def test_generate_alerts_dataset_script_writes_contract_csv(tmp_path: Path) -> None:
     """CLI generator produces the same column schema and in-scope threat types."""
     script = _repo_root() / "ai" / "datasets" / "generate_alerts_dataset.py"

@@ -1,3 +1,5 @@
+# This test file checks response adapter behavior for automated actions.
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -81,6 +83,7 @@ def _context(
     )
 
 
+# Checks block ip dry run remains non destructive.
 def test_block_ip_dry_run_remains_non_destructive() -> None:
     session = FakeSession()
     result = execute_adapter(
@@ -96,6 +99,7 @@ def test_block_ip_dry_run_remains_non_destructive() -> None:
     assert "Dry-run: would execute block_ip" in result.summary
 
 
+# Checks block ip live ledger completes.
 def test_block_ip_live_ledger_completes(monkeypatch) -> None:
     session = FakeSession()
     monkeypatch.setattr(adapters, "_append_json_line", lambda path, payload: None)
@@ -108,6 +112,7 @@ def test_block_ip_live_ledger_completes(monkeypatch) -> None:
     assert result.details["adapter_contract"]["action"] == "block_ip"
 
 
+# Checks disable user live rejects unsafe username.
 def test_disable_user_live_rejects_unsafe_username() -> None:
     session = FakeSession()
     result = execute_adapter(
@@ -118,6 +123,7 @@ def test_disable_user_live_rejects_unsafe_username() -> None:
     assert "safe Linux username" in result.message
 
 
+# Checks block ip live ledger write failure marks failed.
 def test_block_ip_live_ledger_write_failure_marks_failed(monkeypatch) -> None:
     session = FakeSession()
 
@@ -134,6 +140,7 @@ def test_block_ip_live_ledger_write_failure_marks_failed(monkeypatch) -> None:
     assert result.details["backend"] == "ledger"
 
 
+# Checks quarantine host flag persists containment state.
 def test_quarantine_host_flag_persists_containment_state(monkeypatch) -> None:
     session = FakeSession()
     monkeypatch.setattr(adapters, "_append_json_line", lambda path, payload: None)
@@ -145,6 +152,7 @@ def test_quarantine_host_flag_persists_containment_state(monkeypatch) -> None:
     assert any(isinstance(item, ContainmentFlag) for item in session.added)
 
 
+# Checks manual review ledger failure returns warning with audit.
 def test_manual_review_ledger_failure_returns_warning_with_audit(monkeypatch) -> None:
     session = FakeSession()
 
@@ -162,6 +170,7 @@ def test_manual_review_ledger_failure_returns_warning_with_audit(monkeypatch) ->
     assert result.details["manual_review_ledger_written"] is False
 
 
+# Checks notify admin live reports failure from notification channel.
 def test_notify_admin_live_reports_failure_from_notification_channel(monkeypatch) -> None:
     session = FakeSession()
     monkeypatch.setattr(
@@ -179,6 +188,7 @@ def test_notify_admin_live_reports_failure_from_notification_channel(monkeypatch
     assert "smtp down" in result.message
 
 
+# Checks notify admin live partial delivery returns warning.
 def test_notify_admin_live_partial_delivery_returns_warning(monkeypatch) -> None:
     session = FakeSession()
     monkeypatch.setattr(
@@ -199,6 +209,7 @@ def test_notify_admin_live_partial_delivery_returns_warning(monkeypatch) -> None
     assert result.details["failed"] == 1
 
 
+# Checks block ip ledger completes when lab adapters disabled.
 def test_block_ip_ledger_completes_when_lab_adapters_disabled(monkeypatch) -> None:
     session = FakeSession()
     monkeypatch.setattr(adapters, "_append_json_line", lambda path, payload: None)
@@ -210,6 +221,7 @@ def test_block_ip_ledger_completes_when_lab_adapters_disabled(monkeypatch) -> No
     assert result.details["backend"] == "ledger"
 
 
+# Checks block ip live rejects loopback target.
 def test_block_ip_live_rejects_loopback_target(monkeypatch) -> None:
     session = FakeSession()
     monkeypatch.setattr(adapters, "_append_json_line", lambda path, payload: None)
@@ -221,6 +233,7 @@ def test_block_ip_live_rejects_loopback_target(monkeypatch) -> None:
     assert "eligible" in (result.message or "").lower()
 
 
+# Checks block ip iptables blocked when allow destructive false.
 def test_block_ip_iptables_blocked_when_allow_destructive_false(monkeypatch) -> None:
     session = FakeSession()
     cmds: list[list[str]] = []
@@ -244,6 +257,7 @@ def test_block_ip_iptables_blocked_when_allow_destructive_false(monkeypatch) -> 
     assert cmds == []
 
 
+# Checks block ip iptables uses subprocess argv lists.
 def test_block_ip_iptables_uses_subprocess_argv_lists(monkeypatch) -> None:
     session = FakeSession()
     cmds: list[list[str]] = []
