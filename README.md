@@ -222,8 +222,6 @@ WAZUH_INDEXER_ALERT_INDEX=wazuh-alerts-*
 WAZUH_INDEXER_VERIFY_TLS=false
 ```
 
-> `.env` should NOT be pushed to GitHub.
-
 ---
 
 ### 3. Start Containers
