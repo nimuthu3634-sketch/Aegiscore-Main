@@ -24,11 +24,13 @@ from app.schemas.reports import (
 )
 
 
+# Handles database queries used for report summaries and report exports.
 class ReportsRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
     def _base_alert_statement(self):
+        # Common alert query reused by both summary and export report methods.
         return (
             select(NormalizedAlert)
             .join(NormalizedAlert.raw_alert)
@@ -50,6 +52,7 @@ class ReportsRepository:
         )
 
     def _apply_alert_status_filter(self, statement, status: AlertListStatusFilter | None):
+        # Applies the same alert status logic used in the alert listing page.
         if status is None:
             return statement
 
@@ -100,10 +103,12 @@ class ReportsRepository:
         window_start: datetime,
         window_end: datetime,
     ) -> list[NormalizedAlert]:
+        # Gets alerts inside the selected report date range.
         statement = self._base_alert_statement().where(
             NormalizedAlert.created_at >= window_start,
             NormalizedAlert.created_at <= window_end,
         )
+
         if query.detection_type is not None:
             statement = statement.where(
                 NormalizedAlert.detection_type == query.detection_type
@@ -112,6 +117,7 @@ class ReportsRepository:
             statement = statement.where(
                 func.lower(NormalizedAlert.source) == query.source_type.value
             )
+
         statement = statement.order_by(NormalizedAlert.created_at.asc())
         return list(self.session.execute(statement).scalars().unique().all())
 
@@ -122,6 +128,7 @@ class ReportsRepository:
         window_start: datetime,
         window_end: datetime,
     ) -> list[NormalizedAlert]:
+        # Gets alert records for CSV/PDF export based on selected filters.
         statement = self._base_alert_statement().where(
             NormalizedAlert.created_at >= window_start,
             NormalizedAlert.created_at <= window_end,
@@ -135,6 +142,8 @@ class ReportsRepository:
             statement = statement.where(
                 func.lower(NormalizedAlert.source) == query.source_type.value
             )
+
+        # Converts frontend severity labels into numeric severity ranges.
         if query.severity is not None:
             if query.severity == AlertSeverityLabel.CRITICAL:
                 statement = statement.where(NormalizedAlert.severity >= 9)
@@ -144,6 +153,7 @@ class ReportsRepository:
                 statement = statement.where(NormalizedAlert.severity.between(4, 6))
             else:
                 statement = statement.where(NormalizedAlert.severity <= 3)
+
         if query.asset:
             asset_term = f"%{query.asset.strip()}%"
             statement = statement.where(
@@ -165,6 +175,7 @@ class ReportsRepository:
         window_start: datetime,
         window_end: datetime,
     ) -> list[Incident]:
+        # Gets incident records for report export with related alert and user data.
         statement = (
             select(Incident)
             .outerjoin(Incident.alerts)
@@ -188,6 +199,8 @@ class ReportsRepository:
 
         if query.priority is not None:
             statement = statement.where(Incident.priority == query.priority.value)
+
+        # Applies incident workflow state filters.
         if query.state == IncidentListStateFilter.NEW:
             statement = statement.where(Incident.status == IncidentStatus.NEW)
         elif query.state == IncidentListStateFilter.TRIAGED:
@@ -198,6 +211,7 @@ class ReportsRepository:
             statement = statement.where(Incident.status == IncidentStatus.CONTAINED)
         elif query.state == IncidentListStateFilter.RESOLVED:
             statement = statement.where(Incident.status == IncidentStatus.RESOLVED)
+
         if query.assignee:
             assignee_term = f"%{query.assignee.strip()}%"
             statement = statement.where(
@@ -206,6 +220,7 @@ class ReportsRepository:
                     User.full_name.ilike(assignee_term),
                 )
             )
+
         if query.detection_type is not None:
             statement = statement.where(
                 NormalizedAlert.detection_type == query.detection_type
@@ -221,6 +236,7 @@ class ReportsRepository:
         window_start: datetime,
         window_end: datetime,
     ) -> list[ResponseAction]:
+        # Uses executed_at when available, otherwise created_at for queued actions.
         executed_at_expression = func.coalesce(
             ResponseAction.executed_at,
             ResponseAction.created_at,
@@ -246,6 +262,7 @@ class ReportsRepository:
             )
         )
 
+        # Filters response records by execution mode and status.
         if query.mode == ResponseModeLabel.DRY_RUN:
             statement = statement.where(ResponseAction.mode == ResponseMode.DRY_RUN)
         elif query.mode == ResponseModeLabel.LIVE:

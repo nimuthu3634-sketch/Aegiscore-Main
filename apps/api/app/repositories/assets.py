@@ -15,6 +15,7 @@ from app.schemas.listing import (
 )
 
 
+# Handles database operations related to monitored assets.
 class AssetsRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
@@ -22,6 +23,7 @@ class AssetsRepository:
     def list_assets(
         self, query: AssetListQuery
     ) -> tuple[list[tuple[Asset, int, int]], int]:
+        # Counts alerts and open incidents for each asset to show in the asset table.
         recent_alerts_subquery = (
             select(
                 NormalizedAlert.asset_id.label("asset_id"),
@@ -61,6 +63,8 @@ class AssetsRepository:
         )
 
         conditions = []
+
+        # Applies search and filter options from the frontend asset page.
         if query.search:
             search_term = f"%{query.search.strip()}%"
             conditions.append(
@@ -125,6 +129,7 @@ class AssetsRepository:
         if conditions:
             statement = statement.where(*conditions)
 
+        # Sorts the asset list based on the selected table column.
         sort_expression = {
             AssetListSortField.HOSTNAME: Asset.hostname,
             AssetListSortField.LAST_SEEN: Asset.updated_at,
@@ -137,6 +142,7 @@ class AssetsRepository:
         )
         statement = statement.order_by(direction, Asset.hostname.asc())
 
+        # Calculates the total count before applying pagination.
         total = self.session.scalar(
             select(func.count()).select_from(statement.order_by(None).subquery())
         ) or 0
@@ -148,14 +154,17 @@ class AssetsRepository:
         return list(self.session.execute(paged_statement).all()), total
 
     def create(self, asset: Asset) -> Asset:
+        # Adds a new asset record to the database session.
         self.session.add(asset)
         return asset
 
     def get_by_hostname(self, hostname: str) -> Asset | None:
+        # Finds an asset using its hostname.
         statement = select(Asset).where(func.lower(Asset.hostname) == hostname.lower())
         return self.session.scalar(statement)
 
     def get_by_ip_address(self, ip_address: str) -> Asset | None:
+        # Finds an asset using its IP address.
         statement = select(Asset).where(Asset.ip_address == ip_address)
         return self.session.scalar(statement)
 
@@ -165,6 +174,7 @@ class AssetsRepository:
         hostname: str | None,
         ip_address: str | None,
     ) -> Asset | None:
+        # Used during ingestion to match an incoming alert to an existing asset.
         conditions = []
         if hostname:
             conditions.append(func.lower(Asset.hostname) == hostname.lower())

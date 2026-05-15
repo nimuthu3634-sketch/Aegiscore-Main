@@ -7,11 +7,13 @@ from sqlalchemy.orm import Session, selectinload
 from app.models.user import User
 
 
+# Handles database operations related to system users.
 class UsersRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
     def get_by_id(self, user_id: UUID) -> User | None:
+        # Finds a user by ID and loads the user's role for permission checks.
         statement = (
             select(User)
             .options(selectinload(User.role))
@@ -20,6 +22,7 @@ class UsersRepository:
         return self.session.scalar(statement)
 
     def get_by_username(self, username: str) -> User | None:
+        # Finds a user by username, mainly used during login.
         statement = (
             select(User)
             .options(selectinload(User.role))
@@ -28,9 +31,10 @@ class UsersRepository:
         return self.session.scalar(statement)
 
     def create(self, user: User) -> User:
+        # Adds a new user account to the current database session.
         self.session.add(user)
         return user
 
     def touch_last_login(self, user: User) -> None:
+        # Updates the last login time after the user successfully logs in.
         user.last_login_at = datetime.now(UTC)
-

@@ -18,11 +18,13 @@ from app.schemas.listing import (
 )
 
 
+# Handles database operations related to incidents.
 class IncidentsRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
     def list_incidents(self, query: IncidentListQuery) -> tuple[list[Incident], int]:
+        # Builds the main incident list query with related user, alert, and asset data.
         statement = (
             select(Incident)
             .outerjoin(Incident.primary_alert)
@@ -50,6 +52,8 @@ class IncidentsRepository:
         )
 
         conditions = []
+
+        # Applies search filtering across incident, user, asset, and detection fields.
         if query.search:
             search_term = f"%{query.search.strip()}%"
             conditions.append(
@@ -67,6 +71,7 @@ class IncidentsRepository:
         if query.priority is not None:
             conditions.append(Incident.priority == query.priority.value)
 
+        # Filters incidents by their investigation state.
         if query.state == IncidentListStateFilter.NEW:
             conditions.append(Incident.status == IncidentStatus.NEW)
         elif query.state == IncidentListStateFilter.TRIAGED:
@@ -90,6 +95,7 @@ class IncidentsRepository:
         if conditions:
             statement = statement.where(*conditions)
 
+        # Converts priority text into rank values so sorting works correctly.
         priority_rank = case(
             (Incident.priority == "critical", 4),
             (Incident.priority == "high", 3),
@@ -108,6 +114,7 @@ class IncidentsRepository:
         )
         statement = statement.order_by(direction, Incident.updated_at.desc())
 
+        # Gets the total count before applying pagination.
         total = self.session.scalar(
             select(func.count()).select_from(statement.order_by(None).subquery())
         ) or 0
@@ -120,6 +127,7 @@ class IncidentsRepository:
         return list(self.session.scalars(paged_statement)), total
 
     def get_incident(self, incident_id: UUID) -> Incident | None:
+        # Loads one incident with the related data needed by the service layer.
         statement = (
             select(Incident)
             .options(
@@ -152,6 +160,7 @@ class IncidentsRepository:
         return self.session.scalar(statement)
 
     def get_incident_detail(self, incident_id: UUID) -> Incident | None:
+        # Loads full incident details for the incident detail page.
         statement = (
             select(Incident)
             .options(
@@ -184,5 +193,6 @@ class IncidentsRepository:
         return self.session.scalar(statement)
 
     def create(self, incident: Incident) -> Incident:
+        # Adds a new incident to the current database session.
         self.session.add(incident)
         return incident

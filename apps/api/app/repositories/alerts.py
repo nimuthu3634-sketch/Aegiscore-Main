@@ -23,6 +23,7 @@ from app.schemas.listing import (
 from app.services.scoring.service import persist_and_score_alert
 
 
+# Handles database operations related to alerts.
 class AlertsRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
@@ -33,6 +34,7 @@ class AlertsRepository:
         source: str,
         external_id: str,
     ) -> RawAlert | None:
+        # Finds a raw alert using its original source and external ID.
         statement = (
             select(RawAlert)
             .options(
@@ -59,6 +61,7 @@ class AlertsRepository:
         return self.session.scalar(statement)
 
     def list_alerts(self, query: AlertListQuery) -> tuple[list[NormalizedAlert], int]:
+        # Builds the main alert listing query with related data.
         statement = (
             select(NormalizedAlert)
             .join(NormalizedAlert.raw_alert)
@@ -76,6 +79,8 @@ class AlertsRepository:
         )
 
         conditions = []
+
+        # Applies search filtering across common alert, asset, and payload fields.
         if query.search:
             search_term = f"%{query.search.strip()}%"
             conditions.append(
@@ -91,6 +96,7 @@ class AlertsRepository:
                 )
             )
 
+        # Converts frontend severity labels into numeric severity ranges.
         if query.severity is not None:
             if query.severity.value == "critical":
                 conditions.append(NormalizedAlert.severity >= 9)
@@ -101,6 +107,7 @@ class AlertsRepository:
             else:
                 conditions.append(NormalizedAlert.severity <= 3)
 
+        # Handles the alert status filters used on the alerts page.
         if query.status == AlertListStatusFilter.NEW:
             conditions.extend(
                 [NormalizedAlert.status == AlertStatus.NEW, Incident.id.is_(None)]
@@ -156,6 +163,7 @@ class AlertsRepository:
                 )
             )
 
+        # Limits results to a selected time range unless "all" is selected.
         if query.date_range != AlertDateRange.ALL:
             hours = {"4h": 4, "12h": 12, "24h": 24}[query.date_range.value]
             since = datetime.now(UTC) - timedelta(hours=hours)
@@ -164,17 +172,20 @@ class AlertsRepository:
         if conditions:
             statement = statement.where(*conditions)
 
+        # Creates a severity rank so alerts can be sorted by severity label.
         severity_rank = case(
             (NormalizedAlert.severity >= 9, 4),
             (NormalizedAlert.severity >= 7, 3),
             (NormalizedAlert.severity >= 4, 2),
             else_=1,
         )
+
         sort_expression = {
             AlertListSortField.TIMESTAMP: NormalizedAlert.created_at,
             AlertListSortField.SEVERITY: severity_rank,
             AlertListSortField.RISK_SCORE: func.coalesce(RiskScore.score, 0),
         }[query.sort_by]
+
         direction = (
             sort_expression.asc()
             if query.sort_direction == SortDirection.ASC
@@ -182,6 +193,7 @@ class AlertsRepository:
         )
         statement = statement.order_by(direction, NormalizedAlert.created_at.desc())
 
+        # Counts total matching records before pagination.
         total = self.session.scalar(
             select(func.count()).select_from(statement.order_by(None).subquery())
         ) or 0
@@ -194,6 +206,7 @@ class AlertsRepository:
         return list(self.session.scalars(paged_statement)), total
 
     def get_alert(self, alert_id: UUID) -> NormalizedAlert | None:
+        # Gets one alert with the basic related data needed by services.
         statement = (
             select(NormalizedAlert)
             .options(
@@ -208,6 +221,7 @@ class AlertsRepository:
         return self.session.scalar(statement)
 
     def get_alert_detail(self, alert_id: UUID) -> NormalizedAlert | None:
+        # Loads full alert detail data for the alert detail page.
         statement = (
             select(NormalizedAlert)
             .options(
@@ -259,4 +273,5 @@ class AlertsRepository:
         return self.session.scalar(statement)
 
     def create_raw_and_normalized(self, raw_alert, normalized_alert) -> None:
+        # Saves the raw and normalized alert, then runs risk scoring for it.
         persist_and_score_alert(self.session, raw_alert, normalized_alert)

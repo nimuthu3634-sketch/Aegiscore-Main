@@ -11,6 +11,7 @@ from app.models.incident import Incident
 from app.models.notification_event import NotificationEvent
 
 
+# Simple structure used to return notification data for the frontend bell menu.
 @dataclass(frozen=True)
 class NotificationBellRow:
     id: uuid.UUID
@@ -24,17 +25,20 @@ class NotificationBellRow:
     read: bool
 
 
+# Handles database operations related to notification events.
 class NotificationEventsRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
     def count_unread(self) -> int:
+        # Counts notifications that are still unread.
         stmt = select(func.count()).select_from(NotificationEvent).where(
             NotificationEvent.read.is_(False)
         )
         return int(self.session.scalar(stmt) or 0)
 
     def count_matching(self, *, unread_only: bool) -> int:
+        # Counts all notifications, or only unread ones depending on the filter.
         stmt = select(func.count()).select_from(NotificationEvent)
         if unread_only:
             stmt = stmt.where(NotificationEvent.read.is_(False))
@@ -46,6 +50,7 @@ class NotificationEventsRepository:
         limit: int,
         unread_only: bool,
     ) -> list[NotificationBellRow]:
+        # Gets recent notifications with the related incident title.
         stmt = (
             select(
                 NotificationEvent.id,
@@ -62,8 +67,11 @@ class NotificationEventsRepository:
             .order_by(NotificationEvent.created_at.desc())
             .limit(limit)
         )
+
+        # Applies the unread-only filter when the frontend requests it.
         if unread_only:
             stmt = stmt.where(NotificationEvent.read.is_(False))
+
         rows = self.session.execute(stmt).all()
         return [
             NotificationBellRow(
@@ -81,6 +89,7 @@ class NotificationEventsRepository:
         ]
 
     def mark_read(self, notification_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+        # Marks a single notification as read by the current user.
         stmt = (
             update(NotificationEvent)
             .where(NotificationEvent.id == notification_id)
@@ -90,6 +99,7 @@ class NotificationEventsRepository:
         return result.rowcount > 0
 
     def mark_all_read(self, user_id: uuid.UUID) -> int:
+        # Marks all unread notifications as read for the current user.
         stmt = (
             update(NotificationEvent)
             .where(NotificationEvent.read.is_(False))

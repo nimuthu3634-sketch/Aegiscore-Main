@@ -9,6 +9,7 @@ from app.models.risk_score import RiskScore
 from app.services.scoring.types import ScoringResult
 
 
+# Handles database operations related to alert risk scores.
 class RiskScoresRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
@@ -18,7 +19,10 @@ class RiskScoresRepository:
         alert: NormalizedAlert,
         result: ScoringResult,
     ) -> RiskScore:
+        # Updates the existing risk score if it exists, otherwise creates a new one.
         risk_score = alert.risk_score or RiskScore(normalized_alert=alert)
+
+        # Stores the latest scoring result calculated by the scoring service.
         risk_score.score = float(result.score)
         risk_score.confidence = result.confidence
         risk_score.priority_label = result.priority_label
@@ -29,5 +33,6 @@ class RiskScoresRepository:
         risk_score.explanation = result.explanation
         risk_score.feature_snapshot = result.feature_snapshot
         risk_score.calculated_at = datetime.now(UTC)
+
         self.session.add(risk_score)
         return risk_score

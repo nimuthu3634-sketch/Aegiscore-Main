@@ -13,6 +13,7 @@ from app.models.asset import Asset
 from app.models.raw_alert import RawAlert
 
 
+# Simple data structure used to return dashboard summary values.
 @dataclass
 class DashboardMetrics:
     asset_count: int
@@ -24,14 +25,18 @@ class DashboardMetrics:
     alerts_by_detection: list[tuple[str, int]]
 
 
+# Handles database queries needed for the main dashboard page.
 class DashboardRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
     def get_metrics(self) -> DashboardMetrics:
+        # Counts the main SOC records shown as dashboard metrics.
         asset_count = self.session.scalar(select(func.count(Asset.id))) or 0
         raw_alert_count = self.session.scalar(select(func.count(RawAlert.id))) or 0
         alert_count = self.session.scalar(select(func.count(NormalizedAlert.id))) or 0
+
+        # Counts incidents that are not resolved or marked as false positives.
         open_incident_count = (
             self.session.scalar(
                 select(func.count(Incident.id)).where(
@@ -42,6 +47,8 @@ class DashboardRepository:
             )
             or 0
         )
+
+        # Counts response actions that are still waiting or running.
         pending_response_count = (
             self.session.scalar(
                 select(func.count(ResponseAction.id)).where(
@@ -52,9 +59,12 @@ class DashboardRepository:
             )
             or 0
         )
+
         average_risk_score = (
             self.session.scalar(select(func.avg(RiskScore.score))) or 0.0
         )
+
+        # Groups alerts by detection type for the dashboard chart.
         grouped = self.session.execute(
             select(
                 NormalizedAlert.detection_type,

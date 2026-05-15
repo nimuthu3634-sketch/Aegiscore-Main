@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.models.ingestion_failure import IngestionFailure
 
 
+# Handles database operations for failed alert ingestion records.
 class IngestionFailuresRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
@@ -18,6 +19,7 @@ class IngestionFailuresRepository:
         source: str,
         external_id: str,
     ) -> IngestionFailure | None:
+        # Finds a failed ingestion record using the source and external alert ID.
         statement = select(IngestionFailure).where(
             IngestionFailure.source == source,
             IngestionFailure.external_id == external_id,
@@ -34,6 +36,7 @@ class IngestionFailuresRepository:
         error_message: str,
         raw_payload: dict,
     ) -> IngestionFailure:
+        # Creates a new failure record or updates the existing one if it already exists.
         failure = self.get_by_source_external_id(
             source=source,
             external_id=external_id,
@@ -52,6 +55,7 @@ class IngestionFailuresRepository:
             self.session.add(failure)
             return failure
 
+        # Updates the failure details and increases the retry count.
         failure.detection_hint = detection_hint
         failure.error_type = error_type
         failure.error_message = error_message
@@ -67,6 +71,7 @@ class IngestionFailuresRepository:
         source: str,
         external_id: str,
     ) -> IngestionFailure | None:
+        # Marks a previous ingestion failure as resolved after it is processed successfully.
         failure = self.get_by_source_external_id(
             source=source,
             external_id=external_id,
