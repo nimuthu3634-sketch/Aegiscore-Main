@@ -1,3 +1,4 @@
+# Main scoring service that chooses baseline scoring or TensorFlow model scoring.
 from __future__ import annotations
 
 from sqlalchemy.orm import Session
@@ -35,6 +36,7 @@ __all__ = [
 ]
 
 
+# Scores one normalized alert and then evaluates response automation rules.
 def score_alert(
     session: Session,
     alert: NormalizedAlert,
@@ -47,6 +49,7 @@ def score_alert(
     settings = get_settings()
     features = extract_alert_features(session, alert)
 
+    # The scoring strategy can use TensorFlow or the deterministic baseline fallback.
     strategy = settings.scoring_strategy.lower().strip()
     if strategy == "model":
         try:
@@ -71,6 +74,7 @@ def score_alert(
             baseline_version=settings.scoring_baseline_version,
         )
 
+    # Store the latest score so alerts and incidents can use it immediately.
     risk_score = RiskScoresRepository(session).upsert_for_alert(alert, result)
     session.flush()
 
@@ -89,11 +93,13 @@ def score_alert(
     return risk_score
 
 
+# Saves a raw/normalized alert pair and immediately calculates its risk score.
 def persist_and_score_alert(
     session: Session,
     raw_alert: RawAlert,
     normalized_alert: NormalizedAlert,
 ) -> NormalizedAlert:
+    # Link the raw event and normalized alert before saving them.
     raw_alert.normalized_alert = normalized_alert
     session.add(raw_alert)
     session.add(normalized_alert)

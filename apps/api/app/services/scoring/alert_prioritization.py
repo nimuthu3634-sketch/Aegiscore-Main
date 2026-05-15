@@ -82,6 +82,7 @@ NUMERIC_COLUMNS = [
 
 # ── schema detection ───────────────────────────────────────────────────────
 
+# Checks whether a CSV file matches the main alert-prioritization training schema.
 def is_alert_prioritization_dataset(frame: pd.DataFrame) -> bool:
     cols = {c.strip().lower() for c in frame.columns}
     return LABEL_COLUMN in cols and "threat_type" in cols and "source_type" in cols
@@ -89,6 +90,7 @@ def is_alert_prioritization_dataset(frame: pd.DataFrame) -> bool:
 
 # ── data normalisation ─────────────────────────────────────────────────────
 
+# Cleans column names so training data can be accepted even with small casing differences.
 def _rename_columns_clean(frame: pd.DataFrame) -> pd.DataFrame:
     out = frame.copy()
     out.columns = [c.strip() for c in out.columns]
@@ -105,6 +107,7 @@ def _rename_columns_clean(frame: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+# Validates and normalizes priority labels before model training.
 def _normalize_labels(series: pd.Series) -> pd.Series:
     s = series.astype(str).str.strip().str.lower()
     allowed = set(CANONICAL_LABELS)
@@ -116,6 +119,7 @@ def _normalize_labels(series: pd.Series) -> pd.Series:
     return s
 
 
+# Prepares the raw dataset into the exact format required by the TensorFlow model.
 def normalize_alerts_dataframe(frame: pd.DataFrame) -> pd.DataFrame:
     df = _rename_columns_clean(frame)
     missing = [c for c in REQUIRED_COLUMNS if c not in df.columns]
@@ -132,6 +136,7 @@ def normalize_alerts_dataframe(frame: pd.DataFrame) -> pd.DataFrame:
 
 # ── design matrix ──────────────────────────────────────────────────────────
 
+# Builds the numeric input matrix used for TensorFlow training and prediction.
 def build_alert_design_matrix(
     frame: pd.DataFrame,
     *,
@@ -160,6 +165,7 @@ def build_alert_design_matrix(
 
 # ── stratified 60/20/20 split ──────────────────────────────────────────────
 
+# Splits the dataset while keeping each priority class represented in train/validation/test sets.
 def _stratified_split(y: np.ndarray, seed: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
     train_idx, val_idx, test_idx = [], [], []
@@ -183,6 +189,7 @@ def _stratified_split(y: np.ndarray, seed: int) -> tuple[np.ndarray, np.ndarray,
 
 # ── model architecture ─────────────────────────────────────────────────────
 
+# Defines the neural network architecture used for alert priority classification.
 def _build_enterprise_mlp(input_dim: int, num_classes: int) -> tf.keras.Model:
     """
     Enterprise 4-layer MLP with BatchNormalization and progressive Dropout.
@@ -224,6 +231,7 @@ def _build_enterprise_mlp(input_dim: int, num_classes: int) -> tf.keras.Model:
 
 # ── evaluation helpers ─────────────────────────────────────────────────────
 
+# Creates a simple confusion matrix for model evaluation output.
 def _confusion_matrix(y_true: list[str], y_pred: list[str], labels: list[str]) -> np.ndarray:
     idx = {l: i for i, l in enumerate(labels)}
     mat = np.zeros((len(labels), len(labels)), dtype=int)
@@ -232,6 +240,7 @@ def _confusion_matrix(y_true: list[str], y_pred: list[str], labels: list[str]) -
     return mat
 
 
+# Builds a readable precision, recall, and F1-score report for each priority class.
 def _classification_report(y_true: list[str], y_pred: list[str], labels: list[str]) -> str:
     lines = [f"{'':12s} {'precision':>9} {'recall':>7} {'f1':>6} {'support':>8}", "-" * 48]
     for lab in labels:
@@ -248,6 +257,7 @@ def _classification_report(y_true: list[str], y_pred: list[str], labels: list[st
     return "\n".join(lines)
 
 
+# Saves model evaluation files so training results can be reviewed later.
 def _write_eval_outputs(
     out_dir: Path, *, conf: np.ndarray, labels: list[str],
     report: str, metrics: dict[str, Any],
@@ -265,6 +275,7 @@ def _write_eval_outputs(
 
 # ── training ───────────────────────────────────────────────────────────────
 
+# Trains the main enterprise alert-prioritization model and writes its metadata.
 def train_alert_prioritization_model(
     *,
     dataset_path: Path,
@@ -277,6 +288,7 @@ def train_alert_prioritization_model(
     tf.random.set_seed(random_seed)
     np.random.seed(random_seed)
 
+    # Read and normalize the training dataset before splitting it.
     raw   = pd.read_csv(dataset_path)
     frame = normalize_alerts_dataframe(raw)
 
@@ -284,6 +296,7 @@ def train_alert_prioritization_model(
     label_to_index = {lab: i for i, lab in enumerate(label_classes)}
     y_all = frame[LABEL_COLUMN].map(label_to_index).astype(np.int32).values
 
+    # Keep class distribution balanced across train, validation, and test sets.
     train_idx, val_idx, test_idx = _stratified_split(y_all, random_seed)
     train_df = frame.iloc[train_idx].reset_index(drop=True)
     val_df   = frame.iloc[val_idx].reset_index(drop=True)
@@ -313,6 +326,7 @@ def train_alert_prioritization_model(
     total  = sum(counts.values())
     class_weight = {idx: total / (len(counts) * cnt) for idx, cnt in counts.items()}
 
+    # Build and train the neural network using the prepared design matrix.
     model = _build_enterprise_mlp(int(x_train.shape[1]), len(label_classes))
 
     callbacks = [
@@ -383,6 +397,7 @@ def train_alert_prioritization_model(
             report=report_text, metrics=metrics_dict,
         )
 
+    # Save both the model file and metadata needed for later inference.
     model_output_path.parent.mkdir(parents=True, exist_ok=True)
     metadata_output_path.parent.mkdir(parents=True, exist_ok=True)
     model.save(model_output_path)
@@ -426,6 +441,7 @@ def train_alert_prioritization_model(
 
 # ── inference ──────────────────────────────────────────────────────────────
 
+# Converts the model output label into the incident priority enum used by the backend.
 def incident_priority_from_model_tier(tier: str) -> IncidentPriority:
     """Map 4-class model output to IncidentPriority."""
     key = (tier or "low").strip().lower()
@@ -435,6 +451,7 @@ def incident_priority_from_model_tier(tier: str) -> IncidentPriority:
     return IncidentPriority.LOW
 
 
+# Converts extracted API alert features into the CSV-style row expected by the model.
 def alert_row_from_risk_features(features: AlertRiskFeatures) -> dict[str, Any]:
     """Map API AlertRiskFeatures to CSV-style row for model inference."""
     det = features.detection_type
@@ -475,6 +492,7 @@ def alert_row_from_risk_features(features: AlertRiskFeatures) -> dict[str, Any]:
     }
 
 
+# Converts one alert payload into the final TensorFlow input vector.
 def vectorize_alert_payload(metadata: dict[str, Any], payload: dict[str, Any]) -> np.ndarray:
     if metadata.get("training_schema") != TRAINING_SCHEMA:
         raise ValueError(f"Metadata schema is not {TRAINING_SCHEMA}; cannot vectorize.")
@@ -489,6 +507,7 @@ def vectorize_alert_payload(metadata: dict[str, Any], payload: dict[str, Any]) -
     return x
 
 
+# Runs TensorFlow inference and returns the score, confidence, and explanation.
 def score_alert_model_with_features(
     *,
     features: AlertRiskFeatures,
@@ -556,6 +575,7 @@ def score_alert_model_with_features(
     )
 
 
+# Helper used by scripts or tests to score a JSON alert payload directly.
 def predict_alert_model_json(
     *, model: tf.keras.Model, metadata: dict[str, Any], payload: dict[str, Any],
 ) -> dict[str, Any]:

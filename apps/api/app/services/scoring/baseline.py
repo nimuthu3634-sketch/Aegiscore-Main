@@ -1,3 +1,4 @@
+# Baseline scoring logic used when the AI model is not enabled or not available.
 from __future__ import annotations
 
 from app.models.enums import IncidentPriority, ScoreMethod
@@ -17,6 +18,7 @@ from app.services.scoring.types import (
 )
 
 
+# Converts a numeric risk score into a priority label.
 def priority_from_score(score: float | int | None):
     normalized_score = int(round(score or 0))
     for minimum, priority in PRIORITY_THRESHOLDS:
@@ -25,6 +27,7 @@ def priority_from_score(score: float | int | None):
     return PRIORITY_THRESHOLDS[-1][1]
 
 
+# Maps old 3-class model labels into incident priorities.
 def incident_priority_from_three_class_tier(tier: str) -> IncidentPriority:
     """Legacy 3-class mapping — kept for backward compatibility."""
     key = (tier or "low").strip().lower()
@@ -35,6 +38,7 @@ def incident_priority_from_three_class_tier(tier: str) -> IncidentPriority:
     return IncidentPriority.LOW
 
 
+# Maps the current model priority tier into the backend priority enum.
 def incident_priority_from_model_tier(tier: str) -> IncidentPriority:
     """Map enterprise 4-class model output to IncidentPriority."""
     key = (tier or "low").strip().lower()
@@ -44,11 +48,13 @@ def incident_priority_from_model_tier(tier: str) -> IncidentPriority:
     return IncidentPriority.LOW
 
 
+# Calculates risk using deterministic rules instead of the TensorFlow model.
 def score_with_baseline(
     features: AlertRiskFeatures,
     *,
     baseline_version: str,
 ) -> ScoringResult:
+    # Start with a base score and increase it using alert risk factors.
     score = 10
     drivers: list[ScoreContribution] = []
 
@@ -106,6 +112,7 @@ def score_with_baseline(
         min(max(features.repeated_source_ip - 1, 0) * 3, 12),
     )
 
+    # Brute-force alerts get extra weight when failed login counts are high.
     if features.repeated_failed_logins >= 20:
         add(
             "repeated_failed_logins",
@@ -152,6 +159,7 @@ def score_with_baseline(
             4,
         )
 
+    # Keep the final risk score inside the 0-100 range.
     normalized_score = max(MIN_RISK_SCORE, min(MAX_RISK_SCORE, score))
     priority_label = priority_from_score(normalized_score)
 
@@ -168,6 +176,7 @@ def score_with_baseline(
         f"{normalized_score}/100 using normalized telemetry, recurrence, and asset context."
     )
 
+    # Explanation is stored so the dashboard can show why the score was assigned.
     explanation = {
         "label": "Deterministic baseline score",
         "summary": (

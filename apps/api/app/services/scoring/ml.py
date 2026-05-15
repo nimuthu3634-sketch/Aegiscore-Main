@@ -33,15 +33,18 @@ from app.services.scoring.types import AlertRiskFeatures, ScoringResult
 LEGACY_TRAINING_SCHEMA = "legacy_risk_fixture"
 
 
+# Custom error used when the TensorFlow model or metadata cannot be loaded.
 class ModelArtifactUnavailableError(RuntimeError):
     pass
 
 
+# Sets random seeds so training results are more repeatable.
 def _set_deterministic_seed(seed: int = 42) -> None:
     tf.random.set_seed(seed)
     np.random.seed(seed)
 
 
+# Cleans the legacy training dataset before model training.
 def _normalize_training_frame(dataframe: pd.DataFrame) -> pd.DataFrame:
     """LEGACY: normalize rows for `risk_training_fixture.csv` (MODEL_* columns)."""
     frame = dataframe.copy()
@@ -64,6 +67,7 @@ def _normalize_training_frame(dataframe: pd.DataFrame) -> pd.DataFrame:
     return frame
 
 
+# Builds one-hot encoded and normalized feature matrices for the legacy model.
 def _build_design_matrices(
     frame: pd.DataFrame,
     *,
@@ -101,10 +105,12 @@ def _build_design_matrices(
     return design.values.astype(np.float32), meta
 
 
+# Convenience wrapper for building the legacy training matrix.
 def _build_training_matrix(frame: pd.DataFrame) -> tuple[np.ndarray, dict[str, Any]]:
     return _build_design_matrices(frame, numeric_means=None, numeric_stds=None, feature_column_names=None)
 
 
+# Converts one feature row into a dataframe for legacy inference.
 def _frame_from_model_input(row: dict[str, Any]) -> pd.DataFrame:
     """LEGACY: single row for MODEL_* inference."""
     frame = pd.DataFrame([row])
@@ -115,6 +121,7 @@ def _frame_from_model_input(row: dict[str, Any]) -> pd.DataFrame:
     return frame
 
 
+# Converts extracted alert features into the legacy TensorFlow input row.
 def _row_from_features(
     features: AlertRiskFeatures,
     preprocessing: dict[str, Any],
@@ -129,6 +136,7 @@ def _row_from_features(
     return x_matrix
 
 
+# Defines the smaller legacy Keras classifier used in test fixtures.
 def _build_keras_classifier(input_dim: int, num_classes: int) -> tf.keras.Model:
     """LEGACY fixture model: smaller MLP."""
     inputs = tf.keras.Input(shape=(input_dim,), name="risk_features")
@@ -144,6 +152,7 @@ def _build_keras_classifier(input_dim: int, num_classes: int) -> tf.keras.Model:
     return model
 
 
+# Trains the legacy fixture model used for older tests or lab data.
 def _train_legacy_fixture_tensorflow_model(
     *,
     dataset_path: Path,
@@ -202,6 +211,7 @@ def _train_legacy_fixture_tensorflow_model(
     return metadata
 
 
+# Chooses the correct TensorFlow training path based on the dataset schema.
 def train_priority_model(
     *,
     dataset_path: Path,
@@ -210,6 +220,7 @@ def train_priority_model(
     requested_version: str | None = None,
 ) -> dict[str, Any]:
     dataset = pd.read_csv(dataset_path)
+    # The project supports the current alert-prioritization dataset and an older fixture schema.
     if ap.is_alert_prioritization_dataset(dataset):
         eval_dir_raw = os.getenv("AI_EVAL_OUTPUT_DIR")
         default_eval = dataset_path.resolve().parent.parent / "outputs" / "alert_prioritization"
@@ -230,6 +241,7 @@ def train_priority_model(
     )
 
 
+# Loads the saved Keras model and validates its metadata before inference.
 def load_priority_model(
     *,
     model_path: str | Path,
@@ -246,6 +258,7 @@ def load_priority_model(
             f"Risk model metadata does not exist at {resolved_metadata_path}."
         )
 
+    # Metadata is required because it contains the preprocessing rules for the model.
     metadata = json.loads(resolved_metadata_path.read_text(encoding="utf-8"))
     schema = metadata.get("training_schema")
     if schema == ap.TRAINING_SCHEMA:
@@ -273,16 +286,19 @@ def load_priority_model(
             "Scikit-learn joblib dumps are not supported; the primary artifact is a .keras file."
         )
 
+    # Load without compiling because we only need inference at runtime.
     model = tf.keras.models.load_model(resolved_model_path, compile=False)
     return model, metadata
 
 
+# Scores an alert using the older TensorFlow fixture model.
 def _score_legacy_tensorflow_model(
     *,
     features: AlertRiskFeatures,
     model: tf.keras.Model,
     metadata: dict[str, Any],
 ) -> ScoringResult:
+    # Convert extracted alert features into the model input shape.
     x_row = _row_from_features(features, metadata)
     probabilities = model.predict(x_row, verbose=0)[0]
     classes = [str(label) for label in metadata.get("label_classes", [])]
@@ -357,6 +373,7 @@ def _score_legacy_tensorflow_model(
     )
 
 
+# Routes scoring to either the current model or the legacy TensorFlow model.
 def score_with_model(
     *,
     features: AlertRiskFeatures,

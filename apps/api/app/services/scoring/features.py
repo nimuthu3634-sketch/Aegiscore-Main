@@ -1,3 +1,4 @@
+# Extracts useful risk-scoring features from normalized security alerts.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -19,6 +20,7 @@ from app.services.scoring.constants import (
 from app.services.scoring.types import AlertRiskFeatures
 
 
+# Searches different payload formats for the first available value.
 def _pick_payload_value(
     payloads: list[dict[str, Any] | None],
     *keys: str,
@@ -33,6 +35,7 @@ def _pick_payload_value(
     return None
 
 
+# Safely converts payload values into integers for scoring features.
 def _coerce_int(value: Any) -> int | None:
     if value in (None, ""):
         return None
@@ -49,6 +52,7 @@ def _coerce_int(value: Any) -> int | None:
     return None
 
 
+# Extracts the attacker/source IP address from alert payload fields.
 def extract_source_ip(alert: NormalizedAlert) -> str | None:
     return _pick_payload_value(
         [alert.normalized_payload, alert.raw_alert.raw_payload],
@@ -59,6 +63,7 @@ def extract_source_ip(alert: NormalizedAlert) -> str | None:
     )
 
 
+# Extracts the destination/victim IP address from alert payload fields.
 def extract_destination_ip(alert: NormalizedAlert) -> str | None:
     return _pick_payload_value(
         [alert.normalized_payload, alert.raw_alert.raw_payload],
@@ -70,6 +75,7 @@ def extract_destination_ip(alert: NormalizedAlert) -> str | None:
     )
 
 
+# Extracts the target port used in the security event.
 def extract_destination_port(alert: NormalizedAlert) -> int | None:
     return _coerce_int(
         _pick_payload_value(
@@ -82,6 +88,7 @@ def extract_destination_port(alert: NormalizedAlert) -> int | None:
     )
 
 
+# Extracts the related username from Wazuh or normalized payload data.
 def extract_username(alert: NormalizedAlert) -> str | None:
     return _pick_payload_value(
         [alert.normalized_payload, alert.raw_alert.raw_payload],
@@ -91,6 +98,7 @@ def extract_username(alert: NormalizedAlert) -> str | None:
     )
 
 
+# Gets the Wazuh rule level or falls back to the alert severity.
 def extract_rule_level(alert: NormalizedAlert) -> int:
     value = _coerce_int(
         _pick_payload_value(
@@ -103,6 +111,7 @@ def extract_rule_level(alert: NormalizedAlert) -> int:
     return value if value is not None else alert.severity
 
 
+# Finds failed login counts used for brute-force scoring.
 def extract_failed_login_count(alert: NormalizedAlert) -> int:
     value = _coerce_int(
         _pick_payload_value(
@@ -116,6 +125,7 @@ def extract_failed_login_count(alert: NormalizedAlert) -> int:
     return value or 0
 
 
+# Checks whether the alert involves sensitive system files or paths.
 def extract_sensitive_file_flag(alert: NormalizedAlert) -> bool:
     file_path = _pick_payload_value(
         [alert.normalized_payload, alert.raw_alert.raw_payload],
@@ -130,6 +140,7 @@ def extract_sensitive_file_flag(alert: NormalizedAlert) -> bool:
     return any(pattern in lowered for pattern in SENSITIVE_FILE_PATTERNS)
 
 
+# Checks whether the alert involves privileged or service accounts.
 def extract_privileged_account_flag(alert: NormalizedAlert) -> bool:
     username = extract_username(alert)
     if not username:
@@ -139,6 +150,7 @@ def extract_privileged_account_flag(alert: NormalizedAlert) -> bool:
     return any(marker in lowered for marker in PRIVILEGED_ACCOUNT_MARKERS)
 
 
+# Filters recent alerts into a specific time window for correlation.
 def _alerts_in_window(
     recent_alerts: list[NormalizedAlert],
     *,
@@ -149,6 +161,7 @@ def _alerts_in_window(
     return [a for a in recent_alerts if start <= a.created_at <= anchor]
 
 
+# Counts brute-force alerts from the same source IP.
 def _same_ip_brute_force_count(
     candidates: list[NormalizedAlert],
     *,
@@ -164,6 +177,7 @@ def _same_ip_brute_force_count(
     )
 
 
+# Classifies file integrity changes as none, minor, important, or critical.
 def extract_integrity_change_tier(alert: NormalizedAlert) -> str:
     payloads = [alert.normalized_payload, alert.raw_alert.raw_payload]
     raw = _pick_payload_value(payloads, "integrity_change", "syscheck_event_type", "fim_event_type")
@@ -184,6 +198,7 @@ def extract_integrity_change_tier(alert: NormalizedAlert) -> str:
     return "none"
 
 
+# Calculates failed login activity in a five-minute window.
 def extract_failed_logins_5m(
     alert: NormalizedAlert,
     *,
@@ -209,6 +224,7 @@ def extract_failed_logins_5m(
     return max(explicit or 0, base)
 
 
+# Calculates failed login activity in a one-minute window.
 def extract_failed_logins_1m(
     alert: NormalizedAlert,
     *,
@@ -235,6 +251,7 @@ def extract_failed_logins_1m(
     return max(explicit or 0, min(base, failed_logins_5m))
 
 
+# Calculates how many unique ports were targeted during scanning activity.
 def extract_unique_ports_1m(
     alert: NormalizedAlert,
     *,
@@ -273,6 +290,7 @@ def extract_unique_ports_1m(
     return max(len(ports), 1)
 
 
+# Marks alerts that happen outside the configured business-hour window.
 def extract_off_hours_flag(observed_at: datetime) -> int:
     dt = observed_at if observed_at.tzinfo else observed_at.replace(tzinfo=UTC)
     hour = dt.astimezone(UTC).hour
@@ -281,6 +299,7 @@ def extract_off_hours_flag(observed_at: datetime) -> int:
     return 1
 
 
+# Detects whether an IP looks blocked, denylisted, or repeatedly suspicious.
 def extract_blacklisted_ip_flag(alert: NormalizedAlert, *, repeated_source_ip: int) -> int:
     payloads = [alert.normalized_payload, alert.raw_alert.raw_payload]
     marker = _pick_payload_value(
@@ -297,6 +316,7 @@ def extract_blacklisted_ip_flag(alert: NormalizedAlert, *, repeated_source_ip: i
     return 1 if repeated_source_ip >= SCORING_BLACKLISTED_IP_REPEAT_THRESHOLD else 0
 
 
+# Builds the complete AlertRiskFeatures object for baseline and AI scoring.
 def extract_alert_features(
     session: Session,
     alert: NormalizedAlert,
@@ -308,6 +328,7 @@ def extract_alert_features(
     username = extract_username(alert)
     failed_login_count = extract_failed_login_count(alert)
 
+    # Pull recent alerts so repeated events and attack patterns can be measured.
     recent_statement = (
         select(NormalizedAlert)
         .options(selectinload(NormalizedAlert.raw_alert))
@@ -365,6 +386,7 @@ def extract_alert_features(
         )
     )
 
+    # These time-window features are mainly useful for brute-force and port-scan scoring.
     failed_logins_5m = extract_failed_logins_5m(
         alert, recent_alerts=recent_alerts, observed_at=observed_at
     )
@@ -388,6 +410,7 @@ def extract_alert_features(
     )
     suricata_severity = alert.severity if alert.source.lower() == "suricata" else 0
 
+    # Return one structured object that both rule-based and AI scoring can use.
     return AlertRiskFeatures(
         observed_at=observed_at,
         source_type=alert.source.lower(),

@@ -1,3 +1,4 @@
+# Combines linked alert scores into one incident-level priority.
 from __future__ import annotations
 
 from statistics import mean
@@ -7,10 +8,12 @@ from app.models.incident import Incident
 from app.services.scoring.baseline import priority_from_score
 
 
+# Calculates an incident score from all linked alert scores.
 def incident_rollup_score(incident: Incident) -> float:
     linked_alerts = list(incident.alerts) or ([incident.primary_alert] if incident.primary_alert else [])
     risk_values = [alert.risk_score.score for alert in linked_alerts if alert and alert.risk_score]
 
+    # Prefer calculated risk scores when linked alerts already have them.
     if risk_values:
         max_score = max(risk_values)
         average_score = mean(risk_values)
@@ -23,11 +26,13 @@ def incident_rollup_score(incident: Incident) -> float:
     return float(primary_alert.severity * 10)
 
 
+# Updates the incident priority after linked alerts change.
 def refresh_incident_priority(incident: Incident) -> IncidentPriority:
     incident.priority = priority_from_score(incident_rollup_score(incident))
     return incident.priority
 
 
+# Builds the explanation shown for incident priority rollup.
 def build_incident_priority_summary(incident: Incident) -> dict[str, object]:
     linked_alerts = list(incident.alerts) or ([incident.primary_alert] if incident.primary_alert else [])
     risk_values = [alert.risk_score.score for alert in linked_alerts if alert and alert.risk_score]
@@ -43,6 +48,7 @@ def build_incident_priority_summary(incident: Incident) -> dict[str, object]:
         }
     )
 
+    # Factors are returned to explain the final incident priority in the UI.
     factors = [
         f"Linked alert count: {len(linked_alerts)}",
         f"Rollup score: {round(rollup_score)}",

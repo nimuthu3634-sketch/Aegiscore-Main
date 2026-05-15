@@ -1,3 +1,4 @@
+# Shared data structures used by baseline and AI scoring.
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,6 +8,7 @@ from typing import Any
 from app.models.enums import IncidentPriority, ScoreMethod
 
 
+# Feature bundle passed between extraction, baseline scoring, and model scoring.
 @dataclass(frozen=True)
 class AlertRiskFeatures:
     observed_at: datetime
@@ -41,6 +43,7 @@ class AlertRiskFeatures:
     blacklisted_ip: int = 0
     suricata_severity: int = 0
 
+    # Returns the compact feature dictionary used by the legacy model path.
     def to_model_input(self) -> dict[str, Any]:
         return {
             "source_type": self.source_type,
@@ -59,6 +62,7 @@ class AlertRiskFeatures:
             "sensitive_file_flag": int(self.sensitive_file_flag),
         }
 
+    # Returns a fuller snapshot so analysts can understand how the score was made.
     def to_snapshot(self) -> dict[str, Any]:
         snapshot = self.to_model_input()
         snapshot.update(
@@ -91,12 +95,14 @@ class AlertRiskFeatures:
         return snapshot
 
 
+# Stores one feature contribution in the baseline scoring explanation.
 @dataclass(frozen=True)
 class ScoreContribution:
     feature: str
     label: str
     contribution: int
 
+    # Converts the contribution into JSON-friendly format for API responses.
     def to_dict(self) -> dict[str, Any]:
         return {
             "feature": self.feature,
@@ -105,6 +111,7 @@ class ScoreContribution:
         }
 
 
+# Final scoring result saved to the database and returned to the dashboard.
 @dataclass(frozen=True)
 class ScoringResult:
     score: float

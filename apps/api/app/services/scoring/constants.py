@@ -7,9 +7,11 @@
 
 from app.models.enums import IncidentPriority
 
+# Risk scores are always clamped between these two values.
 MAX_RISK_SCORE = 100
 MIN_RISK_SCORE = 0
 
+# Thresholds convert numeric risk scores into human-readable priority labels.
 PRIORITY_THRESHOLDS: tuple[tuple[int, IncidentPriority], ...] = (
     (85, IncidentPriority.CRITICAL),
     (70, IncidentPriority.HIGH),
@@ -17,6 +19,7 @@ PRIORITY_THRESHOLDS: tuple[tuple[int, IncidentPriority], ...] = (
     (0, IncidentPriority.LOW),
 )
 
+# Baseline weights give different attack types different starting impact.
 DETECTION_TYPE_WEIGHTS: dict[str, int] = {
     "unauthorized_user_creation": 28,
     "file_integrity_violation": 24,
@@ -37,6 +40,7 @@ ASSET_CRITICALITY_WEIGHTS: dict[str, int] = {
     "unknown": 4,
 }
 
+# These ports and markers increase score when they appear in an alert.
 SENSITIVE_PORTS = {22, 3389, 3306, 5432, 5985, 5986}
 SENSITIVE_FILE_PATTERNS = (
     "/etc/",
