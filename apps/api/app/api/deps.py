@@ -12,7 +12,9 @@ from app.models.enums import RoleName
 from app.models.user import User
 from app.repositories.users import UsersRepository
 
+# Defines how the backend receives the bearer token from logged-in users.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
 DbSession = Annotated[Session, Depends(get_db_session)]
 
 
@@ -20,6 +22,7 @@ def get_current_user(
     db: DbSession,
     token: Annotated[str, Depends(oauth2_scheme)],
 ) -> User:
+    # Common error returned when the token is missing, invalid, or belongs to an inactive user.
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate authentication credentials",
@@ -35,6 +38,7 @@ def get_current_user(
     except (ValueError, jwt.InvalidTokenError) as exc:
         raise credentials_exception from exc
 
+    # Loads the user from the database after checking the token.
     user = UsersRepository(db).get_by_id(user_id)
     if user is None or not user.is_active:
         raise credentials_exception
@@ -46,6 +50,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 def require_roles(*allowed_roles: RoleName):
+    # Reusable dependency for protecting routes based on user roles.
     def _role_dependency(current_user: CurrentUser) -> User:
         if current_user.role.name not in allowed_roles:
             raise HTTPException(

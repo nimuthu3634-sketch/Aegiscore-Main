@@ -13,7 +13,9 @@ from app.api.routes.reports import router as reports_router
 from app.api.routes.responses import router as responses_router
 from app.api.routes.users import router as users_router
 
+# Main API router that connects all route files into one backend API.
 api_router = APIRouter()
+
 api_router.include_router(auth_router)
 api_router.include_router(dashboard_router)
 api_router.include_router(ingestion_router)
