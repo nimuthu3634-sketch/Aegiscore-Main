@@ -28,9 +28,11 @@ from app.services.incidents import (
     transition_incident,
 )
 
+# Routes for incident listing, details, notes, and state changes.
 router = APIRouter(prefix="/incidents", tags=["incidents"])
 
 
+# Creates the incident query object using frontend filter values.
 def get_incident_list_query(
     search: Annotated[str | None, Query()] = None,
     priority: Annotated[AlertSeverityLabel | None, Query()] = None,
@@ -61,6 +63,7 @@ def read_incidents(
     _: CurrentUser,
     db: DbSession,
 ) -> IncidentListResponse:
+    # Returns all incidents with filtering and pagination.
     return list_incidents(db, query)
 
 
@@ -70,6 +73,7 @@ def read_incident(
     _: CurrentUser,
     db: DbSession,
 ) -> IncidentDetailResponse:
+    # Returns details for one selected incident.
     return get_incident(db, incident_id)
 
 
@@ -80,6 +84,7 @@ def transition_incident_route(
     current_user: CurrentUser,
     db: DbSession,
 ) -> IncidentTransitionResponse:
+    # Updates the incident status, such as open, investigating, or resolved.
     return transition_incident(db, incident_id, payload, current_user)
 
 
@@ -90,4 +95,5 @@ def create_incident_note_route(
     current_user: CurrentUser,
     db: DbSession,
 ) -> AnalystNoteCreateResponse:
+    # Adds an analyst note to the incident for investigation tracking.
     return create_incident_note(db, incident_id, payload.content, current_user)

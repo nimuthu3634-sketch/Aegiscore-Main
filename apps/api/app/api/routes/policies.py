@@ -10,11 +10,13 @@ from app.schemas.policies import (
 )
 from app.services.policies import list_policies, update_policy_enabled
 
+# Routes for viewing and updating automated response policies.
 router = APIRouter(prefix="/policies", tags=["policies"])
 
 
 @router.get("", response_model=ResponsePolicyListResponse)
 def read_policies(_: CurrentUser, db: DbSession) -> ResponsePolicyListResponse:
+    # Returns all response automation policies.
     return list_policies(db)
 
 
@@ -25,4 +27,5 @@ def update_policy_route(
     _: AdminUser,
     db: DbSession,
 ) -> ResponsePolicyUpdateResponse:
+    # Allows an admin to enable or disable a response policy.
     return update_policy_enabled(db, policy_id, enabled=payload.enabled)

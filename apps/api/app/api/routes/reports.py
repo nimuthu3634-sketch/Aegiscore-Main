@@ -30,9 +30,11 @@ from app.services.reports import (
     get_weekly_summary,
 )
 
+# Routes used for SOC summary reports and exporting report files.
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
+# Creates the filter object used by daily and weekly report summaries.
 def get_report_summary_query(
     date_from: Annotated[date | None, Query()] = None,
     date_to: Annotated[date | None, Query()] = None,
@@ -47,6 +49,7 @@ def get_report_summary_query(
     )
 
 
+# Creates the filter object for exporting alert reports.
 def get_alert_report_export_query(
     date_from: Annotated[date | None, Query()] = None,
     date_to: Annotated[date | None, Query()] = None,
@@ -69,6 +72,7 @@ def get_alert_report_export_query(
     )
 
 
+# Creates the filter object for exporting incident reports.
 def get_incident_report_export_query(
     date_from: Annotated[date | None, Query()] = None,
     date_to: Annotated[date | None, Query()] = None,
@@ -89,6 +93,7 @@ def get_incident_report_export_query(
     )
 
 
+# Creates the filter object for exporting response action reports.
 def get_response_report_export_query(
     date_from: Annotated[date | None, Query()] = None,
     date_to: Annotated[date | None, Query()] = None,
@@ -113,6 +118,7 @@ def read_daily_summary(
     _: CurrentUser,
     db: DbSession,
 ) -> ReportSummaryResponse:
+    # Returns the daily SOC report summary.
     return get_daily_summary(db, query)
 
 
@@ -122,6 +128,7 @@ def read_weekly_summary(
     _: CurrentUser,
     db: DbSession,
 ) -> ReportSummaryResponse:
+    # Returns the weekly SOC report summary.
     return get_weekly_summary(db, query)
 
 
@@ -131,6 +138,7 @@ def export_alerts_route(
     current_user: CurrentUser,
     db: DbSession,
 ) -> Response:
+    # Exports filtered alert data as a downloadable report.
     return export_alert_report(db, query, current_user)
 
 
@@ -140,6 +148,7 @@ def export_incidents_route(
     current_user: CurrentUser,
     db: DbSession,
 ) -> Response:
+    # Exports filtered incident data as a downloadable report.
     return export_incident_report(db, query, current_user)
 
 
@@ -149,4 +158,5 @@ def export_responses_route(
     current_user: CurrentUser,
     db: DbSession,
 ) -> Response:
+    # Exports automated/manual response history as a report.
     return export_response_report(db, query, current_user)

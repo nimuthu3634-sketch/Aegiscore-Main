@@ -13,9 +13,11 @@ from app.schemas.listing import (
 )
 from app.services.responses import list_response_actions
 
+# Routes for viewing automated and manual response actions.
 router = APIRouter(prefix="/responses", tags=["responses"])
 
 
+# Builds the response action query using filters from the frontend.
 def get_response_list_query(
     search: Annotated[str | None, Query()] = None,
     mode: Annotated[ResponseModeLabel | None, Query()] = None,
@@ -44,4 +46,5 @@ def read_responses(
     _: CurrentUser,
     db: DbSession,
 ) -> ResponseActionListResponse:
+    # Returns response action history with filtering and pagination.
     return list_response_actions(db, query)
