@@ -33,9 +33,11 @@ from app.services.alerts import (
     list_alerts,
 )
 
+# Routes related to viewing and managing security alerts.
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
 
+# Collects alert filter and pagination values from the request query parameters.
 def get_alert_list_query(
     search: Annotated[str | None, Query()] = None,
     severity: Annotated[AlertSeverityLabel | None, Query()] = None,
@@ -70,11 +72,13 @@ def read_alerts(
     _: CurrentUser,
     db: DbSession,
 ) -> AlertListResponse:
+    # Returns the alert list after applying filters and pagination.
     return list_alerts(db, query)
 
 
 @router.get("/{alert_id}", response_model=AlertDetailResponse)
 def read_alert(alert_id: UUID, _: CurrentUser, db: DbSession) -> AlertDetailResponse:
+    # Returns full details for one selected alert.
     return get_alert_detail(db, alert_id)
 
 
@@ -103,6 +107,7 @@ def link_alert_incident_route(
     current_user: CurrentUser,
     db: DbSession,
 ) -> AlertLinkIncidentResponse:
+    # Links an alert with an incident for investigation workflow.
     return link_alert_incident(db, alert_id, payload, current_user)
 
 

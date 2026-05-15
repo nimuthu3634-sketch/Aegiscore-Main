@@ -13,9 +13,11 @@ from app.schemas.listing import (
 )
 from app.services.assets import list_assets
 
+# Routes for viewing monitored assets/endpoints in the SOC dashboard.
 router = APIRouter(prefix="/assets", tags=["assets"])
 
 
+# Builds the asset list query using filters from the frontend.
 def get_asset_list_query(
     search: Annotated[str | None, Query()] = None,
     status: Annotated[AssetAgentStatusLabel | None, Query()] = None,
@@ -49,4 +51,5 @@ def read_assets(
     _: CurrentUser,
     db: DbSession,
 ) -> AssetListResponse:
+    # Returns the asset list with filtering, sorting, and pagination.
     return list_assets(db, query)
