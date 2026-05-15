@@ -1,4 +1,4 @@
-# This test file checks common serializer conversion logic.
+# AegisCore student note: Tests for API serializer output formatting.
 
 from datetime import UTC, datetime
 from uuid import uuid4
@@ -25,7 +25,7 @@ from app.services.serializers import (
 )
 
 
-# Checks alert summary response includes nested entities.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_alert_summary_response_includes_nested_entities() -> None:
     asset = Asset(
         id=uuid4(),
@@ -85,7 +85,7 @@ def test_alert_summary_response_includes_nested_entities() -> None:
     assert response.risk_score_value == 81
 
 
-# Checks incident summary response includes assigned user and alert.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_incident_summary_response_includes_assigned_user_and_alert() -> None:
     role = Role(
         id=uuid4(),
@@ -180,7 +180,7 @@ def test_incident_summary_response_includes_assigned_user_and_alert() -> None:
     assert response.linked_alerts_count == 2
 
 
-# Checks alert summary tensorflow risk score serializes explanation payload.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_alert_summary_tensorflow_risk_score_serializes_explanation_payload() -> None:
     """Nested ``risk_score.explanation`` keeps ML fields for API clients."""
     now = datetime.now(UTC)

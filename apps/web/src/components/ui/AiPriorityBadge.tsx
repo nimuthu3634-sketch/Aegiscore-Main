@@ -1,11 +1,9 @@
-/*
- * Ai Priority Badge reusable UI component used by the React dashboard.
- */
+// AegisCore student note: Small UI badge for displaying AI priority levels.
+
 import { Badge } from "./Badge";
 import type { AiPriorityTier } from "../../lib/aiPrioritization";
 import { formatAiTierTitleCase } from "../../lib/aiPrioritization";
 
-// Defines the Ai Priority Badge Props data shape used by this frontend module.
 type AiPriorityBadgeProps = {
   tier: AiPriorityTier;
 };
@@ -17,6 +15,7 @@ const toneMap: Record<AiPriorityTier, "neutral" | "brand" | "warning"> = {
 };
 
 /** TensorFlow alert prioritization tier only (Low / Medium / High — never Critical). */
+// Keeps the AiPriorityBadge component logic easy to understand.
 export function AiPriorityBadge({ tier }: AiPriorityBadgeProps) {
   return <Badge tone={toneMap[tier]}>AI: {formatAiTierTitleCase(tier)}</Badge>;
 }

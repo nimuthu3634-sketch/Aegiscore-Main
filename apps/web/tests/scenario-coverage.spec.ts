@@ -1,6 +1,5 @@
-/*
- * Playwright end-to-end tests for checking frontend user workflows.
- */
+// AegisCore student note: Playwright test coverage for important user scenarios.
+
 import { expect, test } from "@playwright/test";
 import { formatTokenLabel } from "../src/lib/formatters";
 import {
@@ -35,7 +34,6 @@ const scenarioKeys: ScenarioKey[] = [
 ];
 
 for (const scenarioKey of scenarioKeys) {
-  // Test case for an important user workflow.
   test(`supported threat scenario ${scenarioKey} is visible through live alert detail, incident detail, and reports`, async ({
     page,
     request

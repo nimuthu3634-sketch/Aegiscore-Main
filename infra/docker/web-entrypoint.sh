@@ -1,4 +1,7 @@
 #!/bin/sh
+# AegisCore student note: Entrypoint script used when starting the web container.
+
+# Stops the container startup if any required command fails.
 set -eu
 
 cd /srv/apps/web
@@ -15,4 +18,5 @@ else
   fi
 fi
 
+# Runs the main container command after setup is complete.
 exec "$@"

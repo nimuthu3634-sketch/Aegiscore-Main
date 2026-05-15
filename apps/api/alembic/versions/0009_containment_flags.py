@@ -1,3 +1,5 @@
+# AegisCore student note: Alembic migration for host containment flag records.
+
 """Add containment flags for quarantine action"""
 
 from __future__ import annotations
@@ -12,7 +14,9 @@ branch_labels = None
 depends_on = None
 
 
+# Applies this migration when moving the database forward.
 def upgrade() -> None:
+    # Creates a database table needed by the application.
     op.create_table(
         "containment_flags",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
@@ -48,6 +52,8 @@ def upgrade() -> None:
     )
 
 
+# Reverts this migration if the database needs to roll back.
 def downgrade() -> None:
     op.drop_index("ix_containment_flags_incident_hostname", table_name="containment_flags")
+    # Drops the table when rolling this migration back.
     op.drop_table("containment_flags")

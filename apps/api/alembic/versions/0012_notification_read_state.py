@@ -1,3 +1,5 @@
+# AegisCore student note: Alembic migration for read/unread notification state.
+
 """Add read state columns to notification_events."""
 
 from __future__ import annotations
@@ -12,7 +14,9 @@ branch_labels = None
 depends_on = None
 
 
+# Applies this migration when moving the database forward.
 def upgrade() -> None:
+    # Adds a new column required by the updated schema.
     op.add_column(
         "notification_events",
         sa.Column(
@@ -22,6 +26,7 @@ def upgrade() -> None:
             server_default=sa.text("false"),
         ),
     )
+    # Adds a new column required by the updated schema.
     op.add_column(
         "notification_events",
         sa.Column(
@@ -38,7 +43,10 @@ def upgrade() -> None:
     )
 
 
+# Reverts this migration if the database needs to roll back.
 def downgrade() -> None:
     op.drop_index("ix_notification_events_read_created", table_name="notification_events")
+    # Removes the column during rollback.
     op.drop_column("notification_events", "read_by_user_id")
+    # Removes the column during rollback.
     op.drop_column("notification_events", "read")

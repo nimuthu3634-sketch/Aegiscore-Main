@@ -1,3 +1,5 @@
+# AegisCore student note: Integration connector for reading Suricata EVE JSON events.
+
 from __future__ import annotations
 
 import asyncio
@@ -30,7 +32,7 @@ from app.services.integrations.state import (
 )
 
 
-# Records invalid eve.json lines so bad Suricata data is not silently ignored.
+# Helper function used internally by this module.
 def _record_malformed_line_failure(
     session: Session,
     *,
@@ -72,7 +74,7 @@ def _record_malformed_line_failure(
     session.commit()
 
 
-# Reads only new lines from the Suricata eve.json file using the saved checkpoint.
+# Helper function used internally by this module.
 def _read_new_eve_lines(
     *,
     source_path: Path,
@@ -85,7 +87,6 @@ def _read_new_eve_lines(
 
     current_inode = current_file_inode(source_path)
     start_offset = checkpoint_offset
-    # If the inode changed, the log file was likely rotated so reading starts again.
     if checkpoint_inode is None or current_inode != checkpoint_inode:
         start_offset = 0
 
@@ -104,7 +105,7 @@ def _read_new_eve_lines(
     return lines, final_offset, current_inode
 
 
-# Runs one Suricata polling cycle and sends new events into the ingestion pipeline.
+# Handles the run suricata poll cycle logic.
 def run_suricata_poll_cycle(session: Session) -> dict[str, int]:
     settings = get_settings()
     if settings.suricata_connector_mode != "file_tail":
@@ -121,7 +122,6 @@ def run_suricata_poll_cycle(session: Session) -> dict[str, int]:
     lines: list[tuple[int, int, str]] = []
     final_offset = offset
     current_inode = inode
-    # Retry is used because the eve.json file may be temporarily unavailable.
     for attempt in range(settings.suricata_retry_attempts + 1):
         try:
             lines, final_offset, current_inode = _read_new_eve_lines(
@@ -149,7 +149,6 @@ def run_suricata_poll_cycle(session: Session) -> dict[str, int]:
     cycle_duplicates = 0
     cycle_failed = 0
 
-    # Each valid JSON line is treated as one Suricata security event.
     for line_number, line_offset, line in lines:
         if not line.strip():
             continue
@@ -188,7 +187,6 @@ def run_suricata_poll_cycle(session: Session) -> dict[str, int]:
         except HTTPException:
             cycle_failed += 1
 
-    # Update connector metrics and save the latest read position.
     metrics["poll_count"] += 1
     metrics["total_fetched"] += len(lines)
     metrics["total_ingested"] += cycle_ingested
@@ -210,7 +208,7 @@ def run_suricata_poll_cycle(session: Session) -> dict[str, int]:
     }
 
 
-# Background loop that keeps polling Suricata until the application stops.
+# Handles the run suricata connector forever logic.
 async def run_suricata_connector_forever(stop_event: asyncio.Event) -> None:
     settings = get_settings()
     while not stop_event.is_set():
@@ -232,7 +230,7 @@ async def run_suricata_connector_forever(stop_event: asyncio.Event) -> None:
             continue
 
 
-# Returns connector status details for health checks or admin visibility.
+# Handles the get suricata connector status logic.
 def get_suricata_connector_status(session: Session) -> SuricataConnectorStatusResponse:
     settings = get_settings()
     state = get_connector_state(session, SURICATA_CONNECTOR_KEY)

@@ -1,4 +1,4 @@
-# Adapter implementations for AegisCore automated response actions.
+# AegisCore student note: Adapter implementations used by automated response actions.
 
 from __future__ import annotations
 
@@ -29,8 +29,8 @@ if TYPE_CHECKING:
     from app.models.normalized_alert import NormalizedAlert
 
 
-# Carries all information needed by an adapter when it executes an action.
 @dataclass(frozen=True)
+# AdapterContext groups related data or behaviour for this module.
 class AdapterContext:
     session: Session
     action_type: ResponseActionType
@@ -41,7 +41,7 @@ class AdapterContext:
     normalized_alert: NormalizedAlert | None = None
 
 
-# Runs an external script adapter and sends the execution payload through stdin.
+# Helper function used internally by this module.
 def _run_script(script_path: str, payload: dict) -> tuple[int, str, str]:
     process = subprocess.run(
         [script_path],
@@ -55,7 +55,7 @@ def _run_script(script_path: str, payload: dict) -> tuple[int, str, str]:
     return process.returncode, process.stdout.strip(), process.stderr.strip()
 
 
-# Runs a system command safely and captures the result for audit details.
+# Helper function used internally by this module.
 def _run_command(command: list[str]) -> tuple[int, str, str]:
     process = subprocess.run(
         command,
@@ -68,7 +68,7 @@ def _run_command(command: list[str]) -> tuple[int, str, str]:
     return process.returncode, process.stdout.strip(), process.stderr.strip()
 
 
-# Appends one JSON line to a ledger file for lab-safe response evidence.
+# Helper function used internally by this module.
 def _append_json_line(path: str, payload: dict) -> None:
     file_path = Path(path)
     file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -77,7 +77,7 @@ def _append_json_line(path: str, payload: dict) -> None:
         handle.write("\n")
 
 
-# Adds adapter contract information so analysts can understand why an action ran.
+# Helper function used internally by this module.
 def _with_contract_details(
     *,
     action_name: str,
@@ -95,7 +95,7 @@ def _with_contract_details(
     }
 
 
-# Extracts the incident ID from the execution payload when it is available.
+# Helper function used internally by this module.
 def _incident_uuid_from_payload(payload: dict) -> UUID | None:
     incident_payload = payload.get("incident")
     if not isinstance(incident_payload, dict):
@@ -109,7 +109,7 @@ def _incident_uuid_from_payload(payload: dict) -> UUID | None:
         return None
 
 
-# Writes incident audit evidence from inside adapter execution.
+# Helper function used internally by this module.
 def _create_incident_audit(
     context: AdapterContext,
     *,
@@ -130,7 +130,7 @@ def _create_incident_audit(
     )
 
 
-# Returns a simulated success result when the policy is in dry-run mode.
+# Helper function used internally by this module.
 def _dry_run_result(context: AdapterContext) -> AdapterExecutionResult:
     target_value = context.target_value or "no target resolved"
     return AdapterExecutionResult(
@@ -147,7 +147,7 @@ def _dry_run_result(context: AdapterContext) -> AdapterExecutionResult:
     )
 
 
-# Helper used when an adapter finishes successfully.
+# Helper function used internally by this module.
 def _completed_result(
     context: AdapterContext,
     *,
@@ -163,7 +163,7 @@ def _completed_result(
     )
 
 
-# Performs a basic IP format check before deeper safety validation.
+# Helper function used internally by this module.
 def _validate_ip_target(target_value: str | None) -> tuple[bool, str]:
     if not target_value:
         return False, "No source IP target was resolved."
@@ -174,7 +174,7 @@ def _validate_ip_target(target_value: str | None) -> tuple[bool, str]:
     return True, ""
 
 
-# Validates Linux usernames before user-disabling adapters run.
+# Helper function used internally by this module.
 def _validate_username_target(target_value: str | None) -> tuple[bool, str]:
     if not target_value:
         return False, "No username target was resolved."
@@ -183,7 +183,7 @@ def _validate_username_target(target_value: str | None) -> tuple[bool, str]:
     return True, ""
 
 
-# Helper used when an adapter is skipped or partially completed.
+# Helper function used internally by this module.
 def _warning_result(summary: str, message: str, *, extra: dict | None = None) -> AdapterExecutionResult:
     return AdapterExecutionResult(
         status=ResponseStatus.WARNING,
@@ -193,7 +193,7 @@ def _warning_result(summary: str, message: str, *, extra: dict | None = None) ->
     )
 
 
-# Helper used when an adapter execution fails.
+# Helper function used internally by this module.
 def _failed_result(summary: str, message: str, *, extra: dict | None = None) -> AdapterExecutionResult:
     return AdapterExecutionResult(
         status=ResponseStatus.FAILED,
@@ -203,7 +203,7 @@ def _failed_result(summary: str, message: str, *, extra: dict | None = None) -> 
     )
 
 
-# Applies common safety checks before live lab adapters are allowed to run.
+# Helper function used internally by this module.
 def _lab_live_guard(
     context: AdapterContext,
     *,
@@ -233,7 +233,7 @@ def _lab_live_guard(
     return None
 
 
-# Prevents destructive live actions unless they are explicitly enabled.
+# Helper function used internally by this module.
 def _destructive_guard(action_name: str, *, settings: Settings) -> AdapterExecutionResult | None:
     if settings.automated_response_allow_destructive:
         return None
@@ -247,7 +247,7 @@ def _destructive_guard(action_name: str, *, settings: Settings) -> AdapterExecut
     )
 
 
-# block_ip has its own guard because the ledger backend is demo-safe.
+# Helper function used internally by this module.
 def _block_ip_lab_guard(
     context: AdapterContext,
     *,
@@ -266,7 +266,6 @@ def _block_ip_lab_guard(
             ),
             extra={"builtin_adapters_enabled": False},
         )
-    # Ledger mode records the action for evidence without changing the firewall.
     if backend == "ledger":
         return None
     if not settings.automated_response_lab_adapters_enabled:
@@ -281,7 +280,7 @@ def _block_ip_lab_guard(
     return None
 
 
-# Executes block_ip using ledger, iptables, or a configured script backend.
+# Helper function used internally by this module.
 def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> AdapterExecutionResult:
     preconditions = [
         "Resolved target_value must be a valid IPv4 or IPv6 address.",
@@ -363,7 +362,6 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
             ),
         )
 
-    # iptables mode applies a real firewall rule, so extra destructive checks are required.
     if backend == "iptables":
         mode_requirements.append("AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true for iptables backend.")
         blocked = _destructive_guard("block_ip", settings=settings)
@@ -444,7 +442,6 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
             ),
         )
 
-    # Script mode lets the deployment call a custom blocking script.
     if backend == "script" and settings.response_adapter_block_ip_script:
         mode_requirements.append("AUTOMATED_RESPONSE_ALLOW_DESTRUCTIVE=true for script backend.")
         blocked_script = _destructive_guard("block_ip", settings=settings)
@@ -492,7 +489,7 @@ def _execute_block_ip(context: AdapterContext, *, settings: Settings) -> Adapter
     )
 
 
-# Executes the disable_user response action against a safe lab/script backend.
+# Helper function used internally by this module.
 def _execute_disable_user(context: AdapterContext, *, settings: Settings) -> AdapterExecutionResult:
     preconditions = [
         "Resolved target_value must be a safe Linux username.",
@@ -652,7 +649,7 @@ def _execute_disable_user(context: AdapterContext, *, settings: Settings) -> Ada
     )
 
 
-# Creates administrator notification events for important response actions.
+# Helper function used internally by this module.
 def _execute_notify_admin(context: AdapterContext, *, settings: Settings) -> AdapterExecutionResult:
     preconditions = [
         "Execution payload must include a valid incident.id.",
@@ -768,7 +765,7 @@ def _execute_notify_admin(context: AdapterContext, *, settings: Settings) -> Ada
     )
 
 
-# Records a host quarantine flag without directly isolating the host.
+# Helper function used internally by this module.
 def _execute_quarantine_flag(context: AdapterContext, *, settings: Settings) -> AdapterExecutionResult:
     preconditions = [
         "Resolved target_value must contain a hostname.",
@@ -808,7 +805,6 @@ def _execute_quarantine_flag(context: AdapterContext, *, settings: Settings) -> 
             ),
         )
 
-    # Reuse an existing active quarantine flag instead of creating duplicates.
     existing_flag = context.session.scalar(
         select(ContainmentFlag).where(
             ContainmentFlag.incident_id == incident_id,
@@ -841,7 +837,6 @@ def _execute_quarantine_flag(context: AdapterContext, *, settings: Settings) -> 
         },
     )
 
-    # Optional host tag writing is used as lab evidence for quarantine actions.
     tag_write_error: str | None = None
     if settings.automated_response_enable_host_tag_write:
         try:
@@ -898,7 +893,7 @@ def _execute_quarantine_flag(context: AdapterContext, *, settings: Settings) -> 
     )
 
 
-# Records that the incident needs manual analyst review.
+# Helper function used internally by this module.
 def _execute_manual_review(context: AdapterContext, *, settings: Settings) -> AdapterExecutionResult:
     preconditions = [
         "Execution payload must include a valid incident.id.",
@@ -980,7 +975,6 @@ def _execute_manual_review(context: AdapterContext, *, settings: Settings) -> Ad
     )
 
 
-# Maps each response action type to the adapter function that handles it.
 ADAPTER_MAP: dict[ResponseActionType, Callable[[AdapterContext, Settings], AdapterExecutionResult]] = {
     ResponseActionType.BLOCK_IP: _execute_block_ip,
     ResponseActionType.DISABLE_USER: _execute_disable_user,
@@ -990,7 +984,7 @@ ADAPTER_MAP: dict[ResponseActionType, Callable[[AdapterContext, Settings], Adapt
 }
 
 
-# Entry point used by the execution service to run the correct adapter.
+# Handles the execute adapter logic.
 def execute_adapter(
     context: AdapterContext,
     *,

@@ -1,6 +1,5 @@
-/*
- * Top Navigation reusable UI component used by the React dashboard.
- */
+// AegisCore student note: Top navigation component with user and notification controls.
+
 import type { ChangeEventHandler, ReactNode } from "react";
 import type { HealthTone } from "../../lib/theme/tokens";
 import { AegisCoreLogo } from "../AegisCoreLogo";
@@ -9,7 +8,6 @@ import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { Badge } from "../ui/Badge";
 
-// Defines the Top Navigation Props data shape used by this frontend module.
 type TopNavigationProps = {
   healthTone: HealthTone;
   healthLabel: string;
@@ -30,7 +28,7 @@ const healthToneMap: Record<HealthTone, "success" | "warning" | "danger"> = {
   down: "danger"
 };
 
-// Renders the Top Navigation UI section.
+// Keeps the TopNavigation component logic easy to understand.
 export function TopNavigation({
   healthTone,
   healthLabel,

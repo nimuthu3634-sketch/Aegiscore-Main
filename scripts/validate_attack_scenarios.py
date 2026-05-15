@@ -1,3 +1,5 @@
+# AegisCore student note: Script used to validate expected attack scenario data.
+
 from __future__ import annotations
 
 import argparse
@@ -19,6 +21,7 @@ FIXTURES_DIR = ROOT_DIR / "apps" / "api" / "tests" / "fixtures" / "ingestion"
 
 
 @dataclass(frozen=True)
+# ScenarioDefinition groups related data or behaviour for this module.
 class ScenarioDefinition:
     key: str
     source: str
@@ -65,10 +68,12 @@ SCENARIOS = [
 ]
 
 
+# ValidationError groups related data or behaviour for this module.
 class ValidationError(RuntimeError):
     pass
 
 
+# Helper function used internally by this module.
 def _date_string_from_timestamp(timestamp: str, *, scenario_key: str) -> str:
     normalized = timestamp.replace("Z", "+00:00")
     try:
@@ -80,6 +85,7 @@ def _date_string_from_timestamp(timestamp: str, *, scenario_key: str) -> str:
     return parsed.date().isoformat()
 
 
+# Handles the request json logic.
 def request_json(
     *,
     base_url: str,
@@ -121,6 +127,7 @@ def request_json(
         ) from exc
 
 
+# Handles the login logic.
 def login(*, base_url: str, username: str, password: str) -> str:
     response = request_json(
         base_url=base_url,
@@ -134,10 +141,12 @@ def login(*, base_url: str, username: str, password: str) -> str:
     return access_token
 
 
+# Handles the load fixture logic.
 def load_fixture(name: str) -> dict[str, Any]:
     return json.loads((FIXTURES_DIR / name).read_text(encoding="utf-8"))
 
 
+# Handles the with unique external id logic.
 def with_unique_external_id(
     payload: dict[str, Any],
     *,
@@ -165,6 +174,7 @@ def with_unique_external_id(
     return cloned
 
 
+# Handles the validate scenario logic.
 def validate_scenario(
     *,
     base_url: str,
@@ -267,6 +277,7 @@ def validate_scenario(
     }
 
 
+# Handles the print markdown table logic.
 def print_markdown_table(results: list[dict[str, Any]]) -> None:
     print("| Scenario | Ingestion | Alert | Incident | Risk | Responses | Daily report alerts |")
     print("| --- | --- | --- | --- | ---: | ---: | ---: |")
@@ -278,6 +289,7 @@ def print_markdown_table(results: list[dict[str, Any]]) -> None:
         )
 
 
+# Handles the ensure supported policies enabled logic.
 def ensure_supported_policies_enabled(*, base_url: str, token: str) -> None:
     response = request_json(base_url=base_url, path="/policies", token=token)
     items = response.get("items")
@@ -305,6 +317,7 @@ def ensure_supported_policies_enabled(*, base_url: str, token: str) -> None:
             )
 
 
+# Handles the parse args logic.
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -330,6 +343,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+# Handles the main logic.
 def main() -> int:
     args = parse_args()
     token = login(base_url=args.base_url, username=args.username, password=args.password)

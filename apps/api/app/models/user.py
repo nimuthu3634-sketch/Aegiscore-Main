@@ -1,3 +1,5 @@
+# AegisCore student note: Database model for system users such as admins and analysts.
+
 from __future__ import annotations
 
 import uuid
@@ -18,7 +20,7 @@ if TYPE_CHECKING:
     from app.models.role import Role
 
 
-# Stores user account details for admins and SOC analysts.
+# Stores user account information and links each user to a role.
 class User(Base):
     __tablename__ = "users"
 
@@ -27,22 +29,16 @@ class User(Base):
         primary_key=True,
         default=uuid.uuid4,
     )
-
-    # Connects each user to a role such as admin or analyst.
     role_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("roles.id", ondelete="RESTRICT"),
         nullable=False,
     )
-
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-
-    # MFA fields are used when two-factor authentication is enabled.
     # MVP: stored as plain base32; production stacks should encrypt at rest (KMS/DB TDE).
     mfa_secret: Mapped[str | None] = mapped_column(String(128), nullable=True)
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-
     full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     last_login_at: Mapped[datetime | None] = mapped_column(
@@ -55,7 +51,6 @@ class User(Base):
         nullable=False,
     )
 
-    # Relationships connect the user with their role and SOC activity records.
     role: Mapped["Role"] = relationship(back_populates="users")
     assigned_incidents: Mapped[list["Incident"]] = relationship(back_populates="assigned_user")
     requested_response_actions: Mapped[list["ResponseAction"]] = relationship(

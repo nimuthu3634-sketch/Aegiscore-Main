@@ -1,4 +1,4 @@
-# This test file checks integration between scoring and alert/incident processing.
+# AegisCore student note: Tests that cover scoring integration flow with alerts.
 
 """``score_alert`` integration: model strategy + baseline fallback."""
 
@@ -27,8 +27,8 @@ from app.services.scoring.service import score_alert
 from app.services.scoring.types import AlertRiskFeatures, ScoringResult
 
 
-# Fixture used to prepare test data or dependencies for this test file.
 @pytest.fixture
+# Handles the minimal alert logic.
 def minimal_alert() -> NormalizedAlert:
     now = datetime.now(UTC)
     asset = Asset(
@@ -66,7 +66,7 @@ def minimal_alert() -> NormalizedAlert:
     return alert
 
 
-# Checks score alert falls back to baseline when model artifacts missing.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_score_alert_falls_back_to_baseline_when_model_artifacts_missing(
     monkeypatch: pytest.MonkeyPatch,
     minimal_alert: NormalizedAlert,
@@ -123,6 +123,7 @@ def test_score_alert_falls_back_to_baseline_when_model_artifacts_missing(
 
     captured: dict[str, ScoringResult] = {}
 
+    # Handles the capture upsert logic.
     def capture_upsert(_self, alert: NormalizedAlert, result: ScoringResult) -> RiskScore:
         captured["result"] = result
         rs = RiskScore(
@@ -155,7 +156,7 @@ def test_score_alert_falls_back_to_baseline_when_model_artifacts_missing(
     assert "missing keras" in result.explanation["fallback_reason"]
 
 
-# Checks score alert uses model when load succeeds.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_score_alert_uses_model_when_load_succeeds(
     monkeypatch: pytest.MonkeyPatch,
     minimal_alert: NormalizedAlert,
@@ -228,6 +229,7 @@ def test_score_alert_uses_model_when_load_succeeds(
 
     captured: dict[str, ScoringResult] = {}
 
+    # Handles the capture upsert logic.
     def capture_upsert(_self, alert: NormalizedAlert, result: ScoringResult) -> RiskScore:
         captured["result"] = result
         rs = RiskScore(

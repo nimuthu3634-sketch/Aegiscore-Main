@@ -1,6 +1,5 @@
-/*
- * ESLint configuration used to keep the frontend code consistent.
- */
+// AegisCore student note: ESLint configuration for keeping frontend code quality consistent.
+
 import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";

@@ -1,4 +1,4 @@
-# This test file checks machine-learning scoring behavior and fallback handling.
+# AegisCore student note: Tests for ML-based alert scoring behaviour.
 
 import os
 from datetime import UTC, datetime
@@ -18,7 +18,7 @@ from app.services.scoring.ml import (
 from app.services.scoring.types import AlertRiskFeatures
 
 
-# Checks train alert prioritization model and score.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_train_alert_prioritization_model_and_score(tmp_path: Path) -> None:
     repo_root = Path(__file__).resolve().parents[3]
     dataset_path = repo_root / "ai" / "datasets" / "alerts_dataset.csv"
@@ -119,7 +119,7 @@ def test_train_alert_prioritization_model_and_score(tmp_path: Path) -> None:
     assert abs(sum(out["probabilities"].values()) - 1.0) < 0.01
 
 
-# Checks train legacy fixture tensorflow model.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_train_legacy_fixture_tensorflow_model(tmp_path: Path) -> None:
     """LEGACY: small fixture CSV with priority_label + MODEL_* columns (legacy 4-tier TensorFlow head)."""
     repo_root = Path(__file__).resolve().parents[3]

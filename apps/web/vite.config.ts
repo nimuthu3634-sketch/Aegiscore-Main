@@ -1,12 +1,12 @@
-/*
- * Vite configuration used to build and run the frontend app.
- */
+// AegisCore student note: Vite build and development server configuration.
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 const apiProxyTarget =
   process.env.VITE_DEV_PROXY_TARGET ?? "http://127.0.0.1:8000";
 
+// Defines the frontend build and development server settings.
 export default defineConfig({
   plugins: [react()],
   server: {

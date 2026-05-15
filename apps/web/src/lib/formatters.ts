@@ -1,6 +1,6 @@
-/*
- * Frontend helper utilities shared across the React application.
- */
+// AegisCore student note: Formatting helpers for dates, labels, and display values.
+
+// Keeps the formatTokenLabel helper logic easy to understand.
 export function formatTokenLabel(value: string | null | undefined) {
   if (!value) {
     return "n/a";
@@ -14,7 +14,7 @@ export function formatTokenLabel(value: string | null | undefined) {
     .replace(/\bSoc\b/g, "SOC");
 }
 
-// Formats score Method Label for display in the dashboard.
+// Keeps the formatScoreMethodLabel helper logic easy to understand.
 export function formatScoreMethodLabel(value: string | null | undefined) {
   switch (value) {
     case "baseline_rules":
@@ -29,7 +29,7 @@ export function formatScoreMethodLabel(value: string | null | undefined) {
   }
 }
 
-// Formats driver Label for display in the dashboard.
+// Keeps the formatDriverLabel helper logic easy to understand.
 export function formatDriverLabel(driver: {
   label?: unknown;
   contribution?: unknown;

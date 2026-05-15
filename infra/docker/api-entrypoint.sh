@@ -1,4 +1,7 @@
 #!/bin/sh
+# AegisCore student note: Entrypoint script used when starting the API container.
+
+# Stops the container startup if any required command fails.
 set -eu
 
 DB_CONNECT_MAX_ATTEMPTS="${DB_CONNECT_MAX_ATTEMPTS:-25}"

@@ -1,3 +1,5 @@
+# AegisCore student note: Alembic migration for improving ingestion pipeline tables and constraints.
+
 """Add ingestion failure logging and raw alert dedupe support"""
 
 from __future__ import annotations
@@ -12,7 +14,9 @@ branch_labels = None
 depends_on = None
 
 
+# Applies this migration when moving the database forward.
 def upgrade() -> None:
+    # Creates a database table needed by the application.
     op.create_table(
         "ingestion_failures",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
@@ -59,6 +63,7 @@ def upgrade() -> None:
     )
 
 
+# Reverts this migration if the database needs to roll back.
 def downgrade() -> None:
     op.drop_constraint(
         "uq_raw_alerts_source_external_id",
@@ -66,4 +71,5 @@ def downgrade() -> None:
         type_="unique",
     )
     op.drop_index("ix_ingestion_failures_retry_lookup", table_name="ingestion_failures")
+    # Drops the table when rolling this migration back.
     op.drop_table("ingestion_failures")

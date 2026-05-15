@@ -1,14 +1,13 @@
-/*
- * Tailwind configuration containing the design theme used by the dashboard.
- */
+// AegisCore student note: Tailwind CSS theme configuration for the frontend UI.
+
 import defaultTheme from "tailwindcss/defaultTheme";
 
-// Helper function for with Opacity logic in this file.
 function withOpacity(variableName) {
   return `rgb(var(${variableName}) / <alpha-value>)`;
 }
 
 /** @type {import('tailwindcss').Config} */
+// Exports configuration used by the frontend tooling.
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {

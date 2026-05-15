@@ -1,4 +1,4 @@
-# This test file checks report service calculations and export formatting.
+# AegisCore student note: Tests for report generation and export service logic.
 
 from __future__ import annotations
 
@@ -35,18 +35,23 @@ from app.schemas.reports import (
 from app.services import reports
 
 
+# FakeSession groups related data or behaviour for this module.
 class FakeSession:
+    # Helper function used internally by this module.
     def __init__(self) -> None:
         self.added: list[object] = []
         self.commits = 0
 
+    # Handles the add logic.
     def add(self, obj: object) -> None:
         self.added.append(obj)
 
+    # Handles the commit logic.
     def commit(self) -> None:
         self.commits += 1
 
 
+# Helper function used internally by this module.
 def _sample_actor() -> User:
     return User(
         id=uuid4(),
@@ -58,6 +63,7 @@ def _sample_actor() -> User:
     )
 
 
+# Helper function used internally by this module.
 def _sample_alert_fixture() -> tuple[NormalizedAlert, NormalizedAlert]:
     # Keep fixture timestamps deterministic and within report query windows.
     now = datetime(2026, 4, 5, 12, 0, tzinfo=UTC)
@@ -183,7 +189,7 @@ def _sample_alert_fixture() -> tuple[NormalizedAlert, NormalizedAlert]:
     return alert_one, alert_two
 
 
-# Checks get daily summary compiles operational metrics.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_get_daily_summary_compiles_operational_metrics(monkeypatch) -> None:
     alert_one, alert_two = _sample_alert_fixture()
     session = FakeSession()
@@ -212,7 +218,7 @@ def test_get_daily_summary_compiles_operational_metrics(monkeypatch) -> None:
     assert any(item.label == "critical" for item in summary.severity_distribution)
 
 
-# Checks export alert report returns json and audits.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_export_alert_report_returns_json_and_audits(monkeypatch) -> None:
     alert_one, alert_two = _sample_alert_fixture()
     session = FakeSession()
@@ -236,7 +242,7 @@ def test_export_alert_report_returns_json_and_audits(monkeypatch) -> None:
     assert any(isinstance(item, AuditLog) for item in session.added)
 
 
-# Checks export responses report returns csv.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_export_responses_report_returns_csv(monkeypatch) -> None:
     alert_one, _ = _sample_alert_fixture()
     session = FakeSession()
@@ -261,7 +267,7 @@ def test_export_responses_report_returns_csv(monkeypatch) -> None:
     assert session.commits == 1
 
 
-# Checks export incidents report returns csv.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_export_incidents_report_returns_csv(monkeypatch) -> None:
     alert_one, _ = _sample_alert_fixture()
     incident = alert_one.incident

@@ -1,3 +1,5 @@
+# AegisCore student note: Alembic migration that creates the initial AegisCore database schema.
+
 """Initial AegisCore backend foundation"""
 
 from __future__ import annotations
@@ -123,6 +125,7 @@ response_status_column_enum = postgresql.ENUM(
 )
 
 
+# Applies this migration when moving the database forward.
 def upgrade() -> None:
     bind = op.get_bind()
 
@@ -134,6 +137,7 @@ def upgrade() -> None:
     incident_priority_enum.create(bind, checkfirst=True)
     response_status_enum.create(bind, checkfirst=True)
 
+    # Creates a database table needed by the application.
     op.create_table(
         "roles",
         sa.Column(
@@ -152,6 +156,7 @@ def upgrade() -> None:
         ),
     )
 
+    # Creates a database table needed by the application.
     op.create_table(
         "users",
         sa.Column(
@@ -179,6 +184,7 @@ def upgrade() -> None:
         ),
     )
 
+    # Creates a database table needed by the application.
     op.create_table(
         "assets",
         sa.Column(
@@ -205,6 +211,7 @@ def upgrade() -> None:
         ),
     )
 
+    # Creates a database table needed by the application.
     op.create_table(
         "raw_alerts",
         sa.Column(
@@ -236,6 +243,7 @@ def upgrade() -> None:
         ),
     )
 
+    # Creates a database table needed by the application.
     op.create_table(
         "normalized_alerts",
         sa.Column(
@@ -281,6 +289,7 @@ def upgrade() -> None:
         ),
     )
 
+    # Creates a database table needed by the application.
     op.create_table(
         "risk_scores",
         sa.Column(
@@ -307,6 +316,7 @@ def upgrade() -> None:
         ),
     )
 
+    # Creates a database table needed by the application.
     op.create_table(
         "incidents",
         sa.Column(
@@ -356,6 +366,7 @@ def upgrade() -> None:
         ),
     )
 
+    # Creates a database table needed by the application.
     op.create_table(
         "response_actions",
         sa.Column(
@@ -397,6 +408,7 @@ def upgrade() -> None:
         sa.Column("executed_at", sa.DateTime(timezone=True), nullable=True),
     )
 
+    # Creates a database table needed by the application.
     op.create_table(
         "audit_logs",
         sa.Column(
@@ -434,6 +446,7 @@ def upgrade() -> None:
     op.create_index("ix_audit_logs_entity_lookup", "audit_logs", ["entity_type", "entity_id"])
 
 
+# Reverts this migration if the database needs to roll back.
 def downgrade() -> None:
     bind = op.get_bind()
 
@@ -443,14 +456,23 @@ def downgrade() -> None:
     op.drop_index("ix_normalized_alerts_created_at", table_name="normalized_alerts")
     op.drop_index("ix_raw_alerts_received_at", table_name="raw_alerts")
 
+    # Drops the table when rolling this migration back.
     op.drop_table("audit_logs")
+    # Drops the table when rolling this migration back.
     op.drop_table("response_actions")
+    # Drops the table when rolling this migration back.
     op.drop_table("incidents")
+    # Drops the table when rolling this migration back.
     op.drop_table("risk_scores")
+    # Drops the table when rolling this migration back.
     op.drop_table("normalized_alerts")
+    # Drops the table when rolling this migration back.
     op.drop_table("raw_alerts")
+    # Drops the table when rolling this migration back.
     op.drop_table("assets")
+    # Drops the table when rolling this migration back.
     op.drop_table("users")
+    # Drops the table when rolling this migration back.
     op.drop_table("roles")
 
     response_status_enum.drop(bind, checkfirst=True)

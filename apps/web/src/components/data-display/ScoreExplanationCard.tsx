@@ -1,17 +1,14 @@
-/*
- * Score Explanation Card reusable UI component used by the React dashboard.
- */
+// AegisCore student note: React component that shows why a risk score was assigned.
+
 import type { ReactNode } from "react";
 import { EvidencePanel } from "./EvidencePanel";
 
-// Defines the Score Metadata Item data shape used by this frontend module.
 type ScoreMetadataItem = {
   label: string;
   value: string;
   mono?: boolean;
 };
 
-// Defines the Score Explanation Card Props data shape used by this frontend module.
 type ScoreExplanationCardProps = {
   label: string;
   summary: string;
@@ -26,7 +23,7 @@ type ScoreExplanationCardProps = {
   classProbabilitiesSummary?: string | null;
 };
 
-// Renders the Score Explanation Card UI section.
+// Keeps the ScoreExplanationCard component logic easy to understand.
 export function ScoreExplanationCard({
   label,
   summary,

@@ -1,4 +1,4 @@
-# This test file checks Suricata connector behavior and event reading.
+# AegisCore student note: Tests for the Suricata integration connector.
 
 from __future__ import annotations
 
@@ -16,30 +16,38 @@ from app.services.integrations import suricata_connector
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "ingestion"
 
 
+# FakeSession groups related data or behaviour for this module.
 class FakeSession:
+    # Helper function used internally by this module.
     def __init__(self) -> None:
         self.added: list[object] = []
         self.commits = 0
         self.flushed = 0
         self.rollbacks = 0
 
+    # Handles the add logic.
     def add(self, obj: object) -> None:
         self.added.append(obj)
 
+    # Handles the commit logic.
     def commit(self) -> None:
         self.commits += 1
 
+    # Handles the flush logic.
     def flush(self) -> None:
         self.flushed += 1
 
+    # Handles the rollback logic.
     def rollback(self) -> None:
         self.rollbacks += 1
 
 
+# Helper function used internally by this module.
 def _fixture(name: str) -> dict:
     return json.loads((FIXTURES_DIR / name).read_text(encoding="utf-8"))
 
 
+# Helper function used internally by this module.
 def _test_settings(**overrides):
     defaults = dict(
         suricata_connector_enabled=True,
@@ -55,7 +63,7 @@ def _test_settings(**overrides):
     return SimpleNamespace(**defaults)
 
 
-# Checks run suricata poll cycle tails eve file and updates checkpoint.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_run_suricata_poll_cycle_tails_eve_file_and_updates_checkpoint(
     monkeypatch,
     tmp_path,
@@ -133,6 +141,7 @@ def test_run_suricata_poll_cycle_tails_eve_file_and_updates_checkpoint(
         lambda self, audit_log: audit_log,
     )
 
+    # Handles the fake persist and score alert logic.
     def fake_persist_and_score_alert(fake_session, raw_alert, normalized_alert):
         raw_alert.id = uuid4()
         normalized_alert.id = uuid4()
@@ -169,7 +178,7 @@ def test_run_suricata_poll_cycle_tails_eve_file_and_updates_checkpoint(
     assert recorded["metrics"]["total_failed"] == 2
 
 
-# Checks run suricata poll cycle reuses offset checkpoint.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_run_suricata_poll_cycle_reuses_offset_checkpoint(monkeypatch, tmp_path) -> None:
     session = FakeSession()
     payload = _fixture("suricata_port_scan.json")
@@ -202,7 +211,7 @@ def test_run_suricata_poll_cycle_reuses_offset_checkpoint(monkeypatch, tmp_path)
     assert summary == {"fetched": 0, "ingested": 0, "duplicates": 0, "failed": 0}
 
 
-# Checks get suricata connector status returns checkpoint and metrics.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_get_suricata_connector_status_returns_checkpoint_and_metrics(monkeypatch) -> None:
     monkeypatch.setattr(suricata_connector, "get_settings", lambda: _test_settings())
     state = SimpleNamespace(
@@ -236,7 +245,7 @@ def test_get_suricata_connector_status_returns_checkpoint_and_metrics(monkeypatc
     assert result.metrics["total_ingested"] == 82
 
 
-# Checks run suricata poll cycle raises when source missing.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_run_suricata_poll_cycle_raises_when_source_missing(monkeypatch, tmp_path) -> None:
     session = FakeSession()
     missing_path = tmp_path / "missing-eve.json"
@@ -268,7 +277,7 @@ def test_run_suricata_poll_cycle_raises_when_source_missing(monkeypatch, tmp_pat
         raise AssertionError("Expected FileNotFoundError for missing eve.json source")
 
 
-# Checks run suricata poll cycle handles missing source in fallback mode.
+# Checks this expected behaviour in the AegisCore test suite.
 def test_run_suricata_poll_cycle_handles_missing_source_in_fallback_mode(
     monkeypatch,
     tmp_path,

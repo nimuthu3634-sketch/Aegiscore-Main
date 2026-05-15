@@ -1,3 +1,5 @@
+# AegisCore student note: Alembic migration for notification event tracking.
+
 """Add notification events for critical incident alerts"""
 
 from __future__ import annotations
@@ -12,7 +14,9 @@ branch_labels = None
 depends_on = None
 
 
+# Applies this migration when moving the database forward.
 def upgrade() -> None:
+    # Creates a database table needed by the application.
     op.create_table(
         "notification_events",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
@@ -59,6 +63,8 @@ def upgrade() -> None:
     )
 
 
+# Reverts this migration if the database needs to roll back.
 def downgrade() -> None:
     op.drop_index("ix_notification_events_incident_created", table_name="notification_events")
+    # Drops the table when rolling this migration back.
     op.drop_table("notification_events")

@@ -1,3 +1,5 @@
+# AegisCore student note: Notification service that decides when and how SOC notifications are created.
+
 from __future__ import annotations
 
 import logging
@@ -20,26 +22,29 @@ from app.repositories.audit_logs import AuditLogsRepository
 logger = logging.getLogger(__name__)
 
 
-# Represents the result of checking whether a notification should be sent.
 @dataclass(slots=True, frozen=True)
+# NotificationDecision groups related data or behaviour for this module.
 class NotificationDecision:
     should_notify: bool
     reason: str
 
 
+# Helper function used internally by this module.
 def _csv_set(value: str) -> set[str]:
-    # Converts comma-separated settings into a lowercase set for easier checking.
     return {item.strip().lower() for item in value.split(",") if item.strip()}
 
 
+# Helper function used internally by this module.
 def _recipient_list(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+# Helper function used internally by this module.
 def _notification_subject(incident: Incident, trigger_type: str) -> str:
     return f"[AegisCore] Incident {incident.priority.value} - {incident.title} ({trigger_type})"
 
 
+# Helper function used internally by this module.
 def _notification_body(
     incident: Incident,
     *,
@@ -47,7 +52,6 @@ def _notification_body(
     trigger_value: str,
     response_action: ResponseAction | None,
 ) -> str:
-    # Builds a readable email body with the main incident and response details.
     lines = [
         "AegisCore incident notification",
         "",
@@ -71,8 +75,8 @@ def _notification_body(
     return "\n".join(lines)
 
 
+# Helper function used internally by this module.
 def _send_via_smtp(*, recipient: str, subject: str, body: str) -> None:
-    # Sends the notification email using the SMTP settings from the environment.
     settings = get_settings()
     message = EmailMessage()
     message["From"] = settings.notifications_sender
@@ -100,8 +104,8 @@ def _send_via_smtp(*, recipient: str, subject: str, body: str) -> None:
         smtp.send_message(message)
 
 
+# Helper function used internally by this module.
 def _record_audit(session: Session, *, event: NotificationEvent) -> None:
-    # Saves audit records for both the notification and the related incident.
     action = (
         "notification.sent"
         if event.status == "sent"
@@ -139,13 +143,14 @@ def _record_audit(session: Session, *, event: NotificationEvent) -> None:
     )
 
 
+# Helper function used internally by this module.
 def _existing_event_by_dedupe(session: Session, dedupe_key: str) -> NotificationEvent | None:
-    # Checks whether the same notification was already created before.
     return session.scalar(
         select(NotificationEvent).where(NotificationEvent.dedupe_key == dedupe_key)
     )
 
 
+# Helper function used internally by this module.
 def _create_event(
     session: Session,
     *,
@@ -158,7 +163,6 @@ def _create_event(
     trigger_value: str,
     dedupe_key: str,
 ) -> NotificationEvent:
-    # Creates the notification database record before delivery is attempted.
     event = NotificationEvent(
         incident=incident,
         response_action=response_action,
@@ -178,8 +182,8 @@ def _create_event(
     return event
 
 
+# Helper function used internally by this module.
 def _deliver_event(session: Session, event: NotificationEvent) -> NotificationEvent:
-    # Delivers the notification using log mode or SMTP mode.
     settings = get_settings()
     mode = settings.notifications_mode.lower()
     if mode == "log":
@@ -212,8 +216,8 @@ def _deliver_event(session: Session, event: NotificationEvent) -> NotificationEv
     return event
 
 
+# Helper function used internally by this module.
 def _decide_for_risk(*, risk_score: float, incident_state: str) -> NotificationDecision:
-    # Checks whether a high-risk incident should notify admins.
     settings = get_settings()
     if not settings.notifications_enabled:
         return NotificationDecision(False, "notifications_disabled")
@@ -224,8 +228,8 @@ def _decide_for_risk(*, risk_score: float, incident_state: str) -> NotificationD
     return NotificationDecision(True, "risk_threshold_matched")
 
 
+# Helper function used internally by this module.
 def _decide_for_incident_state(*, incident_state: str) -> NotificationDecision:
-    # Checks whether the current incident state is configured for notifications.
     settings = get_settings()
     if not settings.notifications_enabled:
         return NotificationDecision(False, "notifications_disabled")
@@ -234,10 +238,10 @@ def _decide_for_incident_state(*, incident_state: str) -> NotificationDecision:
     return NotificationDecision(True, "incident_state_matched")
 
 
+# Helper function used internally by this module.
 def _decide_for_response_result(
     *, response_status: str, action_type: str
 ) -> NotificationDecision:
-    # Checks whether a response action result should notify admins.
     settings = get_settings()
     if not settings.notifications_enabled:
         return NotificationDecision(False, "notifications_disabled")
@@ -250,6 +254,7 @@ def _decide_for_response_result(
     return NotificationDecision(True, "response_status_matched")
 
 
+# Helper function used internally by this module.
 def _notify_many(
     session: Session,
     *,
@@ -259,7 +264,6 @@ def _notify_many(
     trigger_value: str,
     dedupe_suffix: str,
 ) -> list[NotificationEvent]:
-    # Sends the same notification to all configured admin recipients.
     recipients = _recipient_list(get_settings().notifications_admin_recipients)
     if not recipients:
         return []
@@ -290,13 +294,13 @@ def _notify_many(
     return events
 
 
+# Handles the notify for high risk incident logic.
 def notify_for_high_risk_incident(
     session: Session,
     *,
     incident: Incident,
     risk_score: float,
 ) -> list[NotificationEvent]:
-    # Creates admin notifications when an incident reaches the configured risk threshold.
     decision = _decide_for_risk(
         risk_score=risk_score,
         incident_state=incident.status.value,
@@ -314,13 +318,13 @@ def notify_for_high_risk_incident(
     )
 
 
+# Creates notifications when an incident reaches important states.
 def notify_for_incident_state(
     session: Session,
     *,
     incident: Incident,
     previous_state: str | None,
 ) -> list[NotificationEvent]:
-    # Creates notifications when an incident moves into a configured state.
     decision = _decide_for_incident_state(incident_state=incident.status.value)
     if not decision.should_notify:
         return []
@@ -334,13 +338,13 @@ def notify_for_incident_state(
     )
 
 
+# Handles the notify for response result logic.
 def notify_for_response_result(
     session: Session,
     *,
     incident: Incident,
     response_action: ResponseAction,
 ) -> list[NotificationEvent]:
-    # Creates notifications for important response action results such as warning or failed.
     decision = _decide_for_response_result(
         response_status=response_action.status.value,
         action_type=response_action.action_type,
@@ -357,6 +361,7 @@ def notify_for_response_result(
     )
 
 
+# Handles the send admin notification logic.
 def send_admin_notification(
     session: Session,
     *,
@@ -364,7 +369,6 @@ def send_admin_notification(
     trigger_value: str,
     response_action: ResponseAction | None = None,
 ) -> list[NotificationEvent]:
-    # Manual helper used when the system needs to notify admins directly.
     settings = get_settings()
     if not settings.notifications_enabled:
         return []
@@ -378,8 +382,8 @@ def send_admin_notification(
     )
 
 
+# Handles the list incident notifications logic.
 def list_incident_notifications(
     incident: Incident,
 ) -> list[NotificationEvent]:
-    # Returns incident notifications with the newest notification first.
     return sorted(incident.notification_events, key=lambda item: item.created_at, reverse=True)
