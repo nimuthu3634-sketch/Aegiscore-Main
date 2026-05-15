@@ -1,3 +1,4 @@
+# Imports all database models so Alembic and SQLAlchemy can detect them properly.
 from app.models.analyst_note import AnalystNote
 from app.models.asset import Asset
 from app.models.audit_log import AuditLog
@@ -15,6 +16,7 @@ from app.models.risk_score import RiskScore
 from app.models.role import Role
 from app.models.user import User
 
+# Controls which model classes are exported when importing from app.models.
 __all__ = [
     "Asset",
     "AnalystNote",

@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
+# Stores notes written by analysts for alerts or incidents.
 class AnalystNote(Base):
     __tablename__ = "analyst_notes"
 
@@ -23,16 +24,21 @@ class AnalystNote(Base):
         primary_key=True,
         default=uuid.uuid4,
     )
+
+    # Shows whether this note belongs to an alert or an incident.
     target_type: Mapped[NoteTargetType] = mapped_column(
         Enum(NoteTargetType, name="notetargettype", values_callable=enum_values),
         nullable=False,
     )
     target_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+
+    # Author is nullable so notes can remain even if the user account is deleted.
     author_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
+
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -46,4 +52,5 @@ class AnalystNote(Base):
         nullable=False,
     )
 
+    # Links the note back to the user who created it.
     author: Mapped["User | None"] = relationship(back_populates="analyst_notes")
