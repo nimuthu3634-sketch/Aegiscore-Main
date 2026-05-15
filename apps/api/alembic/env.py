@@ -13,11 +13,15 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# Uses the database URL from our application settings for Alembic migrations.
 config.set_main_option("sqlalchemy.url", get_settings().database_url)
+
+# Alembic uses this metadata to detect database table changes from SQLAlchemy models.
 target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
+    # Runs migrations without directly connecting to the database.
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -31,6 +35,7 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
+    # Runs migrations with an active database connection.
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
@@ -44,8 +49,8 @@ def run_migrations_online() -> None:
             context.run_migrations()
 
 
+# Chooses the correct migration mode depending on how Alembic is executed.
 if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-

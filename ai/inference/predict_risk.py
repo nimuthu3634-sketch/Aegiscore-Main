@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 
+# Adds the API folder to the Python path so this AI script can use backend services.
 def _bootstrap_api_path() -> Path:
     repo_root = Path(__file__).resolve().parents[2]
     api_root = repo_root / "apps" / "api"
@@ -16,6 +17,7 @@ def _bootstrap_api_path() -> Path:
     return repo_root
 
 
+# Reads the input JSON file path from the command line.
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run TensorFlow alert prioritization inference on a JSON feature file."
@@ -35,6 +37,7 @@ def _load_json_payload(path: Path) -> dict:
 def main() -> None:
     repo_root = _bootstrap_api_path()
 
+    # Imports are placed here because the API path is added at runtime.
     from app.services.scoring import alert_prioritization as ap
     from app.services.scoring.ml import load_priority_model, score_with_model
     from app.services.scoring.types import AlertRiskFeatures
@@ -42,6 +45,7 @@ def main() -> None:
     args = _parse_args()
     payload = _load_json_payload(Path(args.features_file))
 
+    # Load the trained AI model and metadata from environment variables or default paths.
     model_path = Path(
         os.getenv(
             "AI_MODEL_PATH",
@@ -61,12 +65,14 @@ def main() -> None:
     )
     schema = metadata.get("training_schema")
 
+    # Handles the current model training schema used by AegisCore.
     if schema == ap.TRAINING_SCHEMA:
         if "threat_type" in payload and "detection_type" not in payload:
             result = ap.predict_alert_model_json(model=model, metadata=metadata, payload=payload)
             print(json.dumps(result, indent=2))
             return
 
+        # Converts input JSON data into the feature format expected by the model.
         features = AlertRiskFeatures(
             observed_at=datetime.fromisoformat(
                 payload.get("observed_at", datetime.now(UTC).isoformat())
@@ -98,6 +104,7 @@ def main() -> None:
         print(json.dumps(result, indent=2))
         return
 
+    # Fallback scoring method for older or different model schemas.
     features = AlertRiskFeatures(
         observed_at=datetime.fromisoformat(payload.get("observed_at", datetime.now(UTC).isoformat())),
         source_type=str(payload["source_type"]),
@@ -122,6 +129,7 @@ def main() -> None:
         alert_id=payload.get("alert_id"),
         external_id=payload.get("external_id"),
     )
+
     scoring = score_with_model(features=features, model=model, metadata=metadata)
     print(
         json.dumps(
