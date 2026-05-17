@@ -1,4 +1,4 @@
-# AegisCore student note: Main FastAPI application entry point for AegisCore API.
+# Main FastAPI application entry point for AegisCore API.
 
 import asyncio
 from contextlib import asynccontextmanager
